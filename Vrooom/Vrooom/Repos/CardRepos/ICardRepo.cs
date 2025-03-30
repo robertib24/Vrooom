@@ -1,5 +1,5 @@
 ﻿using Vrooom.Models;
-namespace Vrooom.Repos.CardRepo
+namespace Vrooom.Repos.CardRepos
 {
     public interface ICardRepo
     {
