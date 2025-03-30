@@ -1,0 +1,6 @@
+@Vrooom_HostAddress = http://localhost:5124
+
+GET {{Vrooom_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
