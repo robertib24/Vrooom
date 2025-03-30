@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ProiectMDS.Models;
+using Vrooom.Models;
 
 namespace Vrooom.Models
 {

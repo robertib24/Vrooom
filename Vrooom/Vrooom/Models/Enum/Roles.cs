@@ -1,7 +1,7 @@
-﻿namespace ProiectMDS.Models.Enum
+﻿namespace Vrooom.Models.Enum
 {
     public enum Roles
     {
-        Chirias,Propietar,Admin,Default
+        Chirias,Proprietar,Admin,Default
     }
 }
