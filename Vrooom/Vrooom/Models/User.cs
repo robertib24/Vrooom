@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-using Vrooom.Models;
 
-namespace ProiectMDS.Models
+namespace Vrooom.Models
 {
     public class User:IdentityUser<int>
     {

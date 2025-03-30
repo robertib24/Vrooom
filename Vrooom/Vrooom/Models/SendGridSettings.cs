@@ -1,4 +1,4 @@
-﻿namespace ProiectMDS.Models
+﻿namespace Vrooom.Models
 {
     public class SendGridSettings
     {

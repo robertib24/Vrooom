@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Primitives;
 using System.ComponentModel.DataAnnotations;
+using Vrooom.Models;
 
-namespace ProiectMDS.Models
+namespace Vrooom.Models
 {
     public class Review
     {

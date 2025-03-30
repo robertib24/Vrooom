@@ -1,6 +1,4 @@
-﻿
-
-namespace ProiectMDS.Models.DTOs
+﻿namespace Vrooom.Models.DTOs.UserDTOs
 {
     public class RegisterDTO
     {

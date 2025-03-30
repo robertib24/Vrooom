@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ProiectMDS.Models;
 
-namespace ProiectMDS.Models
+namespace Vrooom.Models
 {
     public class Chirie
     {

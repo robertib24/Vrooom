@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-namespace ProiectMDS.Models
+namespace Vrooom.Models
 {
     public class Support
     {

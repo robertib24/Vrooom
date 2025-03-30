@@ -1,4 +1,4 @@
-﻿namespace ProiectMDS.Models.DTOs.UserDTOs
+﻿namespace Vrooom.Models.DTOs.UserDTOs
 {
     public class SafeUserDTO
     {
