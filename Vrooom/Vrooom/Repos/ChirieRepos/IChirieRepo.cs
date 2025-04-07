@@ -1,7 +1,8 @@
 ﻿using Vrooom.Models;
 namespace Vrooom.Repos.ChirieRepo
 {
-    public interface IChirieRepo
+    public interface IChirieRepo // to do: implementati 
+    // fiecare metoda din fiecare interfata prezenta in repos, aveti ca exemplu clasele ICardRepo si CardRepo din folderul precedent
     {
         Task AddChirie(Chirie c);
         Task DeleteChirie(int id);
