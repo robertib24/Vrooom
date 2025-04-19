@@ -22,6 +22,8 @@ namespace Vrooom.Data
         public object CardDTO { get; internal set; }
         public DbSet<Support> Support { get; set; }
 
+        public DbSet<Postare> Postari { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Support>();

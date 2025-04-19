@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vrooom.Data;
 
@@ -11,9 +12,11 @@ using Vrooom.Data;
 namespace Vrooom.Migrations
 {
     [DbContext(typeof(VrooomDbContext))]
-    partial class VrooomDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250418172711_AddUserNameConfirmedToUser")]
+    partial class AddUserNameConfirmedToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -428,6 +431,7 @@ namespace Vrooom.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("permis")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("pozaProfil")

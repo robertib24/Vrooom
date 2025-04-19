@@ -12,7 +12,7 @@ namespace Vrooom.Models
 
         public string carteIdentitate {  get; set; }
 
-        public string permis {  get; set; }
+        public string? permis {  get; set; }
         public DateTime dataNasterii { get; set; }
 
         public string pozaProfil { get; set; }
@@ -26,5 +26,9 @@ namespace Vrooom.Models
         public ICollection<Postare>? postare {  get; set; }
 
         public ICollection<Chirie>? chirie {  get; set; }
+        public bool UserNameConfirmed { get; set; }
+     
+
+
     }
 }

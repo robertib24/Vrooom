@@ -10,5 +10,9 @@
         public string nrTelefon { get; set; }
         public DateTime dataNasterii { get; set; }
         public IFormFile pozaProfil { get; set; }
+        public string carteIdentitate { get; set; }
+       
+
+
     }
 }
