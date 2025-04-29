@@ -4,7 +4,7 @@ namespace Vrooom.Repos.ReviewRepo
     public interface IReviewRepo
     {
         Task addReview(Review review);
-        Task removeReview(Review review);
+        Task removeReview(int id);
         Task<Review> ReviewByID(int id);
         Task UpdateReview(Review review);
         Task <IEnumerable<Review>> ReviewByRating(float rating);
