@@ -38,7 +38,7 @@ namespace Vrooom.Data
 
             modelBuilder.Entity<Chirie>()
                 .HasOne(c => c.Postare)
-                .WithMany(p => p.chirie)
+                .WithMany(p => p.Chirie)
                 .HasForeignKey(c => c.PostareId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -53,7 +53,7 @@ namespace Vrooom.Data
 
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Postare)
-                .WithMany(p => p.review)
+                .WithMany(p => p.Review)
                 .HasForeignKey(r => r.PostareId)
                 .OnDelete(DeleteBehavior.Restrict);
 

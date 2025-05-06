@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35919.96 d17.13
+VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vrooom", "Vrooom\Vrooom.csproj", "{E613EF82-CEDE-4E0B-8F07-F418EC2F848C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VrooomTestConsole", "VrooomTestConsole\VrooomTestConsole.csproj", "{45A1D2A0-39A0-41E5-BC8C-717B06C43477}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{E613EF82-CEDE-4E0B-8F07-F418EC2F848C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E613EF82-CEDE-4E0B-8F07-F418EC2F848C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E613EF82-CEDE-4E0B-8F07-F418EC2F848C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45A1D2A0-39A0-41E5-BC8C-717B06C43477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45A1D2A0-39A0-41E5-BC8C-717B06C43477}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45A1D2A0-39A0-41E5-BC8C-717B06C43477}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45A1D2A0-39A0-41E5-BC8C-717B06C43477}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

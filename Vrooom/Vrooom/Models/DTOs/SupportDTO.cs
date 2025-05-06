@@ -2,9 +2,12 @@
 {
     public class SupportDTO
     {
-        public int supportId { get; set; }
-        public string titlu {  get; set; }
-        public string comentariu { get; set; }
-        public int userId {  get; set; }
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string Subiect { get; set; }
+        public string Mesaj { get; set; }
+        public DateTime Data { get; set; }
+        public string Status { get; set; }
+        public string Raspuns { get; set; }
     }
 }

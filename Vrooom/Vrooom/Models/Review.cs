@@ -12,13 +12,13 @@ namespace Vrooom.Models
 
         public int UserId { get; set; }
 
-        public string titlu {  get; set; }
+        public string Titlu {  get; set; }
 
-        public string comentariu { get; set; }
+        public string Comentariu { get; set; }
 
-        public int rating { get; set; }
+        public int Rating { get; set; }
 
-        public DateTime dataReview {  get; set; }
+        public DateTime Data {  get; set; }
 
         public virtual User User {  get; set; }
 

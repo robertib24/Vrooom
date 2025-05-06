@@ -5,39 +5,41 @@ namespace Vrooom.Models
     public class Postare
     {
         [Key]
+        public int Id { get; set; }
+
         public int PostareId { get; set; }
         public int UserId {  get; set; }
 
-        public string titlu {  get; set; }
+        public string Titlu {  get; set; }
 
-        public string descriere { get; set; }
+        public string Descriere { get; set; }
 
-        public int pret {  get; set; }
+        public int Pret {  get; set; }
 
-        public string firma {  get; set; }
+        public string Firma {  get; set; }
 
-        public string model {  get; set; }
+        public string Model {  get; set; }
 
-        public int kilometraj { get; set; }
+        public int Kilometraj { get; set; }
 
-        public int anFabricatie {  get; set; }
+        public int AnFabricatie {  get; set; }
 
-        public string talon {  get; set; }
-        public string culoare { get; set; }
+        public string Talon {  get; set; }
+        public string Culoare { get; set; }
 
-        public string carteIdentitateMasina { get; set; }
+        public string CarteIdentitateMasina { get; set; }
 
-        public string asigurare {  get; set; }
-        public int nrImagini { get; set; }
-        public double latitudine { get; set; }
-        public double longitudine { get; set; }
-        public string adresa_user { get; set; }
-        public string adresa_formala { get; set; }
+        public string Asigurare {  get; set; }
+        public int NrImagini { get; set; }
+        public double Latitudine { get; set; }
+        public double Longitudine { get; set; }
+        public string Adresa_user { get; set; }
+        public string Adresa_formala { get; set; }
 
         public virtual User User {  get; set; }
 
-        public ICollection<Chirie>? chirie {  get; set; }
+        public ICollection<Chirie>? Chirie {  get; set; }
 
-        public ICollection<Review>? review {  get; set; }
+        public ICollection<Review>? Review {  get; set; }
     }
 }

@@ -6,6 +6,8 @@ namespace Vrooom.Models
     public class Card
     {
         [Key]
+        public int Id { get; set; }
+
         public int CardId { get; set; }
         public int UserId { get; set; }
 

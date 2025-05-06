@@ -69,8 +69,12 @@ builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<JwtService>();
-var app = builder.Build();
 
+
+// === REPO + SERVICE pentru Card ===
+builder.Services.AddScoped<Vrooom.Repos.CardRepos.ICardRepo, Vrooom.Repos.CardRepos.CardRepo>();
+builder.Services.AddScoped<Vrooom.Services.CardServices.ICardService, Vrooom.Services.CardServices.CardService>();
+var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

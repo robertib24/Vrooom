@@ -2,7 +2,7 @@
 using Vrooom.Data;
 using Vrooom.Models;
 using Vrooom.Repos.CardRepos;
-namespace Vrooom.Repos
+namespace Vrooom.Repos.CardRepos
 {
     public class CardRepo : ICardRepo
     {

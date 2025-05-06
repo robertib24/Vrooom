@@ -1,13 +1,13 @@
 ﻿using Vrooom.Models;
+
 namespace Vrooom.Repos.SupportRepo
 {
     public interface ISupportRepo
     {
-        Task addSupport(Support supp);
-        Task<IEnumerable<Support>> listSupport();
-        Task<IEnumerable<Support>> getSupportByUserID(int userID);
-        Task<IEnumerable<Support>> getSupportBySupportID(int supportID);
-        Task<User> UserByID(int userID);
-        Task<int> getMaxID();
+        Task AddSupport(Support support);
+        Task<IEnumerable<Support>> GetAllSupports();
+        Task<IEnumerable<Support>> GetSupportsByUserID(int userId);
+        Task<Support> GetSupportByID(int id);
+        Task UpdateSupport(Support support);
     }
 }

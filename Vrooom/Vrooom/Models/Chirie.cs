@@ -11,11 +11,14 @@ namespace Vrooom.Models
         public int UserId {  get; set; }
         public int PostareId { get; set; }
 
-        public DateTime dataStart {  get; set; }
+        public DateTime DataStop {  get; set; }
 
-        public DateTime dataStop {  get; set; }
+        public virtual User? User { get; set; }
+        public virtual Postare? Postare { get; set; }
+        public int MasinaId { get; set; }
+        public DateTime DataStart { get; set; }
+        public int Id { get; set; }
 
-        public virtual User User { get; set; }
-        public virtual Postare Postare { get; set; }
+
     }
 }
