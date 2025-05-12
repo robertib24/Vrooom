@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Vehicle Rental Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+            .header h1 {
+                color: #5cb85c;
+            }
+
+        .details {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            text-align: center;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Your Vehicle Has Been Rented!</h1>
+        </div>
+
+        <p>Hello, <strong>{{username}}</strong>,</p>
+
+        <p>Great news! Your vehicle has been rented. Here are the details of the rental:</p>
+
+        <div class="details">
+            <p><strong>Vehicle:</strong> {{firma}} {{model}}</p>
+            <p><strong>Renter:</strong> {{cumparator}}</p>
+            <p><strong>Rental Period:</strong> {{data-start}} to {{data-stop}}</p>
+        </div>
+
+        <p>Please ensure your vehicle is clean, fueled, and ready for pickup at the agreed location. Remember to check the renter's driver's license and ID when they pick up the vehicle.</p>
+
+        <p>You can contact the renter through our platform if you need to communicate any details about the pickup.</p>
+
+        <p>Thank you for listing your vehicle with Vrooom Car Rental!</p>
+
+        <div class="footer">
+            <p>&copy; 2025 Vrooom Car Rental. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

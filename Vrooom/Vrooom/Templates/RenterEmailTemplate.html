@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Vehicle Rental Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+            .header h1 {
+                color: #5cb85c;
+            }
+
+        .details {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .map {
+            width: 100%;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            text-align: center;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Your Vehicle Rental is Confirmed!</h1>
+        </div>
+
+        <p>Hello, <strong>{{username}}</strong>,</p>
+
+        <p>Great news! Your vehicle rental has been successfully confirmed. Here are the details of your rental:</p>
+
+        <div class="details">
+            <p><strong>Vehicle:</strong> {{firma}} {{model}}</p>
+            <p><strong>Owner:</strong> {{seller}}</p>
+            <p><strong>Rental Period:</strong> {{data-start}} to {{data-stop}}</p>
+            <p><strong>Pickup Location:</strong> {{adresa-text}}</p>
+        </div>
+
+        <p>The pickup location is shown on the map below:</p>
+
+        <img src="{{maps_img}}" alt="Pickup Location Map" class="map">
+
+        <p>GPS Coordinates: {{latitudine}}, {{longitudine}}</p>
+
+        <p>Please remember to bring your driver's license and a valid form of ID when picking up the vehicle. Contact the vehicle owner if you need to make any changes to your rental.</p>
+
+        <p>Enjoy your rental and safe travels!</p>
+
+        <div class="footer">
+            <p>&copy; 2025 Vrooom Car Rental. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

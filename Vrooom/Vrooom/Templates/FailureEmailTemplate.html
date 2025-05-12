@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Registration Failed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+            .header h1 {
+                color: #d9534f;
+            }
+
+        .reason {
+            background-color: #f2dede;
+            color: #a94442;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            text-align: center;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Registration Failed</h1>
+        </div>
+
+        <p>Hello, <strong>{{username}}</strong>,</p>
+
+        <p>We're sorry, but we couldn't complete your registration with Vrooom Car Rental for the following reason:</p>
+
+        <div class="reason">
+            <p>{{reason}}</p>
+        </div>
+
+        <p>Please try again with a different profile picture that meets our guidelines. For profile pictures, we suggest:</p>
+        <ul>
+            <li>A clear image of yourself</li>
+            <li>No inappropriate content</li>
+            <li>No alcohol, drugs, or other prohibited items</li>
+            <li>Good lighting and image quality</li>
+        </ul>
+
+        <p>If you need assistance, please contact our support team.</p>
+
+        <div class="footer">
+            <p>&copy; 2025 Vrooom Car Rental. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

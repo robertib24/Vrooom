@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Support Ticket Update</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+            .header h1 {
+                color: #4a7bae;
+            }
+
+        .ticket-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #4a7bae;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            text-align: center;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Support Ticket Update</h1>
+        </div>
+
+        <p>Hello, <strong>{{username}}</strong>,</p>
+
+        <p>We've received your support ticket and our team is working on it. Here's a summary of your ticket:</p>
+
+        <div class="ticket-info">
+            <p><strong>Ticket Subject:</strong> {{titlu}}</p>
+        </div>
+
+        <p>You can view the status and details of your ticket by clicking the button below:</p>
+
+        <p style="text-align: center;">
+            <a href="{{link-ticket}}" class="btn">View My Ticket</a>
+        </p>
+
+        <p>Our support team will get back to you as soon as possible. The typical response time is within 24 hours.</p>
+
+        <p>If you have any additional information to add to your ticket, you can do so by replying to this email or by updating your ticket through our website.</p>
+
+        <p>Thank you for your patience.</p>
+
+        <div class="footer">
+            <p>&copy; 2025 Vrooom Car Rental. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

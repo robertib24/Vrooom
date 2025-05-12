@@ -84,7 +84,7 @@ builder.Services.AddAWSService<IAmazonS3>();
 builder.Services.AddScoped<IS3Service, S3Service>(provider =>
 {
     var s3Client = provider.GetRequiredService<IAmazonS3>();
-    var bucketName = "dawbucket";
+    var bucketName = "vrooom1224";
     return new S3Service(s3Client, bucketName);
 });
 
@@ -144,23 +144,6 @@ app.UseCors(builder =>
         .AllowAnyOrigin();
 });
 
-
-
-
-// await Seed.InitializeRoles(app);
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-// }
-
-// app.UseHttpsRedirection();
-
-// app.UseAuthorization();
-
-// app.MapControllers();
-
-// app.Run();
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
