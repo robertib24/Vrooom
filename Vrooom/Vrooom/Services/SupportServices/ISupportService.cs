@@ -4,10 +4,10 @@ namespace Vrooom.Services.SupportServices
 {
     public interface ISupportService
     {
-        Task addSupport(SupportDTO supp);
+        Task AddSupport(SupportDTO supportDTO);
         Task<IEnumerable<SupportDTO>> getAllSupports();
-        Task<IEnumerable<SupportDTO>> getSupportByUserID(int userID);
-        Task<IEnumerable<SupportDTO>> getSupportBySupportID(int supportID);
+        Task<IEnumerable<SupportDTO>> getSupportByUserId(int userId);
+        Task<IEnumerable<SupportDTO>> getSupportBySupportId(int supportId);
         Task adminEmail(SupportDTO support);
         Task ReplySupport(SupportDTO supportDTO);
         Task replyEmail(SupportDTO support);

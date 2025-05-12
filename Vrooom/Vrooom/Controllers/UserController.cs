@@ -6,215 +6,188 @@ using Microsoft.EntityFrameworkCore;
 using Vrooom.Models;
 using Microsoft.AspNetCore.Authorization;
 using Vrooom.Services;
+using Vrooom.Exceptions;
+using Vrooom.Services.UserServices;
 
 namespace Vrooom.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly VrooomDbContext _context;
-        private readonly UserManager<User> _userManager;
-        private readonly IWebHostEnvironment _environment;
-        private readonly JwtService _jwtService;
-
-        public UserController(UserManager<User> userManager, IWebHostEnvironment environment, JwtService jwtService, VrooomDbContext context)
+        private readonly IUserService _userService;
+        public UserController(IUserService userService)
         {
-            _userManager = userManager;
-            _environment = environment;
-            _jwtService = jwtService;
-            _context = context;
+            _userService = userService;
         }
-
-        [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO dto)
-        {
-            var user = await _userManager.FindByNameAsync(dto.Username);
-
-            if (user == null || user.Email != dto.Email)
-            {
-                return NotFound("Utilizatorul nu a fost găsit.");
-            }
-
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            return Ok(new { Token = token });
-        }
-
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDTO dto)
-        {
-            var user = await _userManager.FindByNameAsync(dto.username);
-            if (user == null || !await _userManager.CheckPasswordAsync(user, dto.parola))
-                return Unauthorized("Date de autentificare invalide.");
-
-            var token = _jwtService.GenerateToken(user);
-            return Ok(new { Token = token });
-        }
-
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromForm] RegisterDTO dto)
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromForm] RegisterDTO user)
         {
-            var uploadsPath = Path.Combine(_environment.WebRootPath ?? "wwwroot", "images");
-            if (!Directory.Exists(uploadsPath))
+
+            var result = await _userService.RegisterAsync(user);
+            if (result.Succeeded)
             {
-                Directory.CreateDirectory(uploadsPath);
+                return Ok();
             }
-
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.pozaProfil.FileName);
-            var filePath = Path.Combine(uploadsPath, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            else
             {
-                await dto.pozaProfil.CopyToAsync(stream);
+                var errors = result.Errors.Select(e => e.Description);
+                return BadRequest(errors);
             }
-
-            string profilePicturePath = "/images/" + fileName;
-
-            var user = new User
-            {
-                UserName = dto.username,
-                Email = dto.email,
-                nume = dto.nume,
-                prenume = dto.prenume,
-                PhoneNumber = dto.nrTelefon,
-                dataNasterii = dto.dataNasterii,
-                pozaProfil = profilePicturePath,
-                EmailConfirmed = true,
-                carteIdentitate = dto.carteIdentitate,
-            };
-
-            var result = await _userManager.CreateAsync(user, dto.parola);
-
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
-            }
-
-            return Ok("Utilizatorul a fost înregistrat cu succes.");
         }
-
-        [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Login(LoginDTO user)
         {
-            var user = await _userManager.FindByNameAsync(dto.Username);
-            if (user == null)
+            try
             {
-                return NotFound("Utilizatorul nu a fost găsit.");
+                var result = await _userService.LoginAsync(user);
+                return Ok(new { Token = result, Message = $"Autentificat ca {user.username}" });
             }
-
-            var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.Password);
-            if (!result.Succeeded)
+            catch (LockedOutException e)
             {
-                return BadRequest(result.Errors);
+                return BadRequest(e.Message);
             }
-
-            return Ok("Parola a fost resetată cu succes.");
-        }
-
-        [HttpPost("generate-reset-token")]
-        public async Task<IActionResult> GenerateResetToken([FromBody] ForgotPasswordDTO dto)
-        {
-            var user = await _userManager.FindByNameAsync(dto.Username);
-            if (user == null || user.Email != dto.Email)
+            catch (WrongDetailsException e)
             {
-                return NotFound("Utilizatorul nu a fost găsit.");
+                return NotFound(e.Message);
             }
-
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            return Ok(new { Token = token });
-        }
-
-        [HttpGet("profile-public")]
-        public async Task<IActionResult> GetPublicProfileSelf()
-        {
-            var userName = User.Identity?.Name;
-            if (string.IsNullOrEmpty(userName))
-                return Unauthorized("Utilizator neautentificat.");
-
-            var user = await _userManager.FindByNameAsync(userName);
-            if (user == null)
-                return NotFound("Utilizatorul nu a fost găsit.");
-
-            var postariCount = await _context.Postari.CountAsync(p => p.UserId == user.Id);
-
-            var dto = new SafeUserDTO
+            catch (Exception e)
             {
-                id = user.Id,
-                nume = user.nume,
-                prenume = user.prenume,
-                username = user.UserName,
-                nrTelefon = user.PhoneNumber,
-                dataNasterii = user.dataNasterii,
-                linkPozaProfil = user.pozaProfil,
-                nrPostari = postariCount
-            };
-
-            return Ok(dto);
-        }
-
-        [HttpGet("profile-public/{username}")]
-        public async Task<IActionResult> GetPublicProfile(string username)
-        {
-            var user = await _userManager.FindByNameAsync(username);
-            if (user == null)
-                return NotFound("Utilizatorul nu a fost găsit.");
-
-            var postariCount = await _context.Postari.CountAsync(p => p.UserId == user.Id);
-
-            var dto = new SafeUserDTO
-            {
-                id = user.Id,
-                nume = user.nume,
-                prenume = user.prenume,
-                username = user.UserName,
-                nrTelefon = null,
-                dataNasterii = user.dataNasterii,
-                linkPozaProfil = user.pozaProfil,
-                nrPostari = postariCount
-            };
-
-            return Ok(dto);
-        }
-
-        /*[Authorize]
-        [HttpGet("get-profile")]
-        public IActionResult GetProfile()
-        {
-            var username = User.Identity?.Name;
-            return Ok($"Hello, {username}");
-        }*/
-        [Authorize]
-        [HttpGet("get-profile")] // CEVA AICI NU E BINE, NU STIU DACA E DIN COD SAU SUNT EU PREA TUTA SI IN TESTARE PUN CEVA GRESIT.. POATE VA DATI VOI SEAMA, TOATA ZIUA AM STAT PE EL, MA DAU BATUTA!
-        public IActionResult GetProfile()
-        {
-            var username = User.Identity?.Name ?? "(null)";
-            return Ok($"Hello, {username}");
-        }
-
-        [Authorize]
-        [HttpPost("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] UserChangePassDTO dto)
-        {
-            var user = await _userManager.FindByNameAsync(dto.username);
-            if (user == null)
-            {
-                return NotFound("Utilizatorul nu a fost găsit.");
+                return BadRequest(e.Message);
             }
-
-            var isOldPasswordCorrect = await _userManager.CheckPasswordAsync(user, dto.parolaVeche);
-            if (!isOldPasswordCorrect)
-            {
-                return BadRequest("Parola veche este incorectă.");
-            }
-
-            var result = await _userManager.ChangePasswordAsync(user, dto.parolaVeche, dto.parolaNoua);
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
-            }
-
-            return Ok("Parola a fost schimbată cu succes.");
         }
-
+        [HttpGet("confirmEmail")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string username, string token)
+        {
+            try
+            {
+                await _userService.ConfirmEmail(username, token);
+                return Ok();
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+        }
+        [HttpPost("getUserDetails")]
+        [AllowAnonymous]
+        public async Task<IActionResult> getUserDetails(string username)
+        {
+            try
+            {
+                var result = await _userService.getUserDetails(username);
+                return Ok(result);
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+        }
+        [HttpPost("uploadPhoto")]
+        [AllowAnonymous]
+        public async Task<IActionResult> uploadPhoto([FromForm] RegisterDTO user)
+        {
+            try
+            {
+                var res = await _userService.uploadPhoto(user);
+                if (res == true)
+                    return Ok(res);
+                else
+                    return BadRequest(res);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        [HttpPost("sendConfirmationEmail")]
+        [AllowAnonymous]
+        public async Task<IActionResult> sendConfirmationEmail([FromForm] RegisterDTO user)
+        {
+            try
+            {
+                await _userService.sendConfirmationEmail(user);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        [HttpPost("forgotPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> forgotPassword(ForgotPasswordDTO user)
+        {
+            Console.WriteLine(user.Username);
+            Console.WriteLine(user.Email);
+            try
+            {
+                await _userService.forgotPassword(user);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        [HttpPost("resetPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> resetPassword(ResetPasswordDTO user)
+        {
+            try
+            {
+                await _userService.resetPassword(user);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        [HttpGet("getUser")]
+        [AllowAnonymous]
+        public async Task<IActionResult> getUser(string username)
+        {
+            try
+            {
+                var result = await _userService.getUserProfile(username);
+                return Ok(result);
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+        }
+        [HttpPost("uploadDocument")]
+        [AllowAnonymous]
+        public async Task<IActionResult> uploadDocument(string username, string document, IFormFile file)
+        {
+            try
+            {
+                await _userService.uploadDocument(username, document, file);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        [HttpGet("getById")]
+        [AllowAnonymous]
+        public async Task<IActionResult> getUserById(int id)
+        {
+            try
+            {
+                var result = await _userService.getUserById(id);
+                return Ok(result);
+            }
+            catch (NotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+        }
     }
 }

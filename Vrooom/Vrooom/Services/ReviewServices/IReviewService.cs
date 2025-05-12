@@ -3,13 +3,13 @@ namespace Vrooom.Services.ReviewServices
 {
     public interface IReviewService
     {
-        Task AddReview(ReviewDTO reviewDTO, int postareID, int userID);
+        Task AddReview(ReviewDTO reviewDTO, int postareId, int userId);
         Task DeleteReview(int id);
-        Task UpdateReview(ReviewDTO review, int id);    
-        Task <IEnumerable<ReviewDTO>> ReviewByRating (int rating);
-        Task<IEnumerable<ReviewDTO>> getReviewByDateAsc();
-        Task<IEnumerable<ReviewDTO>> getReviewByDateDesc();
-        Task<IEnumerable<ReviewDTO>> ReviewByRatingAsc();
-        Task<IEnumerable<ReviewDTO>> ReviewByRatingDesc();
+        Task UpdateReview(ReviewDTO reviewDTO, int id);
+        Task<IEnumerable<ReviewDTO>> ReviewByRating(int rating);
+        Task<IEnumerable<ReviewDTO>> GetReviewByDateAsc();
+        Task<IEnumerable<ReviewDTO>> GetReviewByDateDesc();
+        Task<IEnumerable<ReviewDTO>> GetReviewByRatingDesc();
+        Task<IEnumerable<ReviewDTO>> GetReviewByRatingAsc();
     }
 }
