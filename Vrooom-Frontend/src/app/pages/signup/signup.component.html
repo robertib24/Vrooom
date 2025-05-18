@@ -1,65 +1,158 @@
 <div class="landing-container">
   <div class="overlay">
+    <h2>Create Your Account</h2>
+    
     <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
       <div class="form">
-        <input
-          id="firstName"
-          type="string"
-          class="form-control"
-          formControlName="firstName"
-          placeholder="First name"
-        />
+        <div class="form-row">
+          <input
+            id="firstName"
+            type="text"
+            class="form-control"
+            formControlName="firstName"
+            placeholder="First name"
+          />
+          @if (f['firstName'].touched && f['firstName'].errors?.['required']) {
+            <div class="error-message">First name is required</div>
+          }
+        </div>
 
-        <input
-          id="lastName"
-          type="string"
-          class="form-control"
-          formControlName="lastName"
-          placeholder="Last name"
-        />
+        <div class="form-row">
+          <input
+            id="lastName"
+            type="text"
+            class="form-control"
+            formControlName="lastName"
+            placeholder="Last name"
+          />
+          @if (f['lastName'].touched && f['lastName'].errors?.['required']) {
+            <div class="error-message">Last name is required</div>
+          }
+        </div>
 
-        <input
-          id="email"
-          type="email"
-          class="form-control"
-          formControlName="email"
-          placeholder="Email"
-        />
+        <div class="form-row">
+          <input
+            id="username"
+            type="text"
+            class="form-control"
+            formControlName="username"
+            placeholder="Username"
+          />
+          @if (f['username'].touched && f['username'].errors?.['required']) {
+            <div class="error-message">Username is required</div>
+          }
+          @if (f['username'].touched && f['username'].errors?.['minlength']) {
+            <div class="error-message">Username must be at least 4 characters</div>
+          }
+        </div>
 
-        @if (f["email"].touched && f["email"].invalid) {
-          <div class="text-danger">
-            @if (f["email"].errors && f["email"].errors["required"]) {
-              <small>Email is required.</small>
-            }
-            @if (f["email"].errors && f["email"].errors["email"]) {
-              <small>Invalid email format.</small>
-            }
-          </div>
-        }
+        <div class="form-row">
+          <input
+            id="email"
+            type="email"
+            class="form-control"
+            formControlName="email"
+            placeholder="Email"
+          />
+          @if (f['email'].touched && f['email'].errors?.['required']) {
+            <div class="error-message">Email is required</div>
+          }
+          @if (f['email'].touched && f['email'].errors?.['emailInvalid']) {
+            <div class="error-message">Please enter a valid email</div>
+          }
+        </div>
 
-        <input
-          id="password"
-          type="password"
-          class="form-control"
-          placeholder="Password"
-          formControlName="password"
-        />
+        <div class="form-row">
+          <input
+            id="phone"
+            type="tel"
+            class="form-control"
+            formControlName="phone"
+            placeholder="Phone number"
+          />
+          @if (f['phone'].touched && f['phone'].errors?.['pattern']) {
+            <div class="error-message">Please enter a valid phone number (10 digits)</div>
+          }
+        </div>
 
-        @if (f["password"].touched && f["password"].invalid) {
-          <div class="text-danger">
-            @if (f["password"].errors && f["password"].errors["required"]) {
-              <small>Password is required.</small>
-            }
-            @if (f["password"].errors && f["password"].errors["minlength"]) {
-              <small>Min 6 characters.</small>
-            }
-          </div>
-        }
+        <div class="form-row">
+          <input
+            id="password"
+            type="password"
+            class="form-control"
+            formControlName="password"
+            placeholder="Password"
+          />
+          @if (f['password'].touched && f['password'].errors?.['required']) {
+            <div class="error-message">Password is required</div>
+          }
+          @if (f['password'].touched && f['password'].errors?.['parolaInvalida']) {
+            <div class="error-message">
+              Password must contain at least 8 characters, including an uppercase letter, 
+              a lowercase letter, a number, and a special character
+            </div>
+          }
+        </div>
+
+        <div class="form-row">
+          <input
+            id="confirmPassword"
+            type="password"
+            class="form-control"
+            formControlName="confirmPassword"
+            placeholder="Confirm password"
+          />
+          @if (f['confirmPassword'].touched && f['confirmPassword'].errors?.['required']) {
+            <div class="error-message">Please confirm your password</div>
+          }
+          @if (signupForm.errors?.['mismatch'] && f['confirmPassword'].touched) {
+            <div class="error-message">Passwords do not match</div>
+          }
+        </div>
+
+        <div class="form-row">
+          <input
+            id="birthDate"
+            type="date"
+            class="form-control"
+            formControlName="birthDate"
+            placeholder="Birth date"
+          />
+          @if (f['birthDate'].touched && f['birthDate'].errors?.['required']) {
+            <div class="error-message">Birth date is required</div>
+          }
+          @if (f['birthDate'].touched && f['birthDate'].errors?.['minor']) {
+            <div class="error-message">You must be at least 18 years old</div>
+          }
+        </div>
+
+        <div class="form-row file-input">
+          <label for="profilePicture" class="file-label">Profile Picture</label>
+          <input
+            id="profilePicture"
+            type="file"
+            class="form-control"
+            accept="image/png, image/jpeg, image/jpg"
+            (change)="onFileSelected($event)"
+          />
+          @if (f['profilePicture'].touched && f['profilePicture'].errors?.['extensieIncorecta']) {
+            <div class="error-message">Only JPG, JPEG, and PNG files are allowed</div>
+          }
+        </div>
       </div>
 
-      <button type="submit" mat-button class="custom-submit-button">
-        Sign up
+      @if (errorMessage) {
+        <div class="server-error">{{ errorMessage }}</div>
+      }
+
+      <button type="submit" mat-button class="custom-submit-button" [disabled]="loading">
+        {{ loading ? 'Creating Account...' : 'Sign Up' }}
       </button>
     </form>
+
+    <div class="login-link">
+      <p>Already have an account?</p>
+      <a routerLink="/login">Log in</a>
+    </div>
   </div>
 </div>

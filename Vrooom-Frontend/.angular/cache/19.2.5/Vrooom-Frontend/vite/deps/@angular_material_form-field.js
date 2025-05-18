@@ -1,4 +1,7 @@
 import {
+  MatFormFieldModule
+} from "./chunk-PBXTK2JP.js";
+import {
   MAT_ERROR,
   MAT_FORM_FIELD,
   MAT_FORM_FIELD_DEFAULT_OPTIONS,
@@ -14,49 +17,21 @@ import {
   getMatFormFieldDuplicatedHintError,
   getMatFormFieldMissingControlError,
   getMatFormFieldPlaceholderConflictError
-} from "./chunk-JJYNAVFL.js";
-import "./chunk-IYFJZ7RF.js";
+} from "./chunk-RPWGCHT3.js";
 import "./chunk-JXBCBRYI.js";
+import "./chunk-52IT5FRW.js";
 import "./chunk-42FJBLFI.js";
 import "./chunk-2O4WY5GE.js";
-import {
-  MatCommonModule,
-  ObserversModule
-} from "./chunk-5EA3ICV3.js";
-import "./chunk-JGT33FZN.js";
-import "./chunk-PRKBPGQA.js";
-import "./chunk-VJE4L4UK.js";
-import {
-  NgModule,
-  setClassMetadata,
-  ɵɵdefineInjector,
-  ɵɵdefineNgModule
-} from "./chunk-5SLB7SFU.js";
-import "./chunk-S35MAB2V.js";
-
-// node_modules/@angular/material/fesm2022/module-DAp_YJSv.mjs
-var MatFormFieldModule = class _MatFormFieldModule {
-  static ɵfac = function MatFormFieldModule_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _MatFormFieldModule)();
-  };
-  static ɵmod = ɵɵdefineNgModule({
-    type: _MatFormFieldModule,
-    imports: [MatCommonModule, ObserversModule, MatFormField, MatLabel, MatError, MatHint, MatPrefix, MatSuffix],
-    exports: [MatFormField, MatLabel, MatHint, MatError, MatPrefix, MatSuffix, MatCommonModule]
-  });
-  static ɵinj = ɵɵdefineInjector({
-    imports: [MatCommonModule, ObserversModule, MatCommonModule]
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(MatFormFieldModule, [{
-    type: NgModule,
-    args: [{
-      imports: [MatCommonModule, ObserversModule, MatFormField, MatLabel, MatError, MatHint, MatPrefix, MatSuffix],
-      exports: [MatFormField, MatLabel, MatHint, MatError, MatPrefix, MatSuffix, MatCommonModule]
-    }]
-  }], null, null);
-})();
+import "./chunk-U5EIRFP4.js";
+import "./chunk-XWFKI5ZP.js";
+import "./chunk-TJL5PQPP.js";
+import "./chunk-4RWJWCP5.js";
+import "./chunk-D6ZLATY2.js";
+import "./chunk-Z7RWVO2Z.js";
+import "./chunk-PEBH6BBU.js";
+import "./chunk-WPM5VTLQ.js";
+import "./chunk-4S3KYZTJ.js";
+import "./chunk-WDMUDEB6.js";
 
 // node_modules/@angular/material/fesm2022/form-field.mjs
 var matFormFieldAnimations = {

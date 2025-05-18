@@ -3,20 +3,17 @@
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <div class="mb-3">
         <input
-          id="email"
-          type="email"
+          id="username"
+          type="text"
           class="form-control"
-          formControlName="email"
-          placeholder="Email"
+          formControlName="username"
+          placeholder="Username"
         />
 
-        @if (f["email"].touched && f["email"].invalid) {
+        @if (f["username"].touched && f["username"].invalid) {
           <div class="text-danger">
-            @if (f["email"].errors && f["email"].errors["required"]) {
-              <small>Email is required.</small>
-            }
-            @if (f["email"].errors && f["email"].errors["email"]) {
-              <small>Invalid email format.</small>
+            @if (f["username"].errors && f["username"].errors["required"]) {
+              <small>Username is required.</small>
             }
           </div>
         }

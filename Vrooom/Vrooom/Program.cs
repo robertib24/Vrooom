@@ -139,6 +139,7 @@ var app = builder.Build();
 app.UseCors(builder =>
 {
     builder
+        .WithOrigins("http://localhost:4200")
         .AllowAnyMethod() // Permite orice metodă HTTP
         .AllowAnyHeader() // Permite orice antet
         .AllowAnyOrigin();

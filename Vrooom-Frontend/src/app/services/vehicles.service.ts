@@ -1,75 +1,112 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ApiService } from './api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SnackbarComponent } from '../components/snackbar/snackbar.component';
+
+export interface Vehicle {
+  id: number;
+  userId: number;
+  titlu: string;
+  descriere: string;
+  pret: number;
+  firma: string;
+  model: string;
+  kilometraj: number;
+  anFabricatie: number;
+  talon: string;
+  carteIdentitateMasina: string;
+  culoare: string;
+  asigurare: string;
+  locatie: string;
+  locatie_formala: string;
+  linkMaps: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class VehiclesService {
-  private _snackBar = inject(MatSnackBar);
+  constructor(private apiService: ApiService, private _snackBar: MatSnackBar) {}
 
-  getVehicles() {
-    return [
-      {
-        model: 'Tesla Model 3',
-        description: 'Electric, fast, and eco-friendly.',
-        pricePerDay: 89,
-        image:
-          'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      },
-      {
-        model: 'BMW 5 Series',
-        description: 'Luxury and comfort for business trips.',
-        pricePerDay: 109,
-        image:
-          'https://images.unsplash.com/photo-1650369446487-88da5c2ca105?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      },
-      {
-        model: 'Ford Mustang',
-        description: 'Classic power and iconic style.',
-        pricePerDay: 120,
-        image:
-          'https://images.unsplash.com/photo-1547744152-14d985cb937f?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      },
-      {
-        model: 'Ducati Panigale V4',
-        description: 'Wild young and free.',
-        pricePerDay: 189,
-        image:
-          'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      },
-      {
-        model: 'Ford Mustang',
-        description: 'Classic power and iconic style.',
-        pricePerDay: 120,
-        image:
-          'https://images.unsplash.com/photo-1547744152-14d985cb937f?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      },
-      {
-        model: 'BMW 5 Series',
-        description: 'Luxury and comfort for business trips.',
-        pricePerDay: 109,
-        image:
-          'https://images.unsplash.com/photo-1650369446487-88da5c2ca105?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      },
-      {
-        model: 'Ford Mustang',
-        description: 'Classic power and iconic style.',
-        pricePerDay: 120,
-        image:
-          'https://images.unsplash.com/photo-1547744152-14d985cb937f?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      },
-    ];
+  getVehicles(): Observable<Vehicle[]> {
+    return this.apiService.get<Vehicle[]>('Postare');
   }
 
-  bookVehicle(vehicle: any, slot: any) {
-    // booking logic
-    console.log('booking vehicle..');
-
-    this.openSnackBar();
+  getVehicleById(id: number): Observable<Vehicle> {
+    return this.apiService.get<Vehicle>(`Postare/carid/${id}`);
   }
 
-  openSnackBar() {
+  getVehiclesByUserId(userId: number): Observable<Vehicle[]> {
+    return this.apiService.get<Vehicle[]>(`Postare/userId?userId=${userId}`);
+  }
+
+  getVehiclesByPrice(minPrice: number, maxPrice: number): Observable<Vehicle[]> {
+    return this.apiService.get<Vehicle[]>(`Postare/pret/${minPrice}/${maxPrice}`);
+  }
+
+  getVehiclesByKm(minKm: number, maxKm: number): Observable<Vehicle[]> {
+    return this.apiService.get<Vehicle[]>(`Postare/km/${minKm}/${maxKm}`);
+  }
+
+  getVehiclesByYear(minYear: number, maxYear: number): Observable<Vehicle[]> {
+    return this.apiService.get<Vehicle[]>(`Postare/an/${minYear}/${maxYear}`);
+  }
+
+  getVehiclesByMake(make: string): Observable<Vehicle[]> {
+    return this.apiService.get<Vehicle[]>(`Postare/firma/${make}`);
+  }
+
+  getVehiclesByModel(model: string): Observable<Vehicle[]> {
+    return this.apiService.get<Vehicle[]>(`Postare/model/${model}`);
+  }
+
+  addVehicle(vehicle: any, images: File[]): Observable<number> {
+    const formData = new FormData();
+    
+    formData.append('userId', vehicle.userId.toString());
+    formData.append('titlu', vehicle.titlu);
+    formData.append('descriere', vehicle.descriere);
+    formData.append('pret', vehicle.pret.toString());
+    formData.append('firma', vehicle.firma);
+    formData.append('model', vehicle.model);
+    formData.append('kilometraj', vehicle.kilometraj.toString());
+    formData.append('anFabricatie', vehicle.anFabricatie.toString());
+    formData.append('culoare', vehicle.culoare);
+    formData.append('locatie', vehicle.locatie);
+
+    images.forEach((image, index) => {
+      formData.append(`imagini`, image);
+    });
+
+    if (vehicle.talonFile) {
+      formData.append('talon', vehicle.talonFile);
+    }
+    if (vehicle.carteIdentitateFile) {
+      formData.append('carteIdentitateMasina', vehicle.carteIdentitateFile);
+    }
+    if (vehicle.asigurareFile) {
+      formData.append('asigurare', vehicle.asigurareFile);
+    }
+
+    return this.apiService.postFormData<number>('Postare', formData);
+  }
+
+  deleteVehicle(id: number): Observable<any> {
+    return this.apiService.delete(`Postare/${id}`);
+  }
+
+  bookVehicle(vehicleId: number, slot: { start: Date, end: Date }): Observable<any> {
+    const bookingData = {
+      postareId: vehicleId,
+      dataStart: slot.start,
+      dataStop: slot.end,
+    };
+
+    return this.apiService.post('Chirie', bookingData);
+  }
+
+  showBookingSuccess() {
     this._snackBar.openFromComponent(SnackbarComponent, {
       verticalPosition: 'top',
       duration: 3000,

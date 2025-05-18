@@ -2,25 +2,48 @@
   <div class="vehicle-list-overlay">
     <h2>Available Vehicles</h2>
 
-    <div class="vehicle-grid">
-      <mat-card *ngFor="let vehicle of vehicles">
-        <img mat-card-image [src]="vehicle.image" alt="{{ vehicle.model }}" />
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading vehicles...</p>
+      </div>
+    } @else if (error) {
+      <div class="error-container">
+        <p>Error loading vehicles. Please try again later.</p>
+        <button mat-button class="custom-button" (click)="loadVehicles()">Retry</button>
+      </div>
+    } @else if (vehicles.length === 0) {
+      <div class="empty-container">
+        <p>No vehicles found.</p>
+      </div>
+    } @else {
+      <div class="vehicle-grid">
+        <mat-card *ngFor="let vehicle of vehicles">
+          <img mat-card-image 
+               [src]="'https://vrooom1224.s3.amazonaws.com/post' + vehicle.id + '/1.jpg'" 
+               alt="{{ vehicle.model }}" 
+               onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'"/>
 
-        <mat-card-title>{{ vehicle.model }}</mat-card-title>
+          <mat-card-title>{{ vehicle.firma }} {{ vehicle.model }}</mat-card-title>
 
-        <mat-card-content>
-          <p>{{ vehicle.description }}</p>
-          <p>
-            <strong>${{ vehicle.pricePerDay }}/day</strong>
-          </p>
-        </mat-card-content>
+          <mat-card-content>
+            <p>{{ vehicle.descriere | slice:0:100 }}{{ vehicle.descriere.length > 100 ? '...' : '' }}</p>
+            <p>
+              <strong>€{{ vehicle.pret }}/day</strong>
+            </p>
+            <p>Year: {{ vehicle.anFabricatie }}</p>
+            <p>Mileage: {{ vehicle.kilometraj }} km</p>
+            <p>Color: {{ vehicle.culoare }}</p>
+            <p>Location: {{ vehicle.locatie }}</p>
+          </mat-card-content>
 
-        <mat-card-actions>
-          <button mat-button class="custom-button" (click)="openDialog(vehicle)">
-            Book
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+          <mat-card-actions>
+            <button mat-button class="custom-button" (click)="openDialog(vehicle)">
+              Book
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    }
   </div>
 </div>
