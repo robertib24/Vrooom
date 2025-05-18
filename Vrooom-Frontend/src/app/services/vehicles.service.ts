@@ -1,9 +1,13 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { SnackbarComponent } from '../components/snackbar/snackbar.component';
 
 @Injectable({
   providedIn: 'root',
 })
 export class VehiclesService {
+  private _snackBar = inject(MatSnackBar);
+
   getVehicles() {
     return [
       {
@@ -56,5 +60,19 @@ export class VehiclesService {
           'https://images.unsplash.com/photo-1547744152-14d985cb937f?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
     ];
+  }
+
+  bookVehicle(vehicle: any, slot: any) {
+    // booking logic
+    console.log('booking vehicle..');
+
+    this.openSnackBar();
+  }
+
+  openSnackBar() {
+    this._snackBar.openFromComponent(SnackbarComponent, {
+      verticalPosition: 'top',
+      duration: 3000,
+    });
   }
 }

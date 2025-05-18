@@ -1,4 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
+@use "@angular/material" as mat;
 
 html,
 body {
@@ -20,4 +20,13 @@ body {
 .custom-button:hover {
   background-color: #ffb6c1;
   color: #1d3557;
+}
+
+:root {
+  @include mat.snack-bar-overrides(
+    (
+      container-color: #a8dadc,
+      supporting-text-color: black,
+    )
+  );
 }

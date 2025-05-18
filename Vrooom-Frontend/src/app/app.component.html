@@ -1,11 +1,21 @@
-<mat-toolbar class="custom-toolbar">
-  <span class="font-bold">Vrooom</span>
-  <span class="spacer"></span>
-  <button mat-button class="custom-button" routerLink="/">Home</button>
-  <button mat-button class="custom-button" routerLink="/about">About Us</button>
-  <button mat-button class="custom-button" routerLink="/vehicles">
-    Vehicles
-  </button>
-</mat-toolbar>
+@if (isAuthenticated()) {
+  <mat-toolbar class="custom-toolbar">
+    <span class="font-bold">Vrooom</span>
+    <span class="spacer"></span>
+    <button mat-button class="custom-button" routerLink="/landing">Home</button>
+    <button mat-button class="custom-button" routerLink="/about">
+      About Us
+    </button>
+    <button mat-button class="custom-button" routerLink="/vehicles">
+      Vehicles
+    </button>
+    <mat-icon
+      aria-hidden="false"
+      aria-label="Example home icon"
+      fontIcon="logout"
+      (click)="signout()"
+    ></mat-icon>
+  </mat-toolbar>
+}
 
 <router-outlet></router-outlet>

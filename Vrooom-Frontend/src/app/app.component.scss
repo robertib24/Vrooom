@@ -6,3 +6,9 @@
   background: linear-gradient(to right, #a8dadc, #ffb6c1);
   color: #1d3557;
 }
+
+mat-icon {
+  &:hover {
+    cursor: pointer;
+  }
+}

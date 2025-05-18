@@ -16,7 +16,9 @@
         </mat-card-content>
 
         <mat-card-actions>
-          <button mat-button class="custom-button">Rent Now</button>
+          <button mat-button class="custom-button" (click)="openDialog(vehicle)">
+            Book
+          </button>
         </mat-card-actions>
       </mat-card>
     </div>
