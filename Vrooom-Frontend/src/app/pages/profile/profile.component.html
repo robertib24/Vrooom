@@ -1,0 +1,371 @@
+<div class="profile-container">
+  @if (loading) {
+    <div class="loading-container" @fadeIn>
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading your profile...</p>
+    </div>
+  } @else {
+    <!-- Profile Header -->
+    <div class="profile-header" @fadeIn>
+      <div class="profile-avatar">
+        <img [src]="user?.linkPozaProfil || 'assets/images/default-profile.jpg'" [alt]="user?.nume">
+        <div class="avatar-overlay" (click)="document.getElementById('profileImageInput').click()">
+          <mat-icon>photo_camera</mat-icon>
+        </div>
+        <input 
+          type="file" 
+          id="profileImageInput" 
+          class="file-upload" 
+          accept="image/*" 
+          (change)="onProfileImageSelected($event)">
+      </div>
+      
+      <div class="profile-info">
+        <h1 class="profile-name">{{ user?.nume }} {{ user?.prenume }}</h1>
+        <p class="profile-role">{{ user?.username }} • {{ user?.puncteFidelitate }} Loyalty Points</p>
+        
+        <div class="profile-meta">
+          <div class="meta-item">
+            <mat-icon>email</mat-icon>
+            <span>{{ user?.email }}</span>
+          </div>
+          <div class="meta-item">
+            <mat-icon>phone</mat-icon>
+            <span>{{ user?.nrTelefon || 'No phone number' }}</span>
+          </div>
+          <div class="meta-item">
+            <mat-icon>cake</mat-icon>
+            <span>{{ formatDate(user?.dataNasterii) }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="verification-badges">
+        <div class="badge" [class.verified]="user?.carteIdentitate" [matTooltip]="user?.carteIdentitate ? 'ID Card Verified' : 'Upload ID Card'">
+          <mat-icon class="badge-icon" [class.verified]="user?.carteIdentitate">
+            {{ user?.carteIdentitate ? 'check_circle' : 'highlight_off' }}
+          </mat-icon>
+          <span class="badge-label">ID Card</span>
+        </div>
+        <div class="badge" [class.verified]="user?.permis" [matTooltip]="user?.permis ? 'Driving License Verified' : 'Upload Driving License'">
+          <mat-icon class="badge-icon" [class.verified]="user?.permis">
+            {{ user?.permis ? 'check_circle' : 'highlight_off' }}
+          </mat-icon>
+          <span class="badge-label">Driving License</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Profile Content -->
+    <div class="profile-content" @fadeIn>
+      <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" [(selectedIndex)]="selectedTab">
+        <mat-tab label="Profile">
+          <div class="tab-card">
+            <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+              <div class="profile-form">
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>Username</mat-label>
+                  <input matInput formControlName="username">
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>Email</mat-label>
+                  <input matInput formControlName="email">
+                  @if (profileForm.get('email').hasError('emailInvalid') && profileForm.get('email').touched) {
+                    <mat-error>Please enter a valid email address</mat-error>
+                  }
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>First Name</mat-label>
+                  <input matInput formControlName="firstName">
+                  @if (profileForm.get('firstName').hasError('required') && profileForm.get('firstName').touched) {
+                    <mat-error>First name is required</mat-error>
+                  }
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>Last Name</mat-label>
+                  <input matInput formControlName="lastName">
+                  @if (profileForm.get('lastName').hasError('required') && profileForm.get('lastName').touched) {
+                    <mat-error>Last name is required</mat-error>
+                  }
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>Phone Number</mat-label>
+                  <input matInput formControlName="phone">
+                  @if (profileForm.get('phone').hasError('pattern') && profileForm.get('phone').touched) {
+                    <mat-error>Please enter a valid 10-digit phone number</mat-error>
+                  }
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>Birth Date</mat-label>
+                  <input matInput [matDatepicker]="picker" formControlName="birthDate">
+                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                  @if (profileForm.get('birthDate').hasError('required') && profileForm.get('birthDate').touched) {
+                    <mat-error>Birth date is required</mat-error>
+                  }
+                </mat-form-field>
+                
+                <div class="form-actions">
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    type="submit"
+                    [disabled]="profileForm.invalid || profileForm.pristine">
+                    Update Profile
+                  </button>
+                </div>
+              </div>
+            </form>
+            
+            <mat-divider style="margin: 32px 0;"></mat-divider>
+            
+            <!-- Documents Section -->
+            <div class="documents-section">
+              <h3 class="section-title">Identity Verification</h3>
+              <p>To fully utilize our platform, please verify your identity by uploading the following documents:</p>
+              
+              <div class="documents-grid">
+                <div class="document-card">
+                  <div class="card-header">
+                    <mat-icon>credit_card</mat-icon>
+                    <h4 class="header-title">ID Card</h4>
+                  </div>
+                  
+                  <div 
+                    class="document-status" 
+                    [class.verified]="user?.carteIdentitate" 
+                    [class.not-verified]="!user?.carteIdentitate">
+                    <mat-icon>{{ user?.carteIdentitate ? 'check_circle' : 'error' }}</mat-icon>
+                    <span>{{ user?.carteIdentitate ? 'Verified' : 'Not Verified' }}</span>
+                  </div>
+                  
+                  <div class="document-upload">
+                    <input 
+                      type="file" 
+                      id="idCardInput" 
+                      class="file-upload" 
+                      accept="image/*" 
+                      (change)="onIdCardSelected($event)">
+                    
+                    <button 
+                      mat-stroked-button 
+                      color="primary" 
+                      class="upload-button"
+                      (click)="document.getElementById('idCardInput').click()">
+                      <mat-icon>upload_file</mat-icon>
+                      {{ user?.carteIdentitate ? 'Update' : 'Upload' }} ID Card
+                    </button>
+                    
+                    @if (idCardFile) {
+                      <button 
+                        mat-icon-button 
+                        color="primary" 
+                        [disabled]="uploadingIdCard"
+                        (click)="uploadIdCard()">
+                        @if (uploadingIdCard) {
+                          <mat-spinner diameter="20"></mat-spinner>
+                        } @else {
+                          <mat-icon>check</mat-icon>
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+                
+                <div class="document-card">
+                  <div class="card-header">
+                    <mat-icon>directions_car</mat-icon>
+                    <h4 class="header-title">Driving License</h4>
+                  </div>
+                  
+                  <div 
+                    class="document-status" 
+                    [class.verified]="user?.permis" 
+                    [class.not-verified]="!user?.permis">
+                    <mat-icon>{{ user?.permis ? 'check_circle' : 'error' }}</mat-icon>
+                    <span>{{ user?.permis ? 'Verified' : 'Not Verified' }}</span>
+                  </div>
+                  
+                  <div class="document-upload">
+                    <input 
+                      type="file" 
+                      id="licenseInput" 
+                      class="file-upload" 
+                      accept="image/*" 
+                      (change)="onLicenseSelected($event)">
+                    
+                    <button 
+                      mat-stroked-button 
+                      color="primary" 
+                      class="upload-button"
+                      (click)="document.getElementById('licenseInput').click()">
+                      <mat-icon>upload_file</mat-icon>
+                      {{ user?.permis ? 'Update' : 'Upload' }} Driving License
+                    </button>
+                    
+                    @if (drivingLicenseFile) {
+                      <button 
+                        mat-icon-button 
+                        color="primary" 
+                        [disabled]="uploadingLicense"
+                        (click)="uploadDrivingLicense()">
+                        @if (uploadingLicense) {
+                          <mat-spinner diameter="20"></mat-spinner>
+                        } @else {
+                          <mat-icon>check</mat-icon>
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Change Password Section -->
+            <div class="password-section">
+              <h3 class="section-title">Change Password</h3>
+              
+              <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+                <div class="password-form">
+                  <mat-form-field appearance="outline" class="form-field">
+                    <mat-label>Current Password</mat-label>
+                    <input matInput type="password" formControlName="currentPassword">
+                    @if (passwordForm.get('currentPassword').hasError('required') && passwordForm.get('currentPassword').touched) {
+                      <mat-error>Current password is required</mat-error>
+                    }
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline" class="form-field">
+                    <mat-label>New Password</mat-label>
+                    <input matInput type="password" formControlName="newPassword">
+                    @if (passwordForm.get('newPassword').hasError('required') && passwordForm.get('newPassword').touched) {
+                      <mat-error>New password is required</mat-error>
+                    }
+                    @if (passwordForm.get('newPassword').hasError('minlength') && passwordForm.get('newPassword').touched) {
+                      <mat-error>Password must be at least 8 characters</mat-error>
+                    }
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline" class="form-field">
+                    <mat-label>Confirm New Password</mat-label>
+                    <input matInput type="password" formControlName="confirmPassword">
+                    @if (passwordForm.get('confirmPassword').hasError('required') && passwordForm.get('confirmPassword').touched) {
+                      <mat-error>Please confirm your new password</mat-error>
+                    }
+                    @if (passwordForm.hasError('notMatching') && passwordForm.get('confirmPassword').touched) {
+                      <mat-error>Passwords do not match</mat-error>
+                    }
+                  </mat-form-field>
+                  
+                  <div class="form-actions">
+                    <button 
+                      mat-raised-button 
+                      color="primary" 
+                      type="submit"
+                      [disabled]="passwordForm.invalid">
+                      Change Password
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="My Bookings">
+          <div class="tab-card bookings-tab">
+            @if (userBookings.length === 0) {
+              <div class="empty-message" @slideIn>
+                <mat-icon>book_online</mat-icon>
+                <h3>No Bookings Yet</h3>
+                <p>You haven't made any bookings yet. Start exploring vehicles now!</p>
+                <button mat-raised-button color="primary" routerLink="/vehicles">Browse Vehicles</button>
+              </div>
+            } @else {
+              <div class="bookings-list">
+                @for (booking of userBookings; track booking.id) {
+                  <div class="booking-card" @slideIn>
+                    <div class="booking-header">
+                      <div class="booking-id">Booking #{{ booking.id }}</div>
+                      <div class="booking-status {{ booking.status.toLowerCase() }}">{{ booking.status }}</div>
+                    </div>
+                    
+                    <div class="booking-content">
+                      <div class="booking-image">
+                        <img 
+                          [src]="booking.vehicle.image" 
+                          [alt]="booking.vehicle.make + ' ' + booking.vehicle.model"
+                          onerror="this.onerror=null; this.src='assets/images/car-placeholder.jpg';">
+                      </div>
+                      
+                      <div class="booking-details">
+                        <h3 class="booking-vehicle">{{ booking.vehicle.make }} {{ booking.vehicle.model }}</h3>
+                        <div class="booking-dates">
+                          <mat-icon>date_range</mat-icon>
+                          <span>{{ formatDate(booking.startDate) }} - {{ formatDate(booking.endDate) }}</span>
+                        </div>
+                        <div class="booking-price">Total: €{{ booking.totalPrice }}</div>
+                      </div>
+                      
+                      <div class="booking-actions">
+                        <button 
+                          mat-stroked-button 
+                          color="primary"
+                          (click)="navigateToVehicle(booking.vehicle.id)">
+                          View Vehicle
+                        </button>
+                        
+                        @if (booking.status === 'Upcoming') {
+                          <button mat-stroked-button color="warn">Cancel</button>
+                        } @else if (booking.status === 'Completed') {
+                          <button mat-stroked-button color="primary">Review</button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="My Vehicles">
+          <div class="tab-card vehicles-tab">
+            <div class="section-header">
+              <h3>My Listed Vehicles</h3>
+              <button mat-raised-button color="primary" (click)="addVehicle()">
+                <mat-icon>add</mat-icon>
+                Add Vehicle
+              </button>
+            </div>
+            
+            @if (userVehicles.length === 0) {
+              <div class="empty-message" @slideIn>
+                <mat-icon>directions_car</mat-icon>
+                <h3>No Vehicles Listed</h3>
+                <p>You haven't listed any vehicles yet. Start earning by sharing your vehicle now!</p>
+                <button mat-raised-button color="primary" (click)="addVehicle()">Add Vehicle</button>
+              </div>
+            } @else {
+              <div class="vehicles-grid">
+                @for (vehicle of userVehicles; track vehicle.id) {
+                  <app-vehicle-card 
+                    [vehicle]="vehicle"
+                    [showActions]="false"
+                    (click)="navigateToVehicle(vehicle.id)"
+                    @slideIn>
+                  </app-vehicle-card>
+                }
+              </div>
+            }
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  }
+</div>

@@ -1,0 +1,577 @@
+.profile-container {
+  min-height: calc(100vh - 64px);
+  background-color: #f8f9fa;
+  padding: 24px;
+  box-sizing: border-box;
+  
+  @media (max-width: 960px) {
+    padding: 16px;
+  }
+}
+
+// Loading container
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  
+  p {
+    margin-top: 16px;
+    font-size: 16px;
+    color: #666;
+  }
+}
+
+// Profile header
+.profile-header {
+  background: linear-gradient(135deg, #3c82bd, #2e6fae);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  margin-bottom: 24px;
+  text-align: center;
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    text-align: left;
+  }
+  
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid white;
+    margin-bottom: 16px;
+    position: relative;
+    
+    @media (min-width: 768px) {
+      margin-right: 32px;
+      margin-bottom: 0;
+    }
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .avatar-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      cursor: pointer;
+      
+      &:hover {
+        opacity: 1;
+      }
+      
+      mat-icon {
+        font-size: 24px;
+        color: white;
+      }
+    }
+  }
+  
+  .profile-info {
+    flex: 1;
+    
+    .profile-name {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+    
+    .profile-role {
+      font-size: 16px;
+      opacity: 0.9;
+      margin: 0 0 16px 0;
+    }
+    
+    .profile-meta {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      
+      @media (min-width: 768px) {
+        justify-content: flex-start;
+      }
+      
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+  }
+  
+  .verification-badges {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    
+    @media (min-width: 768px) {
+      margin-left: auto;
+    }
+    
+    .badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      width: 100px;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-5px);
+      }
+      
+      &.verified {
+        background-color: rgba(76, 175, 80, 0.2);
+      }
+      
+      .badge-icon {
+        font-size: 24px;
+        color: white;
+        
+        &.verified {
+          color: #4caf50;
+        }
+      }
+      
+      .badge-label {
+        font-size: 12px;
+        text-align: center;
+      }
+    }
+  }
+}
+
+// Profile content
+.profile-content {
+  ::ng-deep .mat-mdc-tab-header {
+    background-color: white;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 0 16px;
+  }
+  
+  ::ng-deep .mat-mdc-tab-body-content {
+    padding: 24px;
+  }
+  
+  .tab-card {
+    background-color: white;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    min-height: 400px;
+  }
+  
+  // Profile form
+  .profile-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .form-field {
+      width: 100%;
+    }
+    
+    .form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+  }
+  
+  // Documents section
+  .documents-section {
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      color: #333;
+    }
+    
+    .documents-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      
+      @media (min-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .document-card {
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 16px;
+        
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 16px;
+          
+          mat-icon {
+            font-size: 24px;
+            color: #3c82bd;
+          }
+          
+          .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: #333;
+          }
+        }
+        
+        .document-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 16px;
+          font-size: 14px;
+          
+          &.verified {
+            color: #4caf50;
+          }
+          
+          &.not-verified {
+            color: #f44336;
+          }
+          
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+        
+        .document-upload {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          
+          input[type="file"] {
+            display: none;
+          }
+          
+          .upload-button {
+            flex: 1;
+          }
+        }
+      }
+    }
+  }
+  
+  // Change password section
+  .password-section {
+    margin-top: 32px;
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      color: #333;
+    }
+    
+    .password-form {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      
+      @media (min-width: 768px) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      .form-field {
+        width: 100%;
+      }
+      
+      .form-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 16px;
+      }
+    }
+  }
+  
+  // Bookings tab
+  .bookings-tab {
+    .empty-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      text-align: center;
+      
+      mat-icon {
+        font-size: 48px;
+        color: #ccc;
+        margin-bottom: 16px;
+      }
+      
+      h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        color: #333;
+      }
+      
+      p {
+        font-size: 14px;
+        color: #666;
+        margin: 0 0 16px 0;
+      }
+    }
+    
+    .bookings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      
+      .booking-card {
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        overflow: hidden;
+        
+        .booking-header {
+          padding: 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: #f9f9f9;
+          border-bottom: 1px solid #f0f0f0;
+          
+          .booking-id {
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+          }
+          
+          .booking-status {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 16px;
+            
+            &.upcoming {
+              background-color: rgba(33, 150, 243, 0.1);
+              color: #2196f3;
+            }
+            
+            &.active {
+              background-color: rgba(76, 175, 80, 0.1);
+              color: #4caf50;
+            }
+            
+            &.completed {
+              background-color: rgba(0, 0, 0, 0.1);
+              color: #333;
+            }
+            
+            &.cancelled {
+              background-color: rgba(244, 67, 54, 0.1);
+              color: #f44336;
+            }
+          }
+        }
+        
+        .booking-content {
+          display: flex;
+          padding: 16px;
+          
+          @media (max-width: 600px) {
+            flex-direction: column;
+          }
+          
+          .booking-image {
+            width: 120px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            
+            @media (max-width: 600px) {
+              width: 100%;
+              height: 160px;
+              margin-bottom: 16px;
+            }
+            
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+          }
+          
+          .booking-details {
+            flex: 1;
+            padding-left: 16px;
+            
+            @media (max-width: 600px) {
+              padding-left: 0;
+            }
+            
+            .booking-vehicle {
+              font-size: 18px;
+              font-weight: 600;
+              margin: 0 0 8px 0;
+              color: #333;
+            }
+            
+            .booking-dates {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 8px;
+              font-size: 14px;
+              color: #666;
+              
+              mat-icon {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
+              }
+            }
+            
+            .booking-price {
+              font-size: 16px;
+              font-weight: 600;
+              color: #3c82bd;
+            }
+          }
+          
+          .booking-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-left: 16px;
+            
+            @media (max-width: 600px) {
+              flex-direction: row;
+              margin-left: 0;
+              margin-top: 16px;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Vehicles tab
+  .vehicles-tab {
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      
+      h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        color: #333;
+      }
+    }
+    
+    .empty-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      text-align: center;
+      
+      mat-icon {
+        font-size: 48px;
+        color: #ccc;
+        margin-bottom: 16px;
+      }
+      
+      h3 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        color: #333;
+      }
+      
+      p {
+        font-size: 14px;
+        color: #666;
+        margin: 0 0 16px 0;
+      }
+    }
+    
+    .vehicles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+// File upload styling
+.file-upload {
+  display: none;
+}
+
+.upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+// Animation classes
+.slide-in-left {
+  animation: slideInLeft 0.4s ease-out forwards;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

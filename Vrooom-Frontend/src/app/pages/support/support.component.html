@@ -1,0 +1,211 @@
+<div class="support-container">
+  <!-- Page Header -->
+  <div class="page-header" @fadeIn>
+    <h1>Help Center</h1>
+    <p>Find answers to common questions or submit a support ticket</p>
+  </div>
+  
+  @if (loading) {
+    <div class="loading-container" @fadeIn>
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading help center...</p>
+    </div>
+  } @else {
+    <div class="support-content">
+      <!-- Left Column: FAQ -->
+      <div class="faq-section" @fadeIn>
+        <div class="faq-header">
+          <h2>Frequently Asked Questions</h2>
+          <p>Find answers to the most common questions about our platform</p>
+        </div>
+        
+        <div class="faq-content">
+          <!-- FAQ Categories -->
+          <div class="faq-categories">
+            @for (section of faqSections; track section.title) {
+              <div 
+                class="category-chip" 
+                [class.active]="section.expanded"
+                (click)="section.expanded = true; faqSections.filter(s => s !== section).forEach(s => s.expanded = false)">
+                {{ section.title }}
+              </div>
+            }
+          </div>
+          
+          <!-- FAQ Expansion Panels -->
+          <div class="faq-expansion-panels">
+            @for (section of faqSections; track section.title) {
+              @if (section.expanded) {
+                <mat-accordion>
+                  @for (item of section.items; track item.question) {
+                    <mat-expansion-panel @slideIn>
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          {{ item.question }}
+                        </mat-panel-title>
+                      </mat-expansion-panel-header>
+                      <p>{{ item.answer }}</p>
+                    </mat-expansion-panel>
+                  }
+                </mat-accordion>
+              }
+            }
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Submit Ticket -->
+      <div class="submit-ticket" @fadeIn>
+        <div class="ticket-header">
+          <h2>Support Tickets</h2>
+          <p>Can't find what you're looking for? Submit a support ticket</p>
+        </div>
+        
+        <div class="ticket-form">
+          <form [formGroup]="supportForm" (ngSubmit)="submitTicket()">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Subject</mat-label>
+              <input matInput formControlName="title" placeholder="Brief description of your issue">
+              @if (supportForm.get('title').hasError('required') && supportForm.get('title').touched) {
+                <mat-error>Subject is required</mat-error>
+              }
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Message</mat-label>
+              <textarea 
+                matInput 
+                formControlName="comment" 
+                placeholder="Describe your issue in detail"
+                rows="5">
+              </textarea>
+              @if (supportForm.get('comment').hasError('required') && supportForm.get('comment').touched) {
+                <mat-error>Message is required</mat-error>
+              }
+            </mat-form-field>
+            
+            <div class="form-actions">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                type="submit"
+                [disabled]="supportForm.invalid || submitting">
+                @if (submitting) {
+                  <mat-spinner diameter="20" style="margin-right: 8px;"></mat-spinner>
+                  Submitting...
+                } @else {
+                  Submit Ticket
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        <mat-divider></mat-divider>
+        
+        <div class="ticket-list">
+          <h3 class="list-header">
+            @if (isAdmin) {
+              All Support Tickets
+            } @else {
+              Your Tickets
+            }
+          </h3>
+          
+          @if (userTickets.length === 0) {
+            <p>No tickets found. Submit a new ticket above.</p>
+          } @else {
+            @for (ticket of userTickets; track ticket.supportId) {
+              <div class="ticket-item" (click)="viewTicket(ticket)" @slideIn>
+                <div class="ticket-header">
+                  <h4 class="ticket-title">{{ ticket.titlu }}</h4>
+                  <span class="ticket-status {{ getStatusClass(ticket) }}">{{ getStatusText(ticket) }}</span>
+                </div>
+                <p class="ticket-content">{{ ticket.comentariu }}</p>
+                <div class="ticket-meta">
+                  <div class="ticket-date">
+                    <mat-icon>schedule</mat-icon>
+                    <span>{{ formatDate(new Date()) }}</span>
+                  </div>
+                  <span class="ticket-id">#{{ ticket.supportId }}</span>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+    
+    <!-- Ticket Dialog -->
+    @if (selectedTicket) {
+      <div class="ticket-dialog" @fadeIn>
+        <div class="dialog-content">
+          <div class="dialog-header">
+            <div class="header-title">
+              <h3>{{ selectedTicket.titlu }}</h3>
+              <div class="header-meta">
+                <span class="ticket-id">Ticket #{{ selectedTicket.supportId }}</span>
+                <span class="ticket-status {{ getStatusClass(selectedTicket) }}">{{ getStatusText(selectedTicket) }}</span>
+              </div>
+            </div>
+            <button class="close-button" (click)="closeTicket()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          
+          <div class="dialog-body">
+            <div class="thread-container">
+              @for (message of selectedTicketThread; track message.dummyId) {
+                <div class="message {{ message.userId === userId ? 'user' : 'admin' }}">
+                  <div class="avatar">
+                    {{ message.userId === userId ? username[0].toUpperCase() : 'A' }}
+                  </div>
+                  <div class="message-body">
+                    <div class="message-content">
+                      {{ message.comentariu }}
+                    </div>
+                    <div class="message-meta">
+                      <span>{{ formatDate(new Date()) }}</span>
+                      <span>{{ message.userId === userId ? 'You' : 'Support Team' }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+          
+          <div class="dialog-footer">
+            <form [formGroup]="replyForm" (ngSubmit)="replyToTicket()">
+              <div class="reply-form">
+                <mat-form-field appearance="outline" class="form-field">
+                  <mat-label>Reply</mat-label>
+                  <textarea 
+                    matInput 
+                    formControlName="comment" 
+                    placeholder="Type your reply here..."
+                    rows="3">
+                  </textarea>
+                  @if (replyForm.get('comment').hasError('required') && replyForm.get('comment').touched) {
+                    <mat-error>Reply is required</mat-error>
+                  }
+                </mat-form-field>
+                
+                <button 
+                  mat-raised-button 
+                  color="primary" 
+                  type="submit"
+                  [disabled]="replyForm.invalid || submitting">
+                  @if (submitting) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    Send
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

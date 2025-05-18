@@ -1,21 +1,106 @@
-@if (isAuthenticated()) {
-  <mat-toolbar class="custom-toolbar">
-    <span class="font-bold">Vrooom</span>
-    <span class="spacer"></span>
-    <button mat-button class="custom-button" routerLink="/landing">Home</button>
-    <button mat-button class="custom-button" routerLink="/about">
-      About Us
-    </button>
-    <button mat-button class="custom-button" routerLink="/vehicles">
-      Vehicles
-    </button>
-    <mat-icon
-      aria-hidden="false"
-      aria-label="Example home icon"
-      fontIcon="logout"
-      (click)="signout()"
-    ></mat-icon>
-  </mat-toolbar>
-}
+<div class="app-container">
+  <!-- Main Toolbar -->
+  <mat-toolbar class="vrooom-toolbar">
+    <div class="toolbar-logo" (click)="navigateTo('/dashboard')">
+      <img src="assets/images/vrooom-logo.png" alt="Vrooom logo" />
+      <span class="toolbar-brand">Vrooom</span>
+    </div>
 
-<router-outlet></router-outlet>
+    <div class="toolbar-actions">
+      @if (isAuthenticated()) {
+        <div class="action-button" [matTooltip]="'Support Tickets'" (click)="navigateTo('/support')">
+          <mat-icon [matBadge]="supportTicketsCount" [matBadgeHidden]="supportTicketsCount === 0" matBadgeColor="accent">support_agent</mat-icon>
+        </div>
+        
+        <div class="action-button" [matTooltip]="'Menu'" (click)="toggleSidenav()">
+          <mat-icon>menu</mat-icon>
+        </div>
+        
+        <div 
+          class="user-avatar" 
+          [matMenuTriggerFor]="userMenu"
+          [matTooltip]="username">
+          <img [src]="userProfileImage || 'assets/images/default-profile.jpg'" alt="Profile" />
+        </div>
+        
+        <mat-menu #userMenu="matMenu" xPosition="before" class="user-menu">
+          <div class="menu-header">
+            <div class="user-avatar">
+              <img [src]="userProfileImage || 'assets/images/default-profile.jpg'" alt="Profile" />
+            </div>
+            <div class="user-info">
+              <div class="username">{{ username }}</div>
+              <div class="user-role">{{ userRole }}</div>
+            </div>
+          </div>
+          <button mat-menu-item (click)="navigateTo('/profile')">
+            <mat-icon>account_circle</mat-icon>
+            <span>My Profile</span>
+          </button>
+          <button mat-menu-item (click)="navigateTo('/settings')">
+            <mat-icon>settings</mat-icon>
+            <span>Settings</span>
+          </button>
+          <button mat-menu-item (click)="signout()">
+            <mat-icon>logout</mat-icon>
+            <span>Sign Out</span>
+          </button>
+        </mat-menu>
+      }
+    </div>
+  </mat-toolbar>
+
+  <!-- Main Content with Sidenav -->
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav
+      #sidenav
+      class="sidenav"
+      [mode]="'over'"
+      [opened]="isSidenavOpen"
+      (closedStart)="isSidenavOpen = false">
+      
+      @if (isAuthenticated()) {
+        <div class="sidenav-header" @fadeIn>
+          <div class="user-avatar">
+            <img [src]="userProfileImage || 'assets/images/default-profile.jpg'" alt="Profile" />
+          </div>
+          <div class="user-info">
+            <div class="username">{{ username }}</div>
+            <div class="user-role">{{ userRole }}</div>
+          </div>
+        </div>
+      
+        <div class="nav-links" @fadeIn>
+          @for (link of navLinks; track link.path) {
+            <div 
+              class="nav-item" 
+              [class.active]="router.url === link.path"
+              (click)="navigateTo(link.path)"
+              @fadeSlideInOut>
+              <mat-icon class="nav-icon">{{ link.icon }}</mat-icon>
+              <span class="nav-label">{{ link.label }}</span>
+              @if (link.path === '/support' && supportTicketsCount > 0) {
+                <span class="nav-badge">
+                  <mat-icon [matBadge]="supportTicketsCount" matBadgeColor="accent">
+                    notifications
+                  </mat-icon>
+                </span>
+              }
+            </div>
+          }
+        </div>
+      
+        <div class="sidenav-footer" @fadeIn>
+          <button mat-flat-button color="warn" (click)="signout()">
+            <mat-icon>exit_to_app</mat-icon>
+            Sign Out
+          </button>
+        </div>
+      }
+    </mat-sidenav>
+    
+    <mat-sidenav-content class="sidenav-content">
+      <router-outlet></router-outlet>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>
