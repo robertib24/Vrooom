@@ -1,239 +1,49 @@
-<div class="vehicles-container">
-  <!-- Page Header -->
-  <div class="page-header" @fadeIn>
-    <h1>Find Your Perfect Vehicle</h1>
-    <p>Browse through our extensive collection of quality vehicles for rent</p>
-  </div>
+<div class="vehicle-list-container">
+  <div class="vehicle-list-overlay">
+    <h2>Available Vehicles</h2>
 
-  <!-- AI Search Section -->
-  <div class="ai-search-section" @fadeIn>
-    <h2><mat-icon>auto_awesome</mat-icon> Smart Vehicle Search</h2>
-    <p>Describe what you're looking for in natural language, and our AI will find the perfect match</p>
-    
-    <div class="ai-search-form">
-      <input 
-        type="text" 
-        class="ai-search-input" 
-        placeholder="Example: 'I need a luxurious car for a business trip'" 
-        [(ngModel)]="aiSearchQuery" 
-        (keyup.enter)="onAISearch()">
-      
-      <button 
-        class="ai-search-button" 
-        (click)="onAISearch()" 
-        [disabled]="!aiSearchQuery || loading">
-        <mat-icon>search</mat-icon> Search
-      </button>
-      
-      @if (aiSearchQuery) {
-        <button class="ai-clear-button" (click)="clearAISearch()" [disabled]="loading">
-          <mat-icon>close</mat-icon>
-        </button>
-      }
-    </div>
-    
-    <div class="ai-search-examples">
-      <div class="example-chip" (click)="aiSearchQuery = 'Affordable car with good fuel economy'">Affordable car with good fuel economy</div>
-      <div class="example-chip" (click)="aiSearchQuery = 'Luxury SUV with leather seats'">Luxury SUV with leather seats</div>
-      <div class="example-chip" (click)="aiSearchQuery = 'Sports car under 200€ per day'">Sports car under 200€ per day</div>
-      <div class="example-chip" (click)="aiSearchQuery = 'Family car with 7 seats'">Family car with 7 seats</div>
-    </div>
-  </div>
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading vehicles...</p>
+      </div>
+    } @else if (error) {
+      <div class="error-container">
+        <p>Error loading vehicles. Please try again later.</p>
+        <button mat-button class="custom-button" (click)="loadVehicles()">Retry</button>
+      </div>
+    } @else if (vehicles.length === 0) {
+      <div class="empty-container">
+        <p>No vehicles found.</p>
+      </div>
+    } @else {
+      <div class="vehicle-grid">
+        <mat-card *ngFor="let vehicle of vehicles">
+          <img mat-card-image 
+               [src]="'https://vrooom1224.s3.amazonaws.com/post' + vehicle.id + '/1.jpg'" 
+               alt="{{ vehicle.model }}" 
+               onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'"/>
 
-  <!-- Main Content -->
-  <div class="vehicles-content">
-    <!-- Filters Column -->
-    @if (showFilters) {
-      <div class="filters-column" @fadeIn>
-        <div class="filters-card">
-          <div class="filters-header">
-            <h3>Filters {{ filtersApplied ? '(' + filterCount + ')' : '' }}</h3>
-            <div class="filter-actions">
-              <button 
-                mat-icon-button 
-                color="primary" 
-                [disabled]="!filtersApplied" 
-                (click)="clearFilters()" 
-                matTooltip="Clear filters">
-                <mat-icon>clear_all</mat-icon>
-              </button>
-            </div>
-          </div>
-          
-          <div class="filters-body">
-            <form [formGroup]="filterForm">
-              <!-- Make Filter -->
-              <div class="filter-section">
-                <h4 class="filter-title">Make</h4>
-                <mat-form-field appearance="outline">
-                  <mat-select formControlName="make">
-                    <mat-option value="">All Makes</mat-option>
-                    @for (make of makeOptions; track make) {
-                      <mat-option [value]="make">{{ make }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              
-              <!-- Model Filter -->
-              <div class="filter-section">
-                <h4 class="filter-title">Model</h4>
-                <mat-form-field appearance="outline">
-                  <mat-select formControlName="model">
-                    <mat-option value="">All Models</mat-option>
-                    @for (model of modelOptions; track model) {
-                      <mat-option [value]="model">{{ model }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              
-              <!-- Year Range Filter -->
-              <div class="filter-section">
-                <h4 class="filter-title">Year</h4>
-                <p class="filter-subtitle">{{ filterForm.get('yearRange').value[0] }} - {{ filterForm.get('yearRange').value[1] }}</p>
-                <mat-slider min="{{ minYear }}" max="{{ maxYear }}" step="1" discrete [displayWith]="formatLabel">
-                  <input matSliderStartThumb formControlName="yearRange">
-                  <input matSliderEndThumb formControlName="yearRange">
-                </mat-slider>
-              </div>
-              
-              <!-- Price Range Filter -->
-              <div class="filter-section">
-                <h4 class="filter-title">Price</h4>
-                <p class="filter-subtitle">€{{ filterForm.get('priceRange').value[0] }} - €{{ filterForm.get('priceRange').value[1] }} per day</p>
-                <mat-slider min="{{ minPrice }}" max="{{ maxPrice }}" step="10" discrete [displayWith]="formatLabel">
-                  <input matSliderStartThumb formControlName="priceRange">
-                  <input matSliderEndThumb formControlName="priceRange">
-                </mat-slider>
-              </div>
-              
-              <!-- Color Filter -->
-              <div class="filter-section">
-                <h4 class="filter-title">Color</h4>
-                <div class="color-filters">
-                  @for (color of colorOptions; track color) {
-                    <div 
-                      class="color-filter color-{{ color }}" 
-                      [class.selected]="isColorSelected(color)" 
-                      (click)="handleColorFilterChange(color)"
-                      [matTooltip]="color | titlecase">
-                    </div>
-                  }
-                </div>
-              </div>
-              
-              <!-- Features Filter -->
-              <div class="filter-section" formGroupName="features">
-                <h4 class="filter-title">Features</h4>
-                <div class="features-list">
-                  <mat-checkbox formControlName="airConditioner">Air Conditioner</mat-checkbox>
-                  <mat-checkbox formControlName="bluetooth">Bluetooth</mat-checkbox>
-                  <mat-checkbox formControlName="gps">GPS Navigation</mat-checkbox>
-                  <mat-checkbox formControlName="leatherSeats">Leather Seats</mat-checkbox>
-                  <mat-checkbox formControlName="sunroof">Sunroof</mat-checkbox>
-                  <mat-checkbox formControlName="parkingSensors">Parking Sensors</mat-checkbox>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
+          <mat-card-title>{{ vehicle.firma }} {{ vehicle.model }}</mat-card-title>
+
+          <mat-card-content>
+            <p>{{ vehicle.descriere | slice:0:100 }}{{ vehicle.descriere.length > 100 ? '...' : '' }}</p>
+            <p>
+              <strong>€{{ vehicle.pret }}/day</strong>
+            </p>
+            <p>Year: {{ vehicle.anFabricatie }}</p>
+            <p>Mileage: {{ vehicle.kilometraj }} km</p>
+            <p>Color: {{ vehicle.culoare }}</p>
+            <p>Location: {{ vehicle.locatie }}</p>
+          </mat-card-content>
+
+          <mat-card-actions>
+            <button mat-button class="custom-button" (click)="openDialog(vehicle)">
+              Book
+            </button>
+          </mat-card-actions>
+        </mat-card>
       </div>
     }
-    
-    <!-- Vehicles Column -->
-    <div class="vehicles-column">
-      <div class="vehicles-toolbar" @fadeIn>
-        <div class="toolbar-left">
-          <button 
-            mat-stroked-button 
-            color="primary" 
-            class="filter-toggle" 
-            (click)="toggleFilters()">
-            <mat-icon>{{ showFilters ? 'filter_list_off' : 'filter_list' }}</mat-icon>
-            {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
-            @if (filtersApplied) {
-              <mat-icon matBadge="{{ filterCount }}" matBadgeColor="accent" matBadgeSize="small">filter_list</mat-icon>
-            }
-          </button>
-          
-          <div class="results-count">
-            {{ filteredVehicles.length }} vehicles found
-          </div>
-        </div>
-        
-        <div class="toolbar-right">
-          <mat-form-field appearance="outline" class="sort-select">
-            <mat-select [(value)]="sortOption" (selectionChange)="onSortChange($event.value)">
-              <mat-option value="newest">Newest First</mat-option>
-              <mat-option value="oldest">Oldest First</mat-option>
-              <mat-option value="priceAsc">Price (Low to High)</mat-option>
-              <mat-option value="priceDesc">Price (High to Low)</mat-option>
-            </mat-select>
-          </mat-form-field>
-          
-          <mat-button-toggle-group [(value)]="viewMode" aria-label="View Mode">
-            <mat-button-toggle value="grid" matTooltip="Grid View">
-              <mat-icon>grid_view</mat-icon>
-            </mat-button-toggle>
-            <mat-button-toggle value="list" matTooltip="List View">
-              <mat-icon>view_list</mat-icon>
-            </mat-button-toggle>
-            <mat-button-toggle value="map" matTooltip="Map View">
-              <mat-icon>map</mat-icon>
-            </mat-button-toggle>
-          </mat-button-toggle-group>
-        </div>
-      </div>
-      
-      @if (loading) {
-        <div class="loading-container" @fadeIn>
-          <mat-spinner diameter="40"></mat-spinner>
-          <p>Loading vehicles...</p>
-        </div>
-      } @else if (filteredVehicles.length === 0) {
-        <div class="no-results" @fadeIn>
-          <h3>No Vehicles Found</h3>
-          <p>Try adjusting your filters or search criteria</p>
-          <div class="no-results-actions">
-            <button mat-raised-button color="primary" (click)="clearFilters()">Clear All Filters</button>
-            <button mat-stroked-button color="primary" (click)="clearAISearch()">Clear AI Search</button>
-          </div>
-        </div>
-      } @else {
-        @if (viewMode === 'grid') {
-          <div class="vehicles-grid" @fadeIn>
-            @for (vehicle of filteredVehicles; track vehicle.id) {
-              <app-vehicle-card 
-                [vehicle]="vehicle"
-                [isFavorite]="isFavorite(vehicle)"
-                (favoriteToggle)="toggleFavorite(vehicle)"
-                (bookNow)="openBookingDialog(vehicle)"
-                (click)="viewVehicleDetails(vehicle)"
-                class="stagger-in">
-              </app-vehicle-card>
-            }
-          </div>
-        } @else if (viewMode === 'list') {
-          <div class="vehicles-list" @fadeIn>
-            @for (vehicle of filteredVehicles; track vehicle.id) {
-              <app-vehicle-card 
-                [vehicle]="vehicle"
-                [isFavorite]="isFavorite(vehicle)"
-                [compact]="true"
-                (favoriteToggle)="toggleFavorite(vehicle)"
-                (bookNow)="openBookingDialog(vehicle)"
-                (click)="viewVehicleDetails(vehicle)"
-                class="stagger-in">
-              </app-vehicle-card>
-            }
-          </div>
-        } @else if (viewMode === 'map') {
-          <div class="vehicles-map" @fadeIn>
-            <app-map [height]="'600px'"></app-map>
-          </div>
-        }
-      }
-    </div>
   </div>
 </div>
