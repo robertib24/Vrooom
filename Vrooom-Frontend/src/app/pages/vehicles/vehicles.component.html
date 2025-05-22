@@ -1,49 +1,277 @@
-<div class="vehicle-list-container">
-  <div class="vehicle-list-overlay">
-    <h2>Available Vehicles</h2>
+<div class="vehicles-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>
+        <mat-icon class="hero-icon">car_rental</mat-icon>
+        Premium Vehicle Fleet
+      </h1>
+      <p>Discover our extensive collection of vehicles for every occasion</p>
+    </div>
+  </div>
 
-    @if (loading) {
-      <div class="loading-container">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Loading vehicles...</p>
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <mat-card class="filters-card">
+      <div class="filters-header">
+        <div class="filters-title">
+          <mat-icon>tune</mat-icon>
+          <span>Find Your Perfect Vehicle</span>
+        </div>
+        <div class="filters-actions">
+          <button mat-button (click)="toggleFilters()" class="toggle-filters-btn">
+            <mat-icon>{{ showFilters ? 'expand_less' : 'expand_more' }}</mat-icon>
+            {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+          </button>
+          <button mat-button color="accent" (click)="clearFilters()">
+            <mat-icon>clear</mat-icon>
+            Clear All
+          </button>
+        </div>
       </div>
-    } @else if (error) {
-      <div class="error-container">
-        <p>Error loading vehicles. Please try again later.</p>
-        <button mat-button class="custom-button" (click)="loadVehicles()">Retry</button>
-      </div>
-    } @else if (vehicles.length === 0) {
-      <div class="empty-container">
-        <p>No vehicles found.</p>
-      </div>
-    } @else {
-      <div class="vehicle-grid">
-        <mat-card *ngFor="let vehicle of vehicles">
-          <img mat-card-image 
-               [src]="'https://vrooom1224.s3.amazonaws.com/post' + vehicle.id + '/1.jpg'" 
-               alt="{{ vehicle.model }}" 
-               onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'"/>
 
-          <mat-card-title>{{ vehicle.firma }} {{ vehicle.model }}</mat-card-title>
+      @if (showFilters) {
+        <div class="filters-content" [formGroup]="filterForm">
+          <div class="filters-row">
+            <!-- Search -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Search</mat-label>
+              <input matInput formControlName="searchTerm" placeholder="Search by name, brand, location...">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <!-- Brand -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Brand</mat-label>
+              <mat-select formControlName="brand">
+                <mat-option value="">All Brands</mat-option>
+                @for (brand of carBrands; track brand) {
+                  <mat-option [value]="brand">{{ brand }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Color -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Color</mat-label>
+              <mat-select formControlName="color">
+                <mat-option value="">All Colors</mat-option>
+                @for (color of carColors; track color) {
+                  <mat-option [value]="color">{{ color | titlecase }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Sort -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Sort By</mat-label>
+              <mat-select formControlName="sortBy">
+                @for (option of sortOptions; track option.value) {
+                  <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="filters-row">
+            <!-- Price Range -->
+            <div class="range-filter">
+              <label>Price Range (€/day)</label>
+              <div class="range-inputs">
+                <mat-form-field appearance="outline" class="range-input">
+                  <mat-label>Min</mat-label>
+                  <input matInput type="number" formControlName="minPrice" [min]="priceRange.min" [max]="priceRange.max">
+                </mat-form-field>
+                <span class="range-separator">-</span>
+                <mat-form-field appearance="outline" class="range-input">
+                  <mat-label>Max</mat-label>
+                  <input matInput type="number" formControlName="maxPrice" [min]="priceRange.min" [max]="priceRange.max">
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Year Range -->
+            <div class="range-filter">
+              <label>Year Range</label>
+              <div class="range-inputs">
+                <mat-form-field appearance="outline" class="range-input">
+                  <mat-label>Min Year</mat-label>
+                  <input matInput type="number" formControlName="minYear" [min]="yearRange.min" [max]="yearRange.max">
+                </mat-form-field>
+                <span class="range-separator">-</span>
+                <mat-form-field appearance="outline" class="range-input">
+                  <mat-label>Max Year</mat-label>
+                  <input matInput type="number" formControlName="maxYear" [min]="yearRange.min" [max]="yearRange.max">
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Max Mileage -->
+            <mat-form-field appearance="outline" class="filter-field">
+              <mat-label>Max Mileage (km)</mat-label>
+              <input matInput type="number" formControlName="maxMileage" min="0">
+            </mat-form-field>
+          </div>
+        </div>
+      }
+    </mat-card>
+  </div>
+
+  <!-- Results Summary -->
+  <div class="results-summary">
+    <div class="summary-info">
+      <span class="results-count">
+        {{ totalVehicles }} vehicle{{ totalVehicles !== 1 ? 's' : '' }} found
+      </span>
+      @if (filterForm.get('searchTerm')?.value) {
+        <span class="search-term">
+          for "{{ filterForm.get('searchTerm')?.value }}"
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading amazing vehicles...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (error) {
+    <div class="error-container">
+      <mat-card class="error-card">
+        <mat-card-content>
+          <div class="error-content">
+            <mat-icon class="error-icon">error_outline</mat-icon>
+            <div>
+              <h3>Oops! Something went wrong</h3>
+              <p>We couldn't load the vehicles. Please try again.</p>
+              <button mat-raised-button color="primary" (click)="loadVehicles()">
+                <mat-icon>refresh</mat-icon>
+                Retry
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else if (totalVehicles === 0) {
+    <div class="empty-container">
+      <mat-card class="empty-card">
+        <mat-card-content>
+          <div class="empty-content">
+            <mat-icon class="empty-icon">search_off</mat-icon>
+            <h3>No vehicles found</h3>
+            <p>Try adjusting your search criteria or clearing the filters.</p>
+            <button mat-raised-button color="accent" (click)="clearFilters()">
+              <mat-icon>clear</mat-icon>
+              Clear Filters
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
+  <!-- Vehicles Grid -->
+  @else {
+    <div class="vehicles-grid">
+      @for (vehicle of paginatedVehicles; track vehicle.id) {
+        <mat-card class="vehicle-card">
+          <div class="vehicle-image-container">
+            <img 
+              mat-card-image 
+              [src]="getVehicleImageUrl(vehicle.id)"
+              [alt]="vehicle.firma + ' ' + vehicle.model"
+              (error)="onImageError($event)"
+              class="vehicle-image">
+            
+            <div class="price-badge">
+              €{{ vehicle.pret }}/day
+            </div>
+
+            <div class="vehicle-overlay">
+              <div class="overlay-actions">
+                <button mat-mini-fab color="primary" (click)="viewVehicleDetails(vehicle)" 
+                        matTooltip="View Details">
+                  <mat-icon>info</mat-icon>
+                </button>
+                @if (canUserBook(vehicle)) {
+                  <button mat-mini-fab color="accent" (click)="openBookingDialog(vehicle)"
+                          matTooltip="Book Now">
+                    <mat-icon>event</mat-icon>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <mat-card-header>
+            <div mat-card-avatar class="brand-avatar">
+              <mat-icon>directions_car</mat-icon>
+            </div>
+            <mat-card-title>{{ vehicle.firma }} {{ vehicle.model }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ vehicle.anFabricatie }} • {{ vehicle.kilometraj.toLocaleString() }} km
+            </mat-card-subtitle>
+          </mat-card-header>
 
           <mat-card-content>
-            <p>{{ vehicle.descriere | slice:0:100 }}{{ vehicle.descriere.length > 100 ? '...' : '' }}</p>
-            <p>
-              <strong>€{{ vehicle.pret }}/day</strong>
+            <p class="vehicle-description">
+              {{ vehicle.descriere | slice:0:100 }}{{ vehicle.descriere.length > 100 ? '...' : '' }}
             </p>
-            <p>Year: {{ vehicle.anFabricatie }}</p>
-            <p>Mileage: {{ vehicle.kilometraj }} km</p>
-            <p>Color: {{ vehicle.culoare }}</p>
-            <p>Location: {{ vehicle.locatie }}</p>
+            
+            <div class="vehicle-features">
+              <div class="feature-chip">
+                <mat-icon>palette</mat-icon>
+                <span>{{ vehicle.culoare | titlecase }}</span>
+              </div>
+              <div class="feature-chip">
+                <mat-icon>location_on</mat-icon>
+                <span>{{ vehicle.locatie }}</span>
+              </div>
+            </div>
           </mat-card-content>
 
-          <mat-card-actions>
-            <button mat-button class="custom-button" (click)="openDialog(vehicle)">
-              Book
+          <mat-card-actions class="card-actions">
+            <button mat-button color="primary" (click)="viewVehicleDetails(vehicle)">
+              <mat-icon>info</mat-icon>
+              Details
             </button>
+            @if (canUserBook(vehicle)) {
+              <button mat-raised-button color="accent" (click)="openBookingDialog(vehicle)">
+                <mat-icon>event</mat-icon>
+                Book Now
+              </button>
+            } @else {
+              <button mat-button disabled>
+                <mat-icon>block</mat-icon>
+                Your Vehicle
+              </button>
+            }
           </mat-card-actions>
         </mat-card>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalVehicles > pageSize) {
+      <div class="pagination-container">
+        <mat-paginator
+          [length]="totalVehicles"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="[6, 9, 12, 18]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
       </div>
     }
-  </div>
+  }
 </div>

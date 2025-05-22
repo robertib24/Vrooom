@@ -1,28 +1,11 @@
 import {
-  DateAdapter,
-  MAT_DATE_FORMATS
-} from "./chunk-MATAZGZJ.js";
-import {
-  CdkPortalOutlet,
-  ComponentPortal,
-  FlexibleConnectedPositionStrategy,
-  Overlay,
-  OverlayConfig,
-  OverlayModule,
-  PortalModule,
-  TemplatePortal
-} from "./chunk-B3TMVHQI.js";
-import {
   MAT_INPUT_VALUE_ACCESSOR
 } from "./chunk-YYRGKE5K.js";
 import {
-  ErrorStateMatcher,
-  _ErrorStateTracker
-} from "./chunk-BAC45G4Z.js";
-import {
-  MAT_FORM_FIELD,
-  MatFormFieldControl
-} from "./chunk-RPWGCHT3.js";
+  MatButton,
+  MatButtonModule,
+  MatIconButton
+} from "./chunk-NJOGI2SY.js";
 import {
   ControlContainer,
   FormGroupDirective,
@@ -33,21 +16,41 @@ import {
   Validators
 } from "./chunk-SVLIS4UR.js";
 import {
-  CdkScrollableModule
-} from "./chunk-6ZPA334H.js";
+  DateAdapter,
+  MAT_DATE_FORMATS
+} from "./chunk-MATAZGZJ.js";
 import {
-  MatButton,
-  MatButtonModule,
-  MatIconButton
-} from "./chunk-RMJJNGVP.js";
+  ErrorStateMatcher,
+  _ErrorStateTracker
+} from "./chunk-2AFMJPJY.js";
+import "./chunk-WTBEUAII.js";
+import "./chunk-5QEIS2OR.js";
 import {
   _StructuralStylesLoader
-} from "./chunk-SBUVRMVZ.js";
+} from "./chunk-7UASIDCR.js";
+import "./chunk-OIBNGD5S.js";
+import {
+  CdkPortalOutlet,
+  ComponentPortal,
+  FlexibleConnectedPositionStrategy,
+  Overlay,
+  OverlayConfig,
+  OverlayModule,
+  PortalModule,
+  TemplatePortal
+} from "./chunk-LWHA2IHC.js";
+import {
+  MAT_FORM_FIELD,
+  MatFormFieldControl
+} from "./chunk-NRQJI6KW.js";
+import "./chunk-52IT5FRW.js";
+import "./chunk-42FJBLFI.js";
 import {
   coerceStringArray
 } from "./chunk-JXBCBRYI.js";
-import "./chunk-52IT5FRW.js";
-import "./chunk-42FJBLFI.js";
+import {
+  CdkScrollableModule
+} from "./chunk-6ZPA334H.js";
 import "./chunk-2O4WY5GE.js";
 import {
   A11yModule,
@@ -70,7 +73,7 @@ import {
   _VisuallyHiddenLoader,
   _getFocusedElementPierceShadowDom,
   hasModifierKey
-} from "./chunk-U5EIRFP4.js";
+} from "./chunk-BF5225VT.js";
 import {
   _CdkPrivateStyleLoader,
   _bindEventWithOptions
@@ -161,10 +164,10 @@ import {
   ɵɵtwoWayProperty,
   ɵɵviewQuery
 } from "./chunk-Z7RWVO2Z.js";
-import "./chunk-PEBH6BBU.js";
 import {
   merge
 } from "./chunk-WPM5VTLQ.js";
+import "./chunk-PEBH6BBU.js";
 import {
   Subject,
   Subscription,
@@ -2994,6 +2997,7 @@ var MatCalendar = class _MatCalendar {
     optional: true
   });
   _changeDetectorRef = inject(ChangeDetectorRef);
+  _elementRef = inject(ElementRef);
   /** An input indicating the type of the header component, if set. */
   headerComponent;
   /** A portal containing the header component type for this calendar. */
@@ -3150,7 +3154,9 @@ var MatCalendar = class _MatCalendar {
     if (changeRequiringRerender && !changeRequiringRerender.firstChange) {
       const view = this._getCurrentViewComponent();
       if (view) {
-        this._moveFocusOnNextTick = true;
+        if (this._elementRef.nativeElement.contains(_getFocusedElementPierceShadowDom())) {
+          this._moveFocusOnNextTick = true;
+        }
         this._changeDetectorRef.detectChanges();
         view._init();
       }
@@ -3439,10 +3445,10 @@ var MatDatepickerContent = class _MatDatepickerContent {
   _calendar;
   /**
    * Theme color of the internal calendar. This API is supported in M2 themes
-   * only, it has no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/datepicker/styling.
+   * only, it has no effect in M3 themes. For color customization in M3, see https://material.angular.dev/components/datepicker/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
+   * https://material.angular.dev/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   color;
   /** Reference to the datepicker that created the overlay. */
@@ -3731,10 +3737,10 @@ var MatDatepickerBase = class _MatDatepickerBase {
   startView = "month";
   /**
    * Theme color of the datepicker's calendar. This API is supported in M2 themes only, it
-   * has no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/datepicker/styling.
+   * has no effect in M3 themes. For color customization in M3, see https://material.angular.dev/components/datepicker/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
+   * https://material.angular.dev/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   get color() {
     return this._color || (this.datepickerInput ? this.datepickerInput.getThemePalette() : void 0);

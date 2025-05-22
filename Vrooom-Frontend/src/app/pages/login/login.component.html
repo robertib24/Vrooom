@@ -1,63 +1,176 @@
-<div class="landing-container">
-  <div class="overlay">
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div class="mb-3">
-        <input
-          id="username"
-          type="text"
-          class="form-control"
-          formControlName="username"
-          placeholder="Username"
-        />
+<div class="login-container" [@slideOut]="animationState">
+  <div class="login-background">
+    <!-- Animated background elements -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
+  </div>
 
-        @if (f["username"].touched && f["username"].invalid) {
-          <div class="text-danger">
-            @if (f["username"].errors && f["username"].errors["required"]) {
-              <small>Username is required.</small>
-            }
-          </div>
-        }
-      </div>
-
-      <div class="mb-3">
-        <input
-          id="password"
-          type="password"
-          class="form-control"
-          placeholder="Password"
-          formControlName="password"
-        />
-
-        @if (f["password"].touched && f["password"].invalid) {
-          <div class="text-danger">
-            @if (f["password"].errors && f["password"].errors["required"]) {
-              <small>Password is required.</small>
-            }
-            @if (f["password"].errors && f["password"].errors["minlength"]) {
-              <small>Min 6 characters.</small>
-            }
-          </div>
-        }
-      </div>
-
-      <button type="submit" mat-button class="custom-submit-button">
-        @if (!loading) {
-          Login
-        } @else {
-          Logging in...
-        }
-      </button>
-
-      @if (errorMessage) {
-        <div class="text-danger mt-3">
-          {{ errorMessage }}
+  <!-- Success Overlay -->
+  @if (loginSuccess) {
+    <div class="success-overlay" [@successAnimation]>
+      <div class="success-content">
+        <div class="success-icon">
+          <mat-icon>check_circle</mat-icon>
         </div>
-      }
-    </form>
+        <h2>Welcome back!</h2>
+        <p>Redirecting to your dashboard...</p>
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    </div>
+  }
 
-    <div class="signup">
-      <p>Not registered yet ?</p>
-      <a routerLink="/signup">Sign up</a>
+  <div class="login-content">
+    <div class="login-card" [@fadeInUp]>
+      <!-- Header Section -->
+      <div class="login-header">
+        <div class="logo-section">
+          <mat-icon class="logo-icon">directions_car</mat-icon>
+          <h1 class="logo-text">Vrooom</h1>
+        </div>
+        <h2>Welcome Back</h2>
+        <p>Sign in to your account to continue your journey</p>
+      </div>
+
+      <!-- Login Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Username Field -->
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Username</mat-label>
+          <input 
+            matInput 
+            type="text"
+            formControlName="username"
+            placeholder="Enter your username"
+            autocomplete="username">
+          <mat-icon matSuffix class="field-icon">person</mat-icon>
+          
+          @if (f['username'].touched && f['username'].invalid) {
+            <mat-error>
+              @if (f['username'].errors?.['required']) {
+                Username is required
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Password Field -->
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Password</mat-label>
+          <input 
+            matInput 
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            placeholder="Enter your password"
+            autocomplete="current-password">
+          
+          <button 
+            mat-icon-button 
+            matSuffix 
+            type="button"
+            class="password-toggle"
+            (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="'Hide password'"
+            [attr.aria-pressed]="hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          
+          @if (f['password'].touched && f['password'].invalid) {
+            <mat-error>
+              @if (f['password'].errors?.['required']) {
+                Password is required
+              }
+              @if (f['password'].errors?.['minlength']) {
+                Password must be at least 6 characters
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Remember Me & Forgot Password -->
+        <div class="form-options">
+          <mat-checkbox formControlName="remember" class="remember-checkbox">
+            Remember me
+          </mat-checkbox>
+          
+          <a href="#" class="forgot-password" routerLink="/forgot-password">
+            Forgot password?
+          </a>
+        </div>
+
+        <!-- Error Message -->
+        @if (errorMessage) {
+          <div class="error-message">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        <!-- Login Button -->
+        <button 
+          mat-raised-button 
+          type="submit"
+          class="login-button"
+          [disabled]="loginForm.invalid || loading">
+          
+          @if (loading) {
+            <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+            <span>Signing in...</span>
+          } @else {
+            <ng-container>
+              <mat-icon>login</mat-icon>
+              <span>Sign In</span>
+            </ng-container>
+          }
+        </button>
+
+        <!-- Divider -->
+        <div class="divider">
+          <span>or</span>
+        </div>
+
+        <!-- Social Login Options -->
+        <div class="social-login">
+          <button 
+            mat-stroked-button 
+            type="button"
+            class="social-button google-button"
+            disabled>
+            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" class="social-icon">
+            <span>Continue with Google</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p>Don't have an account? 
+          <a routerLink="/signup" class="signup-link">Sign up here</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="features-section">
+      <h3>Why choose Vrooom?</h3>
+      <div class="features-list">
+        <div class="feature-item">
+          <mat-icon>verified</mat-icon>
+          <span>Verified vehicles</span>
+        </div>
+        <div class="feature-item">
+          <mat-icon>support_agent</mat-icon>
+          <span>24/7 support</span>
+        </div>
+        <div class="feature-item">
+          <mat-icon>security</mat-icon>
+          <span>Secure payments</span>
+        </div>
+        <div class="feature-item">
+          <mat-icon>star</mat-icon>
+          <span>Top-rated service</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

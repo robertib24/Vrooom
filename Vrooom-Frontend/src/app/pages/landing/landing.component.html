@@ -1,7 +1,205 @@
 <div class="landing-container">
-  <div class="overlay">
-    <h1>Welcome to Vrooom</h1>
-    <p>Easy, Fast and Reliable Vehicle Rentals</p>
-    <a mat-raised-button color="primary" routerLink="/vehicles">Browse</a>
-  </div>
+  <!-- Hero Section with Carousel -->
+  <section class="hero-section" [@heroAnimation]>
+    <div class="hero-carousel">
+      @for (slide of heroSlides; track slide; let i = $index) {
+        <div 
+          class="hero-slide"
+          [class.active]="i === currentSlideIndex"
+          [style.background-image]="'url(' + slide.image + ')'">
+          
+          <div class="hero-overlay">
+            <div class="hero-content" [@fadeInUp]>
+              @if (currentUser) {
+                <div class="welcome-message">
+                  <h1>Welcome back, {{ currentUser.nume }}! 👋</h1>
+                  <p class="loyalty-info">
+                    <mat-icon>stars</mat-icon>
+                    You have {{ currentUser.puncteFidelitate || 0 }} loyalty points
+                  </p>
+                </div>
+              }
+              
+              <div class="hero-text">
+                <h1 class="hero-title">{{ slide.title }}</h1>
+                <p class="hero-subtitle">{{ slide.subtitle }}</p>
+                
+                <div class="hero-actions">
+                  <button 
+                    mat-raised-button 
+                    class="cta-button primary"
+                    (click)="onHeroAction(slide)">
+                    <mat-icon>drive_eta</mat-icon>
+                    {{ slide.cta }}
+                  </button>
+                  
+                  <button 
+                    mat-button 
+                    class="cta-button secondary"
+                    routerLink="/about">
+                    <mat-icon>info</mat-icon>
+                    Learn More
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+      
+      <!-- Carousel Controls -->
+      <div class="carousel-controls">
+        <button mat-mini-fab class="carousel-btn prev" (click)="prevSlide()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        
+        <div class="carousel-dots">
+          @for (slide of heroSlides; track slide; let i = $index) {
+            <button 
+              class="dot"
+              [class.active]="i === currentSlideIndex"
+              (click)="goToSlide(i)">
+            </button>
+          }
+        </div>
+        
+        <button mat-mini-fab class="carousel-btn next" (click)="nextSlide()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Stats Section -->
+  <section class="stats-section" [@staggerAnimation]>
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item" [@fadeInUp]>
+          <div class="stat-icon">
+            <mat-icon>directions_car</mat-icon>
+          </div>
+          <div class="stat-content">
+            <h3>{{ stats.totalVehicles }}+</h3>
+            <p>Premium Vehicles</p>
+          </div>
+        </div>
+        
+        <div class="stat-item" [@fadeInUp]>
+          <div class="stat-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <div class="stat-content">
+            <h3>{{ stats.happyCustomers }}+</h3>
+            <p>Happy Customers</p>
+          </div>
+        </div>
+        
+        <div class="stat-item" [@fadeInUp]>
+          <div class="stat-icon">
+            <mat-icon>location_city</mat-icon>
+          </div>
+          <div class="stat-content">
+            <h3>{{ stats.citiesCovered }}</h3>
+            <p>Cities Covered</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Vehicles Section -->
+  @if (featuredVehicles.length > 0) {
+    <section class="featured-section">
+      <div class="container">
+        <div class="section-header" [@slideInLeft]>
+          <h2>Featured Vehicles</h2>
+          <p>Discover our most popular and premium vehicles</p>
+        </div>
+        
+        <div class="featured-grid" [@staggerAnimation]>
+          @for (vehicle of featuredVehicles; track vehicle.id) {
+            <mat-card class="vehicle-card" [@fadeInUp]>
+              <div class="vehicle-image-container">
+                <img 
+                  [src]="getVehicleImageUrl(vehicle.id)"
+                  [alt]="vehicle.firma + ' ' + vehicle.model"
+                  (error)="onImageError($event)">
+                
+                <div class="price-badge">
+                  €{{ vehicle.pret }}/day
+                </div>
+              </div>
+              
+              <mat-card-content>
+                <h3>{{ vehicle.firma }} {{ vehicle.model }}</h3>
+                <p>{{ vehicle.anFabricatie }} • {{ vehicle.kilometraj.toLocaleString() }} km</p>
+                <p class="location">
+                  <mat-icon>location_on</mat-icon>
+                  {{ vehicle.locatie }}
+                </p>
+              </mat-card-content>
+              
+              <mat-card-actions>
+                <button mat-raised-button color="primary" routerLink="/vehicles">
+                  <mat-icon>visibility</mat-icon>
+                  View Details
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          }
+        </div>
+        
+        <div class="section-footer">
+          <button mat-raised-button class="view-all-btn" routerLink="/vehicles">
+            <mat-icon>car_rental</mat-icon>
+            View All Vehicles
+          </button>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <div class="container">
+      <div class="section-header" [@slideInRight]>
+        <h2>Why Choose Vrooom?</h2>
+        <p>Experience the difference with our premium car rental service</p>
+      </div>
+      
+      <div class="features-grid" [@staggerAnimation]>
+        @for (feature of features; track feature.title) {
+          <div class="feature-card" [@fadeInUp]>
+            <div class="feature-icon" [style.background-color]="feature.color">
+              <mat-icon>{{ feature.icon }}</mat-icon>
+            </div>
+            <h3>{{ feature.title }}</h3>
+            <p>{{ feature.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-content" [@heroAnimation]>
+        <h2>Ready to Start Your Journey?</h2>
+        <p>Join thousands of satisfied customers and experience premium car rentals</p>
+        
+        <div class="cta-actions">
+          <button mat-raised-button class="cta-button primary" routerLink="/vehicles">
+            <mat-icon>car_rental</mat-icon>
+            Browse Vehicles
+          </button>
+          
+          <button mat-raised-button class="cta-button secondary" routerLink="/search">
+            <mat-icon>psychology</mat-icon>
+            Try AI Search
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>

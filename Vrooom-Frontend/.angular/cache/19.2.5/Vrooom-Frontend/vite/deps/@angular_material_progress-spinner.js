@@ -1,6 +1,6 @@
 import {
   MatCommonModule
-} from "./chunk-U5EIRFP4.js";
+} from "./chunk-BF5225VT.js";
 import "./chunk-XWFKI5ZP.js";
 import "./chunk-TJL5PQPP.js";
 import "./chunk-4RWJWCP5.js";
@@ -43,8 +43,8 @@ import {
   ɵɵtemplateRefExtractor,
   ɵɵviewQuery
 } from "./chunk-Z7RWVO2Z.js";
-import "./chunk-PEBH6BBU.js";
 import "./chunk-WPM5VTLQ.js";
+import "./chunk-PEBH6BBU.js";
 import "./chunk-4S3KYZTJ.js";
 import "./chunk-WDMUDEB6.js";
 
@@ -83,10 +83,10 @@ var MatProgressSpinner = class _MatProgressSpinner {
   // TODO: should be typed as `ThemePalette` but internal apps pass in arbitrary strings.
   /**
    * Theme color of the progress spinner. This API is supported in M2 themes only, it
-   * has no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/progress-spinner/styling.
+   * has no effect in M3 themes. For color customization in M3, see https://material.angular.dev/components/progress-spinner/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
+   * https://material.angular.dev/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   get color() {
     return this._color || this._defaultColor;

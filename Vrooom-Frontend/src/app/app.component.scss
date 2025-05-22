@@ -1,14 +1,273 @@
-.spacer {
-  flex: 1 1 auto;
-}
-
 .custom-toolbar {
-  background: linear-gradient(to right, #a8dadc, #ffb6c1);
-  color: #1d3557;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 70px;
+  
+  .toolbar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .brand-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 1.5rem;
+    
+    .brand-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      color: #ffd700;
+    }
+    
+    .brand-name {
+      background: linear-gradient(45deg, #ffd700, #ffed4e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  }
+
+  .nav-section {
+    display: flex;
+    gap: 8px;
+    
+    .nav-button {
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 500;
+      border-radius: 20px;
+      padding: 8px 16px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      mat-icon {
+        font-size: 1.1rem;
+        width: 1.1rem;
+        height: 1.1rem;
+      }
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white;
+        transform: translateY(-1px);
+      }
+      
+      &.active {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #ffd700;
+        font-weight: 600;
+        
+        mat-icon {
+          color: #ffd700;
+        }
+      }
+    }
+  }
+
+  .user-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        object-fit: cover;
+      }
+      
+      .user-name {
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+      
+      .loyalty-points {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background-color: rgba(255, 215, 0, 0.2);
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #ffd700;
+        
+        mat-icon {
+          font-size: 1rem;
+          width: 1rem;
+          height: 1rem;
+        }
+      }
+    }
+    
+    .user-menu-trigger {
+      color: rgba(255, 255, 255, 0.9);
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
 }
 
-mat-icon {
-  &:hover {
-    cursor: pointer;
+// Login toolbar for non-authenticated users
+.login-toolbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 70px;
+
+  .login-toolbar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .brand-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 1.5rem;
+    
+    .brand-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      color: #ffd700;
+    }
+    
+    .brand-name {
+      background: linear-gradient(45deg, #ffd700, #ffed4e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  }
+
+  .auth-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    .auth-nav-button {
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 500;
+      border-radius: 20px;
+      padding: 8px 16px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &.signup-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #ffd700;
+        font-weight: 600;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.3);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+      }
+    }
+  }
+}
+
+.user-menu {
+  .logout-button {
+    color: #f44336;
+    
+    mat-icon {
+      color: #f44336;
+    }
+  }
+}
+
+.main-content {
+  min-height: 100vh;
+  
+  &.with-toolbar {
+    min-height: calc(100vh - 70px);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .custom-toolbar, .login-toolbar {
+    .toolbar-content, .login-toolbar-content {
+      padding: 0 16px;
+    }
+    
+    .nav-section {
+      display: none; // Hide navigation on mobile, could implement a mobile menu
+    }
+    
+    .user-info {
+      .user-name {
+        display: none;
+      }
+    }
+
+    .auth-buttons {
+      .auth-nav-button {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-toolbar, .login-toolbar {
+    .brand-section {
+      .brand-name {
+        display: none;
+      }
+    }
+    
+    .user-info {
+      .loyalty-points {
+        display: none;
+      }
+    }
+
+    .auth-buttons {
+      flex-direction: column;
+      gap: 8px;
+    }
   }
 }

@@ -1,0 +1,165 @@
+<div class="search-container">
+    <div class="search-hero">
+      <div class="hero-content">
+        <h1>
+          <mat-icon class="hero-icon">psychology</mat-icon>
+          AI-Powered Car Search
+        </h1>
+        <p>Describe your perfect car in natural language, and our AI will find it for you!</p>
+      </div>
+    </div>
+  
+    <div class="search-section">
+      <mat-card class="search-card">
+        <mat-card-content>
+          <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+            <div class="search-input-container">
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>What kind of car are you looking for?</mat-label>
+                <input 
+                  matInput 
+                  formControlName="query"
+                  placeholder="e.g., 'I need a red sports car for the weekend'"
+                  (keydown.enter)="onSearch()">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+              
+              <div class="search-actions">
+                <button 
+                  mat-raised-button 
+                  color="primary" 
+                  type="submit"
+                  [disabled]="loading || !searchForm.get('query')?.value?.trim()"
+                  class="search-button">
+                  @if (loading) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                    Searching...
+                  } @else {
+                    <mat-icon>search</mat-icon>
+                    Search
+                  }
+                </button>
+                
+                @if (searched) {
+                  <button 
+                    mat-button 
+                    color="accent" 
+                    type="button"
+                    (click)="clearSearch()"
+                    class="clear-button">
+                    <mat-icon>clear</mat-icon>
+                    Clear
+                  </button>
+                }
+              </div>
+            </div>
+          </form>
+  
+          @if (!searched && !loading) {
+            <div class="suggestions-section">
+              <h3>Try these search examples:</h3>
+              <div class="suggestions-grid">
+                @for (suggestion of searchSuggestions; track suggestion) {
+                  <mat-chip 
+                    class="suggestion-chip"
+                    (click)="useSuggestion(suggestion)">
+                    {{ suggestion }}
+                  </mat-chip>
+                }
+              </div>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  
+    @if (loading) {
+      <div class="loading-section">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Our AI is searching for the perfect vehicles...</p>
+      </div>
+    }
+  
+    @if (errorMessage) {
+      <div class="error-section">
+        <mat-card class="error-card">
+          <mat-card-content>
+            <div class="error-content">
+              <mat-icon class="error-icon">error_outline</mat-icon>
+              <p>{{ errorMessage }}</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+  
+    @if (searchResults.length > 0) {
+      <div class="results-section">
+        <div class="results-header">
+          <h2>
+            <mat-icon>local_see</mat-icon>
+            Found {{ searchResults.length }} vehicle{{ searchResults.length !== 1 ? 's' : '' }}
+          </h2>
+          <p>Here are the vehicles that match your search criteria:</p>
+        </div>
+  
+        <div class="results-grid">
+          @for (vehicle of searchResults; track vehicle.id) {
+            <mat-card class="vehicle-card">
+              <div class="vehicle-image-container">
+                <img 
+                  mat-card-image 
+                  [src]="getVehicleImageUrl(vehicle.id)"
+                  [alt]="vehicle.firma + ' ' + vehicle.model"
+                  (error)="$event.target.src='https://via.placeholder.com/300x200?text=No+Image'"
+                  class="vehicle-image">
+                
+                <div class="price-badge">
+                  €{{ vehicle.pret }}/day
+                </div>
+              </div>
+  
+              <mat-card-header>
+                <mat-card-title>{{ vehicle.firma }} {{ vehicle.model }}</mat-card-title>
+                <mat-card-subtitle>{{ vehicle.anFabricatie }} • {{ vehicle.kilometraj.toLocaleString() }} km</mat-card-subtitle>
+              </mat-card-header>
+  
+              <mat-card-content>
+                <p class="vehicle-description">
+                  {{ vehicle.descriere | slice:0:120 }}{{ vehicle.descriere.length > 120 ? '...' : '' }}
+                </p>
+                
+                <div class="vehicle-details">
+                  <div class="detail-item">
+                    <mat-icon>palette</mat-icon>
+                    <span>{{ vehicle.culoare | titlecase }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <mat-icon>location_on</mat-icon>
+                    <span>{{ vehicle.locatie }}</span>
+                  </div>
+                </div>
+              </mat-card-content>
+  
+              <mat-card-actions class="card-actions">
+                <button 
+                  mat-button 
+                  color="primary"
+                  (click)="viewVehicleDetails(vehicle)">
+                  <mat-icon>info</mat-icon>
+                  Details
+                </button>
+                <button 
+                  mat-raised-button 
+                  color="accent"
+                  (click)="bookVehicle(vehicle)">
+                  <mat-icon>event</mat-icon>
+                  Book Now
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          }
+        </div>
+      </div>
+    }
+  </div>

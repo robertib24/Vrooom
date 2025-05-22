@@ -1,21 +1,110 @@
 @if (isAuthenticated()) {
   <mat-toolbar class="custom-toolbar">
-    <span class="font-bold">Vrooom</span>
-    <span class="spacer"></span>
-    <button mat-button class="custom-button" routerLink="/landing">Home</button>
-    <button mat-button class="custom-button" routerLink="/about">
-      About Us
-    </button>
-    <button mat-button class="custom-button" routerLink="/vehicles">
-      Vehicles
-    </button>
-    <mat-icon
-      aria-hidden="false"
-      aria-label="Example home icon"
-      fontIcon="logout"
-      (click)="signout()"
-    ></mat-icon>
+    <div class="toolbar-content">
+      <div class="brand-section">
+        <mat-icon class="brand-icon">directions_car</mat-icon>
+        <span class="brand-name">Vrooom</span>
+      </div>
+      
+      <nav class="nav-section">
+        <button 
+          mat-button 
+          class="nav-button"
+          [class.active]="isActiveRoute('/landing')"
+          routerLink="/landing">
+          <mat-icon>home</mat-icon>
+          Home
+        </button>
+        
+        <button 
+          mat-button 
+          class="nav-button"
+          [class.active]="isActiveRoute('/vehicles')"
+          routerLink="/vehicles">
+          <mat-icon>car_rental</mat-icon>
+          Browse Cars
+        </button>
+        
+        <button 
+          mat-button 
+          class="nav-button"
+          [class.active]="isActiveRoute('/add-vehicle')"
+          routerLink="/add-vehicle">
+          <mat-icon>add_circle</mat-icon>
+          List Your Car
+        </button>
+        
+        <button 
+          mat-button 
+          class="nav-button"
+          [class.active]="isActiveRoute('/search')"
+          routerLink="/search">
+          <mat-icon>search</mat-icon>
+          AI Search
+        </button>
+        
+        <button 
+          mat-button 
+          class="nav-button"
+          [class.active]="isActiveRoute('/about')"
+          routerLink="/about">
+          <mat-icon>info</mat-icon>
+          About
+        </button>
+      </nav>
+
+      <div class="user-section">
+        @if (currentUser) {
+          <div class="user-info">
+            <img 
+              [src]="currentUser.linkPozaProfil || 'assets/default-avatar.png'" 
+              class="user-avatar"
+              [alt]="currentUser.username">
+            <span class="user-name">{{ currentUser.nume }} {{ currentUser.prenume }}</span>
+            <span class="loyalty-points">
+              <mat-icon>stars</mat-icon>
+              {{ currentUser.puncteFidelitate || 0 }}
+            </span>
+          </div>
+        }
+        
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-menu-trigger">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+        
+        <mat-menu #userMenu="matMenu" class="user-menu">
+          <button mat-menu-item (click)="navigateToProfile()">
+            <mat-icon>person</mat-icon>
+            <span>My Profile</span>
+          </button>
+          
+          <button mat-menu-item (click)="navigateToMyVehicles()">
+            <mat-icon>garage</mat-icon>
+            <span>My Vehicles</span>
+          </button>
+          
+          <button mat-menu-item (click)="navigateToBookings()">
+            <mat-icon>event</mat-icon>
+            <span>My Bookings</span>
+          </button>
+          
+          <button mat-menu-item (click)="navigateToSupport()">
+            <mat-icon>support</mat-icon>
+            <span>Support</span>
+          </button>
+          
+          <mat-divider></mat-divider>
+          
+          <button mat-menu-item (click)="signout()" class="logout-button">
+            <mat-icon>logout</mat-icon>
+            <span>Logout</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
   </mat-toolbar>
 }
 
-<router-outlet></router-outlet>
+<main class="main-content" [class.with-toolbar]="isAuthenticated()">
+  <router-outlet></router-outlet>
+</main>

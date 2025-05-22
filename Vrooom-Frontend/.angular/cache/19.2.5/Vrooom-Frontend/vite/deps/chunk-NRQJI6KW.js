@@ -3,7 +3,7 @@ import {
 } from "./chunk-JXBCBRYI.js";
 import {
   _IdGenerator
-} from "./chunk-U5EIRFP4.js";
+} from "./chunk-BF5225VT.js";
 import {
   Directionality
 } from "./chunk-TJL5PQPP.js";
@@ -197,7 +197,7 @@ var SharedResizeObserver = class _SharedResizeObserver {
   }], () => [], null);
 })();
 
-// node_modules/@angular/material/fesm2022/form-field-B4o2BB25.mjs
+// node_modules/@angular/material/fesm2022/form-field-DqPi4knt.mjs
 var _c0 = ["notch"];
 var _c1 = ["matFormFieldNotchedOutline", ""];
 var _c2 = ["*"];
@@ -903,10 +903,10 @@ var MatFormField = class _MatFormField {
   _hideRequiredMarker = false;
   /**
    * Theme color of the form field. This API is supported in M2 themes only, it
-   * has no effect in M3 themes. For color customization in M3, see https://material.angular.io/components/form-field/styling.
+   * has no effect in M3 themes. For color customization in M3, see https://material.angular.dev/components/form-field/styling.
    *
    * For information on applying color variants in M3, see
-   * https://material.angular.io/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
+   * https://material.angular.dev/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
   color = "primary";
   /** Whether the label should always float or float as the user types. */
@@ -1582,4 +1582,4 @@ export {
   MAT_FORM_FIELD_DEFAULT_OPTIONS,
   MatFormField
 };
-//# sourceMappingURL=chunk-RPWGCHT3.js.map
+//# sourceMappingURL=chunk-NRQJI6KW.js.map
