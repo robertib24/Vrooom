@@ -1,3 +1,5 @@
+// Actualizează GoogleMapsService pentru debug și funcționalitate îmbunătățită
+
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -8,166 +10,52 @@ export interface Coordinates {
   longitude: number;
 }
 
-export interface LocationResponse {
-  latitude: number;
-  longitude: number;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class GoogleMapsService {
-  private readonly DEFAULT_ZOOM = 13;
+  private readonly DEFAULT_ZOOM = 15;
   private readonly DEFAULT_MAP_SIZE = { width: 600, height: 300 };
   private googleApiKey: string = '';
   
-  // Predefined valid colors for vehicle color validation
-  private readonly VALID_COLORS = [
-    'black', 'white', 'gray', 'grey', 'silver', 'red', 'blue', 'brown',
-    'green', 'yellow', 'gold', 'orange', 'beige', 'maroon', 'purple',
-    'pink', 'cyan', 'navy', 'teal', 'lime', 'olive', 'aqua', 'fuchsia',
-    'bronze', 'charcoal', 'ivory', 'pearl', 'tan', 'crimson', 'indigo',
-    'violet', 'turquoise', 'magenta', 'salmon', 'coral', 'khaki'
-  ];
-
   constructor(private apiService: ApiService) {
     this.loadApiKey();
   }
 
-  /**
-   * Load Google API key from env.json
-   */
   private async loadApiKey(): Promise<void> {
     try {
+      // Încearcă să încarce din env.json
       const response = await fetch('/env.json');
       const env = await response.json();
-      
-      // Try different possible key names in your env.json
-      this.googleApiKey = env.Google?.ApiKey || 
-                         env.GoogleApiKey || 
-                         env.GOOGLE_API_KEY || 
-                         env.google_api_key || '';
+      this.googleApiKey = env.Google?.ApiKey || '';
       
       if (!this.googleApiKey) {
-        console.warn('Google API key not found in env.json');
+        console.warn('🗺️ Google API key nu a fost găsită în env.json');
+        console.log('📋 Pentru a activa hărțile, adaugă cheia API în public/env.json:');
+        console.log(`{
+  "Google": {
+    "ApiKey": "YOUR_API_KEY_HERE"
+  }
+}`);
+      } else {
+        console.log('✅ Google API key încărcată cu succes');
       }
     } catch (error) {
-      console.error('Failed to load env.json:', error);
+      console.error('❌ Nu s-a putut încărca env.json:', error);
+      console.log('📋 Creează fișierul public/env.json cu structura:');
+      console.log(`{
+  "Google": {
+    "ApiKey": "YOUR_API_KEY_HERE"
+  }
+}`);
     }
   }
 
-  /**
-   * Get the API key
-   */
   private getApiKey(): string {
     return this.googleApiKey;
   }
 
-  /**
-   * Validate and translate color using Google Translate API via your backend
-   */
-  validateColor(color: string): Observable<string> {
-    if (!color || !color.trim()) {
-      return throwError(() => new Error('Color cannot be empty'));
-    }
-
-    // First check if it's already a valid English color
-    const normalizedColor = color.toLowerCase().trim();
-    if (this.VALID_COLORS.includes(normalizedColor)) {
-      return new Observable(observer => {
-        observer.next(normalizedColor);
-        observer.complete();
-      });
-    }
-
-    // Call your backend Google service
-    return this.apiService.get<string>(`Google/check?text=${encodeURIComponent(color)}`)
-      .pipe(
-        map(response => response.toLowerCase().trim()),
-        catchError(error => {
-          console.error('Color validation failed:', error);
-          return throwError(() => new Error(`Invalid color: ${color}`));
-        })
-      );
-  }
-
-  /**
-   * Get coordinates from address using your backend
-   */
-  getCoordinates(location: string): Observable<Coordinates> {
-    if (!location || !location.trim()) {
-      return throwError(() => new Error('Location cannot be empty'));
-    }
-
-    return this.apiService.get<LocationResponse>(`Google/coordinates?location=${encodeURIComponent(location)}`)
-      .pipe(
-        map(response => ({
-          latitude: response.latitude,
-          longitude: response.longitude
-        })),
-        catchError(error => {
-          console.error('Geocoding failed:', error);
-          return throwError(() => new Error(`Failed to get coordinates for: ${location}`));
-        })
-      );
-  }
-
-  /**
-   * Get Google Place ID from address using your backend
-   */
-  getLocationId(location: string): Observable<string> {
-    if (!location || !location.trim()) {
-      return throwError(() => new Error('Location cannot be empty'));
-    }
-
-    return this.apiService.get<string>(`Google/id?location=${encodeURIComponent(location)}`)
-      .pipe(
-        catchError(error => {
-          console.error('Place ID lookup failed:', error);
-          return throwError(() => new Error(`Failed to get place ID for: ${location}`));
-        })
-      );
-  }
-
-  /**
-   * Get formatted address from coordinates using your backend
-   */
-  getLocationFromCoordinates(latitude: number, longitude: number): Observable<string> {
-    if (!this.isValidCoordinate(latitude, longitude)) {
-      return throwError(() => new Error('Invalid coordinates provided'));
-    }
-
-    return this.apiService.get<string>(`Google/location?latitude=${latitude}&longitude=${longitude}`)
-      .pipe(
-        catchError(error => {
-          console.error('Reverse geocoding failed:', error);
-          return throwError(() => new Error(`Failed to get location for coordinates: ${latitude}, ${longitude}`));
-        })
-      );
-  }
-
-  /**
-   * Generate Google Maps embed URL for iframe
-   */
-  generateMapsEmbedUrl(location: string, zoom: number = this.DEFAULT_ZOOM): string {
-    if (!location || !location.trim()) {
-      throw new Error('Location is required for embed URL');
-    }
-
-    const encodedLocation = encodeURIComponent(location.trim());
-    const apiKey = this.getApiKey();
-    
-    if (!apiKey) {
-      console.warn('Google API key not available for embed URL');
-      return `https://www.google.com/maps/embed/v1/place?q=${encodedLocation}&zoom=${zoom}`;
-    }
-
-    return `https://www.google.com/maps/embed/v1/place?q=${encodedLocation}&zoom=${zoom}&key=${apiKey}`;
-  }
-
-  /**
-   * Generate static map image URL from coordinates
-   */
+  // Metodă simplificată pentru a genera URL-uri de map static
   generateStaticMapUrl(
     latitude: number, 
     longitude: number, 
@@ -180,10 +68,6 @@ export class GoogleMapsService {
       markerLabel?: string;
     } = {}
   ): string {
-    if (!this.isValidCoordinate(latitude, longitude)) {
-      throw new Error('Invalid coordinates for static map');
-    }
-
     const {
       width = this.DEFAULT_MAP_SIZE.width,
       height = this.DEFAULT_MAP_SIZE.height,
@@ -193,27 +77,54 @@ export class GoogleMapsService {
       markerLabel = 'A'
     } = options;
 
+    if (!this.isValidCoordinate(latitude, longitude)) {
+      console.error('❌ Coordonate invalide pentru hartă:', latitude, longitude);
+      return '';
+    }
+
     const apiKey = this.getApiKey();
-    const baseUrl = 'https://maps.googleapis.com/maps/api/staticmap';
     
+    if (!apiKey) {
+      console.warn('🗺️ Nu se poate genera harta statică fără API key');
+      return '';
+    }
+
+    const baseUrl = 'https://maps.googleapis.com/maps/api/staticmap';
     const params = new URLSearchParams({
       center: `${latitude},${longitude}`,
       zoom: zoom.toString(),
       size: `${width}x${height}`,
       maptype: mapType,
-      markers: `color:${markerColor}|label:${markerLabel}|${latitude},${longitude}`
+      markers: `color:${markerColor}|label:${markerLabel}|${latitude},${longitude}`,
+      key: apiKey
     });
 
-    if (apiKey) {
-      params.append('key', apiKey);
-    }
-
-    return `${baseUrl}?${params.toString()}`;
+    const url = `${baseUrl}?${params.toString()}`;
+    console.log('🗺️ URL hartă statică generat:', url);
+    return url;
   }
 
-  /**
-   * Generate directions URL for Google Maps
-   */
+  // Metodă pentru Google Maps embed (iframe)
+  generateMapsEmbedUrl(location: string, zoom: number = this.DEFAULT_ZOOM): string {
+    if (!location || !location.trim()) {
+      console.error('❌ Locația este necesară pentru embed URL');
+      return '';
+    }
+
+    const encodedLocation = encodeURIComponent(location.trim());
+    const apiKey = this.getApiKey();
+    
+    if (!apiKey) {
+      console.warn('🗺️ Se folosește embed fără API key (funcționalitate limitată)');
+      return `https://www.google.com/maps/embed/v1/place?q=${encodedLocation}&zoom=${zoom}`;
+    }
+
+    const url = `https://www.google.com/maps/embed/v1/place?q=${encodedLocation}&zoom=${zoom}&key=${apiKey}`;
+    console.log('🗺️ URL embed generat:', url);
+    return url;
+  }
+
+  // Metodă pentru direcții
   generateDirectionsUrl(
     origin: string | Coordinates, 
     destination: string | Coordinates,
@@ -228,12 +139,12 @@ export class GoogleMapsService {
       travelmode: travelMode
     });
 
-    return `https://www.google.com/maps/dir/?api=1&${params.toString()}`;
+    const url = `https://www.google.com/maps/dir/?api=1&${params.toString()}`;
+    console.log('🗺️ URL direcții generat:', url);
+    return url;
   }
 
-  /**
-   * Generate Street View URL
-   */
+  // Metodă pentru Street View
   generateStreetViewUrl(
     location: string | Coordinates,
     options: {
@@ -255,164 +166,100 @@ export class GoogleMapsService {
       : `${location.latitude},${location.longitude}`;
 
     const apiKey = this.getApiKey();
+    
+    if (!apiKey) {
+      console.warn('🗺️ Street View necesită API key');
+      return '';
+    }
+
     const params = new URLSearchParams({
       size,
       location: locationStr,
       fov: fov.toString(),
       heading: heading.toString(),
-      pitch: pitch.toString()
+      pitch: pitch.toString(),
+      key: apiKey
     });
 
-    if (apiKey) {
-      params.append('key', apiKey);
-    }
-
-    return `https://maps.googleapis.com/maps/api/streetview?${params.toString()}`;
+    const url = `https://maps.googleapis.com/maps/api/streetview?${params.toString()}`;
+    console.log('🗺️ URL Street View generat:', url);
+    return url;
   }
 
-  /**
-   * Calculate distance between two points using Haversine formula
-   * Returns distance in kilometers
-   */
-  calculateDistance(coord1: Coordinates, coord2: Coordinates): number {
-    if (!this.isValidCoordinate(coord1.latitude, coord1.longitude) || 
-        !this.isValidCoordinate(coord2.latitude, coord2.longitude)) {
-      throw new Error('Invalid coordinates for distance calculation');
-    }
-
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = this.toRadians(coord2.latitude - coord1.latitude);
-    const dLon = this.toRadians(coord2.longitude - coord1.longitude);
-
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(this.toRadians(coord1.latitude)) * Math.cos(this.toRadians(coord2.latitude)) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  /**
-   * Format distance for display
-   */
-  formatDistance(distanceKm: number): string {
-    if (distanceKm < 1) {
-      return `${Math.round(distanceKm * 1000)} m`;
-    } else if (distanceKm < 100) {
-      return `${distanceKm.toFixed(1)} km`;
-    } else {
-      return `${Math.round(distanceKm)} km`;
-    }
-  }
-
-  /**
-   * Get user's current location using browser geolocation
-   */
+  // Obține locația curentă a utilizatorului
   getCurrentLocation(): Observable<Coordinates> {
     return new Observable(observer => {
       if (!navigator.geolocation) {
-        observer.error(new Error('Geolocation is not supported by this browser'));
+        observer.error(new Error('Geolocation nu este suportată de acest browser'));
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          observer.next({
+          const coords = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
-          });
+          };
+          console.log('📍 Locația curentă obținută:', coords);
+          observer.next(coords);
           observer.complete();
         },
         (error) => {
-          let errorMessage = 'Failed to get current location';
+          let errorMessage = 'Nu s-a putut obține locația curentă';
           switch (error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = 'Location access denied by user';
+              errorMessage = 'Accesul la locație a fost refuzat';
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information unavailable';
+              errorMessage = 'Informațiile de locație nu sunt disponibile';
               break;
             case error.TIMEOUT:
-              errorMessage = 'Location request timed out';
+              errorMessage = 'Cererea de locație a expirat';
               break;
           }
+          console.warn('📍 Eroare la obținerea locației:', errorMessage);
           observer.error(new Error(errorMessage));
         },
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000 // 5 minutes
+          maximumAge: 300000
         }
       );
     });
   }
 
-  /**
-   * Check if a color is valid
-   */
-  isValidColor(color: string): boolean {
-    if (!color || typeof color !== 'string') {
-      return false;
-    }
-    return this.VALID_COLORS.includes(color.toLowerCase().trim());
-  }
-
-  /**
-   * Get list of available colors
-   */
-  getAvailableColors(): string[] {
-    return [...this.VALID_COLORS];
-  }
-
-  /**
-   * Validate coordinates
-   */
+  // Validare coordonate
   private isValidCoordinate(latitude: number, longitude: number): boolean {
     return !isNaN(latitude) && !isNaN(longitude) &&
            latitude >= -90 && latitude <= 90 &&
            longitude >= -180 && longitude <= 180;
   }
 
-  /**
-   * Convert degrees to radians
-   */
-  private toRadians(degrees: number): number {
-    return degrees * (Math.PI / 180);
-  }
-
-  /**
-   * Create bounds for multiple coordinates
-   */
-  createBounds(coordinates: Coordinates[]): {
-    northeast: Coordinates;
-    southwest: Coordinates;
-    center: Coordinates;
-  } | null {
-    if (!coordinates || coordinates.length === 0) {
-      return null;
+  // Metodă pentru debug - verifică dacă API-ul funcționează
+  async testApiKey(): Promise<boolean> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
+      console.log('❌ Nu există API key pentru testare');
+      return false;
     }
 
-    let minLat = coordinates[0].latitude;
-    let maxLat = coordinates[0].latitude;
-    let minLng = coordinates[0].longitude;
-    let maxLng = coordinates[0].longitude;
-
-    coordinates.forEach(coord => {
-      if (this.isValidCoordinate(coord.latitude, coord.longitude)) {
-        minLat = Math.min(minLat, coord.latitude);
-        maxLat = Math.max(maxLat, coord.latitude);
-        minLng = Math.min(minLng, coord.longitude);
-        maxLng = Math.max(maxLng, coord.longitude);
+    try {
+      // Test simplu cu Geocoding API
+      const testUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=Bucharest&key=${apiKey}`;
+      const response = await fetch(testUrl);
+      const data = await response.json();
+      
+      if (data.status === 'OK') {
+        console.log('✅ Google Maps API key funcționează corect');
+        return true;
+      } else {
+        console.error('❌ Eroare la testarea API key:', data.status, data.error_message);
+        return false;
       }
-    });
-
-    return {
-      northeast: { latitude: maxLat, longitude: maxLng },
-      southwest: { latitude: minLat, longitude: minLng },
-      center: {
-        latitude: (minLat + maxLat) / 2,
-        longitude: (minLng + maxLng) / 2
-      }
-    };
+    } catch (error) {
+      console.error('❌ Eroare la testarea API key:', error);
+      return false;
+    }
   }
 }

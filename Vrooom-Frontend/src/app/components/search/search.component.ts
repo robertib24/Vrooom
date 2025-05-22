@@ -8,6 +8,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import { Router } from '@angular/router';
 import { VehiclesService, Vehicle } from '../../services/vehicles.service';
 import { finalize } from 'rxjs/operators';
 
@@ -48,7 +49,8 @@ export class SearchComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private vehiclesService: VehiclesService
+    private vehiclesService: VehiclesService,
+    private router: Router
   ) {
     this.searchForm = this.fb.group({
       query: ['']
@@ -101,12 +103,18 @@ export class SearchComponent implements OnInit {
   }
 
   viewVehicleDetails(vehicle: Vehicle) {
-    // Navigate to vehicle details - you'll implement this route
-    console.log('View details for vehicle:', vehicle);
+    this.router.navigate(['/vehicle', vehicle.id]);
   }
 
   bookVehicle(vehicle: Vehicle) {
-    // Navigate to booking - you'll implement this
-    console.log('Book vehicle:', vehicle);
+    // Navigate to vehicle details for booking
+    this.router.navigate(['/vehicle', vehicle.id]);
+  }
+
+  onImageError(event: any) {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+    }
   }
 }

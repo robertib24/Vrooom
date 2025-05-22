@@ -1,0 +1,590 @@
+// vehicle-details.component.scss
+.vehicle-details-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem 1rem;
+
+  .loading-container,
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+
+    p {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      color: #666;
+    }
+  }
+
+  .error-card {
+    max-width: 500px;
+    border-radius: 16px;
+
+    .error-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 2rem;
+
+      .error-icon {
+        font-size: 3rem;
+        width: 3rem;
+        height: 3rem;
+        color: #f44336;
+      }
+
+      h3 {
+        margin: 0;
+        color: #333;
+        font-size: 1.5rem;
+      }
+
+      p {
+        margin: 0;
+        color: #666;
+        text-align: center;
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto 2rem;
+    padding: 0 1rem;
+
+    .back-button {
+      border-radius: 20px;
+      color: #667eea;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: rgba(102, 126, 234, 0.1);
+        transform: translateX(-2px);
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+
+      button {
+        color: #666;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: rgba(102, 126, 234, 0.1);
+          color: #667eea;
+        }
+      }
+    }
+  }
+
+  .details-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+
+    .images-card {
+      grid-column: 1 / -1;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+      .image-gallery {
+        .main-image-container {
+          position: relative;
+          height: 400px;
+          overflow: hidden;
+
+          .main-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+          }
+
+          .price-overlay {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+          }
+
+          .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            z-index: 2;
+
+            &.prev {
+              left: 1rem;
+            }
+
+            &.next {
+              right: 1rem;
+            }
+
+            &:hover {
+              background: white;
+              transform: translateY(-50%) scale(1.1);
+            }
+          }
+        }
+
+        .image-thumbnails {
+          display: flex;
+          gap: 0.5rem;
+          padding: 1rem;
+          overflow-x: auto;
+
+          .thumbnail {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+
+            &:hover {
+              opacity: 1;
+              transform: scale(1.05);
+            }
+
+            &.active {
+              opacity: 1;
+              border-color: #667eea;
+              transform: scale(1.05);
+            }
+          }
+        }
+      }
+    }
+
+    .info-card {
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+      .vehicle-avatar {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+          font-size: 1.5rem;
+        }
+      }
+
+      mat-card-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+      }
+
+      mat-card-subtitle {
+        font-size: 1rem;
+        color: #666;
+        margin-top: 0.5rem;
+      }
+
+      .vehicle-description {
+        margin-bottom: 2rem;
+
+        h3 {
+          color: #333;
+          margin-bottom: 1rem;
+          font-weight: 600;
+        }
+
+        p {
+          color: #555;
+          line-height: 1.6;
+          font-size: 1rem;
+        }
+      }
+
+      .vehicle-features {
+        margin: 2rem 0;
+
+        h3 {
+          color: #333;
+          margin-bottom: 1rem;
+          font-weight: 600;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+
+          .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: #e9ecef;
+              transform: translateY(-2px);
+            }
+
+            mat-icon {
+              color: #667eea;
+              font-size: 1.2rem;
+            }
+
+            span {
+              font-weight: 500;
+              color: #333;
+            }
+          }
+        }
+      }
+
+      .pricing-info {
+        margin: 2rem 0;
+
+        h3 {
+          color: #333;
+          margin-bottom: 1rem;
+          font-weight: 600;
+        }
+
+        .price-breakdown {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+
+          .price-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+
+            .price {
+              font-weight: 600;
+              color: #4caf50;
+              font-size: 1.1rem;
+            }
+          }
+        }
+      }
+
+      mat-card-actions {
+        padding: 1rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+
+        .book-button {
+          flex: 1;
+          min-width: 200px;
+          height: 48px;
+          border-radius: 24px;
+          font-weight: 600;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+          }
+        }
+
+        .disabled-button {
+          flex: 1;
+          min-width: 200px;
+          height: 48px;
+          border-radius: 24px;
+          opacity: 0.6;
+        }
+      }
+    }
+
+    .location-card {
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+      .location-avatar {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+          font-size: 1.5rem;
+        }
+      }
+
+      .location-info {
+        .address-info {
+          margin-bottom: 2rem;
+
+          h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+          }
+
+          p {
+            color: #555;
+            margin: 0.5rem 0;
+            line-height: 1.5;
+
+            &.coordinates {
+              font-size: 0.9rem;
+              color: #666;
+              font-family: monospace;
+            }
+          }
+        }
+
+        .map-section {
+          h4 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 600;
+          }
+
+          .interactive-map-container {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+
+            .map-embed {
+              width: 100%;
+              height: 400px;
+              border: none;
+              display: block;
+            }
+          }
+
+          .static-map-container {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+
+            .static-map {
+              width: 100%;
+              height: 300px;
+              object-fit: cover;
+              display: block;
+            }
+          }
+
+          .map-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            text-align: center;
+            color: #6c757d;
+
+            mat-icon {
+              font-size: 3rem;
+              width: 3rem;
+              height: 3rem;
+              margin-bottom: 1rem;
+              opacity: 0.5;
+            }
+
+            .title {
+              font-size: 1.1rem;
+              font-weight: 600;
+              margin: 0 0 0.5rem 0;
+            }
+
+            .subtitle {
+              font-size: 0.9rem;
+              margin: 0 0 1rem 0;
+              opacity: 0.8;
+            }
+
+            button {
+              border-radius: 20px;
+            }
+          }
+        }
+      }
+
+      mat-card-actions {
+        padding: 1rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+
+        button {
+          flex: 1;
+          min-width: 150px;
+          border-radius: 20px;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .documents-card {
+      grid-column: 1 / -1;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+      .documents-avatar {
+        background: linear-gradient(135deg, #ffc107, #ff8f00);
+        color: white;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+          font-size: 1.5rem;
+        }
+      }
+
+      .documents-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+
+        .document-item {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1.5rem;
+          background: #f8f9fa;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+          }
+
+          .doc-icon {
+            font-size: 2rem;
+            width: 2rem;
+            height: 2rem;
+
+            &.verified {
+              color: #4caf50;
+            }
+          }
+
+          .doc-info {
+            h4 {
+              margin: 0 0 0.25rem 0;
+              font-weight: 600;
+              color: #333;
+            }
+
+            p {
+              margin: 0;
+              color: #666;
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .vehicle-details-container {
+    padding: 1rem 0.5rem;
+
+    .header-actions {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .details-content {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+
+      .info-card,
+      .location-card {
+        mat-card-actions {
+          flex-direction: column;
+
+          button {
+            width: 100%;
+          }
+        }
+      }
+
+      .location-card .location-info .map-section {
+        .interactive-map-container .map-embed,
+        .static-map-container .static-map {
+          height: 250px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .vehicle-details-container {
+    .details-content {
+      .images-card .image-gallery .main-image-container {
+        height: 250px;
+
+        .price-overlay {
+          font-size: 1rem;
+          padding: 0.5rem 1rem;
+        }
+      }
+
+      .vehicle-features .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .documents-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

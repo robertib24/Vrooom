@@ -25,20 +25,27 @@
               </mat-form-field>
               
               <div class="search-actions">
-                <button 
-                  mat-raised-button 
-                  color="primary" 
-                  type="submit"
-                  [disabled]="loading || !searchForm.get('query')?.value?.trim()"
-                  class="search-button">
-                  @if (loading) {
+                @if (loading) {
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    type="submit"
+                    disabled
+                    class="search-button">
                     <mat-spinner diameter="20"></mat-spinner>
                     Searching...
-                  } @else {
+                  </button>
+                } @else {
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    type="submit"
+                    [disabled]="!searchForm.get('query')?.value?.trim()"
+                    class="search-button">
                     <mat-icon>search</mat-icon>
                     Search
-                  }
-                </button>
+                  </button>
+                }
                 
                 @if (searched) {
                   <button 
@@ -111,7 +118,7 @@
                   mat-card-image 
                   [src]="getVehicleImageUrl(vehicle.id)"
                   [alt]="vehicle.firma + ' ' + vehicle.model"
-                  (error)="$event.target.src='https://via.placeholder.com/300x200?text=No+Image'"
+                  (error)="onImageError($event)"
                   class="vehicle-image">
                 
                 <div class="price-badge">

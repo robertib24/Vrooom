@@ -5,6 +5,9 @@ import { AboutUsComponent } from './pages/about-us/about-us.component';
 import { LoginComponent } from './pages/login/login.component';
 import { authGuard } from './guards/auth.guard';
 import { SignupComponent } from './pages/signup/signup.component';
+import { VehicleDetailsComponent } from './pages/vehicle-details/vehicle-details.component';
+import { SearchComponent } from './components/search/search.component';
+import { ProfileComponent } from './components/profile/profile.component';
 
 export const routes: Routes = [
   {
@@ -14,6 +17,9 @@ export const routes: Routes = [
       { path: 'landing', component: LandingComponent },
       { path: 'about', component: AboutUsComponent },
       { path: 'vehicles', component: VehiclesComponent },
+      { path: 'vehicle/:id', component: VehicleDetailsComponent },
+      { path: 'search', component: SearchComponent },
+      { path: 'profile', component: ProfileComponent },
     ],
   },
   { path: 'signup', component: SignupComponent },

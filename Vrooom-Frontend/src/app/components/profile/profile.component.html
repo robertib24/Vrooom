@@ -21,7 +21,7 @@
             
             <div class="profile-info">
               <h1>{{ userProfile.nume }} {{ userProfile.prenume }}</h1>
-              <p class="username">@{{ userProfile.username }}</p>
+              <p class="username">{{ '@' + userProfile.username }}</p>
               <div class="stats">
                 <div class="stat-item">
                   <mat-icon>stars</mat-icon>
@@ -91,19 +91,25 @@
                   </div>
   
                   <div class="form-actions">
-                    <button 
-                      mat-raised-button 
-                      color="primary" 
-                      type="submit"
-                      [disabled]="profileForm.invalid || updating">
-                      @if (updating) {
+                    @if (updating) {
+                      <button 
+                        mat-raised-button 
+                        color="primary" 
+                        type="submit"
+                        disabled>
                         <mat-spinner diameter="20"></mat-spinner>
                         Updating...
-                      } @else {
+                      </button>
+                    } @else {
+                      <button 
+                        mat-raised-button 
+                        color="primary" 
+                        type="submit"
+                        [disabled]="profileForm.invalid">
                         <mat-icon>save</mat-icon>
                         Update Profile
-                      }
-                    </button>
+                      </button>
+                    }
                   </div>
                 </form>
               </div>
@@ -149,19 +155,25 @@
                   </div>
   
                   <div class="form-actions">
-                    <button 
-                      mat-raised-button 
-                      color="primary" 
-                      type="submit"
-                      [disabled]="passwordForm.invalid || changingPassword">
-                      @if (changingPassword) {
+                    @if (changingPassword) {
+                      <button 
+                        mat-raised-button 
+                        color="primary" 
+                        type="submit"
+                        disabled>
                         <mat-spinner diameter="20"></mat-spinner>
                         Changing...
-                      } @else {
+                      </button>
+                    } @else {
+                      <button 
+                        mat-raised-button 
+                        color="primary" 
+                        type="submit"
+                        [disabled]="passwordForm.invalid">
                         <mat-icon>security</mat-icon>
                         Change Password
-                      }
-                    </button>
+                      </button>
+                    }
                   </div>
                 </form>
               </div>

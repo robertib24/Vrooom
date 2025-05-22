@@ -1,9 +1,9 @@
 import {
   MatRipple
-} from "./chunk-7UASIDCR.js";
+} from "./chunk-XUOXLUKC.js";
 import {
   MatCommonModule
-} from "./chunk-BF5225VT.js";
+} from "./chunk-EBLQ2RZJ.js";
 import {
   NgModule,
   setClassMetadata,
@@ -38,4 +38,4 @@ var MatRippleModule = class _MatRippleModule {
 export {
   MatRippleModule
 };
-//# sourceMappingURL=chunk-5QEIS2OR.js.map
+//# sourceMappingURL=chunk-HRJ5EHMZ.js.map

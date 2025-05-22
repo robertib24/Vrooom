@@ -16,6 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { VehiclesService, Vehicle } from '../../services/vehicles.service';
 import { RentDialogComponent } from '../../components/rent-dialog/rent-dialog.component';
 import { finalize } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { TokenService } from '../../services/token.service';
 
 @Component({
@@ -43,6 +44,7 @@ export class VehiclesComponent implements OnInit {
   private vehiclesService = inject(VehiclesService);
   private tokenService = inject(TokenService);
   private fb = inject(FormBuilder);
+  private router = inject(Router);
   readonly dialog = inject(MatDialog);
 
   allVehicles: Vehicle[] = [];
@@ -285,9 +287,8 @@ export class VehiclesComponent implements OnInit {
   }
 
   viewVehicleDetails(vehicle: Vehicle) {
-    // Navigate to vehicle details page
-    console.log('View details for:', vehicle);
-  }
+    this.router.navigate(['/vehicle', vehicle.id]);
+}
 
   canUserBook(vehicle: Vehicle): boolean {
     const currentUserId = this.tokenService.getUserId();

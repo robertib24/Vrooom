@@ -1,0 +1,293 @@
+<div class="vehicle-details-container">
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading vehicle details...</p>
+    </div>
+  } @else if (error) {
+    <div class="error-container">
+      <mat-card class="error-card">
+        <mat-card-content>
+          <div class="error-content">
+            <mat-icon class="error-icon">error_outline</mat-icon>
+            <h3>Vehicle Not Found</h3>
+            <p>The vehicle you're looking for doesn't exist or has been removed.</p>
+            <button mat-raised-button color="primary" (click)="goBack()">
+              <mat-icon>arrow_back</mat-icon>
+              Back to Vehicles
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  } @else if (vehicle) {
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button mat-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+        Back to Vehicles
+      </button>
+      
+      <div class="action-buttons">
+        <button mat-icon-button (click)="shareVehicle()" matTooltip="Share">
+          <mat-icon>share</mat-icon>
+        </button>
+        <button mat-icon-button (click)="reportVehicle()" matTooltip="Report">
+          <mat-icon>flag</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="details-content">
+      <!-- Vehicle Images Section -->
+      <mat-card class="images-card">
+        <div class="image-gallery">
+          <div class="main-image-container">
+            <img 
+              [src]="vehicleImages[currentImageIndex]" 
+              [alt]="vehicle.firma + ' ' + vehicle.model"
+              (error)="onImageError($event)"
+              class="main-image">
+            
+            <div class="price-overlay">
+              <span class="price-text">{{ formatPrice(vehicle.pret) }}</span>
+            </div>
+
+            @if (vehicleImages.length > 1) {
+              <button mat-mini-fab class="nav-button prev" (click)="previousImage()">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              <button mat-mini-fab class="nav-button next" (click)="nextImage()">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            }
+          </div>
+
+          @if (vehicleImages.length > 1) {
+            <div class="image-thumbnails">
+              @for (image of vehicleImages; track trackByIndex($index); let i = $index) {
+                <img 
+                  [src]="image"
+                  [alt]="'Image ' + (i + 1)"
+                  (click)="goToImage(i)"
+                  (error)="onImageError($event)"
+                  [class.active]="i === currentImageIndex"
+                  class="thumbnail">
+              }
+            </div>
+          }
+        </div>
+      </mat-card>
+
+      <!-- Vehicle Info Section -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <div mat-card-avatar class="vehicle-avatar">
+            <mat-icon>directions_car</mat-icon>
+          </div>
+          <mat-card-title>{{ vehicle.firma }} {{ vehicle.model }}</mat-card-title>
+          <mat-card-subtitle>{{ vehicle.anFabricatie }} • {{ formatMileage(vehicle.kilometraj) }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="vehicle-description">
+            <h3>Description</h3>
+            <p>{{ vehicle.descriere }}</p>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="vehicle-features">
+            <h3>Vehicle Features</h3>
+            <div class="features-grid">
+              <div class="feature-item">
+                <mat-icon>palette</mat-icon>
+                <span>{{ vehicle.culoare | titlecase }}</span>
+              </div>
+              <div class="feature-item">
+                <mat-icon>speed</mat-icon>
+                <span>{{ formatMileage(vehicle.kilometraj) }}</span>
+              </div>
+              <div class="feature-item">
+                <mat-icon>calendar_today</mat-icon>
+                <span>{{ vehicle.anFabricatie }}</span>
+              </div>
+              <div class="feature-item">
+                <mat-icon>description</mat-icon>
+                <span>Registration Available</span>
+              </div>
+              <div class="feature-item">
+                <mat-icon>verified_user</mat-icon>
+                <span>Insurance Included</span>
+              </div>
+              <div class="feature-item">
+                <mat-icon>security</mat-icon>
+                <span>Vehicle ID Verified</span>
+              </div>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="pricing-info">
+            <h3>Pricing</h3>
+            <div class="price-breakdown">
+              <div class="price-item">
+                <span>Daily Rate</span>
+                <span class="price">{{ formatPrice(vehicle.pret) }}</span>
+              </div>
+              <div class="price-item">
+                <span>Weekly Rate (7+ days)</span>
+                <span class="price">€{{ (vehicle.pret * 0.9).toFixed(0) }}/day</span>
+              </div>
+              <div class="price-item">
+                <span>Monthly Rate (30+ days)</span>
+                <span class="price">€{{ (vehicle.pret * 0.8).toFixed(0) }}/day</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          @if (canUserBook()) {
+            <button mat-raised-button color="primary" class="book-button" (click)="openBookingDialog()">
+              <mat-icon>event</mat-icon>
+              Book This Vehicle
+            </button>
+          } @else {
+            <button mat-stroked-button disabled class="disabled-button">
+              <mat-icon>block</mat-icon>
+              This is Your Vehicle
+            </button>
+          }
+          
+          <button mat-button (click)="contactOwner()">
+            <mat-icon>message</mat-icon>
+            Contact Owner
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Location Section -->
+      <mat-card class="location-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="location-avatar">location_on</mat-icon>
+          <mat-card-title>Vehicle Location</mat-card-title>
+          <mat-card-subtitle>{{ vehicle.locatie_formala || vehicle.locatie }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="location-info">
+            <div class="address-info">
+              <h4>Pickup Address</h4>
+              <p>{{ vehicle.locatie_formala || vehicle.locatie }}</p>
+              
+              @if (vehicle.latitudine && vehicle.longitudine) {
+                <p class="coordinates">
+                  Coordinates: {{ vehicle.latitudine.toFixed(6) }}, {{ vehicle.longitudine.toFixed(6) }}
+                </p>
+              }
+            </div>
+
+            <!-- Interactive Map Embed - Only here in Pickup Address section -->
+            <div class="map-section">
+              <h4>Location on Map</h4>
+              
+              @if (mapEmbedUrl) {
+                <div class="interactive-map-container">
+                  <iframe 
+                    [src]="mapEmbedUrl"
+                    width="100%"
+                    height="400"
+                    style="border:0; border-radius: 8px;"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    class="map-embed"
+                    (load)="onMapEmbedLoad()"
+                    (error)="onMapEmbedError()">
+                  </iframe>
+                </div>
+              } @else if (staticMapUrl) {
+                <!-- Fallback to static map if embed not available -->
+                <div class="static-map-container">
+                  <img 
+                    [src]="staticMapUrl" 
+                    alt="Vehicle location map"
+                    class="static-map"
+                    (error)="onMapImageError($event)"
+                    (load)="onMapImageLoad()">
+                </div>
+              } @else {
+                <!-- Fallback when no map is available -->
+                <div class="map-placeholder">
+                  <mat-icon>map</mat-icon>
+                  <p class="title">Map not available</p>
+                  <p class="subtitle">Google Maps API key required to display the map</p>
+                  <button mat-button color="primary" (click)="openGoogleMaps()">
+                    <mat-icon>open_in_new</mat-icon>
+                    Open in Google Maps
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-button (click)="openGoogleMaps()">
+            <mat-icon>directions</mat-icon>
+            Get Directions
+          </button>
+          
+          <button mat-button (click)="openStreetView()">
+            <mat-icon>streetview</mat-icon>
+            Street View
+          </button>
+          
+          <button mat-button (click)="debugMapsSetup()">
+            <mat-icon>bug_report</mat-icon>
+            Debug Maps
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Documents Section -->
+      <mat-card class="documents-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="documents-avatar">description</mat-icon>
+          <mat-card-title>Vehicle Documents</mat-card-title>
+          <mat-card-subtitle>All required documents are verified</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="documents-grid">
+            <div class="document-item">
+              <mat-icon class="doc-icon verified">verified_user</mat-icon>
+              <div class="doc-info">
+                <h4>Vehicle Registration</h4>
+                <p>Verified and up to date</p>
+              </div>
+            </div>
+            
+            <div class="document-item">
+              <mat-icon class="doc-icon verified">security</mat-icon>
+              <div class="doc-info">
+                <h4>Insurance Coverage</h4>
+                <p>Full comprehensive coverage</p>
+              </div>
+            </div>
+            
+            <div class="document-item">
+              <mat-icon class="doc-icon verified">assignment</mat-icon>
+              <div class="doc-info">
+                <h4>Vehicle ID</h4>
+                <p>Officially verified identity</p>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>

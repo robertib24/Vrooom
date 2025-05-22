@@ -252,6 +252,10 @@ export class LandingComponent implements OnInit, OnDestroy {
     return this.vehiclesService.getVehicleImageUrl(vehicleId);
   }
 
+  viewVehicleDetails(vehicle: any) {
+    this.router.navigate(['/vehicle', vehicle.id]);
+  }
+
   onHeroAction(slide: any) {
     switch (slide.cta) {
       case 'Browse Premium Cars':
