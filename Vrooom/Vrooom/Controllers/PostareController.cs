@@ -18,8 +18,21 @@ namespace Vrooom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddPostare([FromForm] PostareDTO postareDTO)
         {
-
-            return Ok(await _postareService.AddPostare(postareDTO));
+            try
+            {
+                var result = await _postareService.AddPostare(postareDTO);
+                return Ok(result);
+            }
+            catch (Amazon.S3.AmazonS3Exception ex)
+            {
+                // Logheaza excepția dacă vrei
+                return StatusCode(500, new { error = "S3 error", message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Logheaza excepția dacă vrei
+                return StatusCode(500, new { error = "Internal server error", message = ex.Message });
+            }
         }
         [HttpGet]
         public async Task<IActionResult> getAllPostari()

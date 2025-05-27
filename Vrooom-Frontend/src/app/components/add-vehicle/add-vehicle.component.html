@@ -1,0 +1,576 @@
+<div class="add-vehicle-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>
+        <mat-icon class="hero-icon">add_circle</mat-icon>
+        List Your Vehicle
+      </h1>
+      <p>Share your car with the community and earn money when you're not driving</p>
+    </div>
+  </div>
+
+  <!-- Form Container -->
+  <div class="form-container">
+    <mat-card class="stepper-card">
+      <mat-stepper linear #stepper>
+        
+        <!-- Step 1: Basic Information -->
+        <mat-step [stepControl]="basicInfoForm" label="Basic Information">
+          <div class="step-content">
+            <h2>Vehicle Information</h2>
+            <p>Tell us about your vehicle's basic details</p>
+
+            <form [formGroup]="basicInfoForm">
+              <div class="form-grid">
+                <!-- Title -->
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Listing Title</mat-label>
+                  <input matInput formControlName="titlu" 
+                         placeholder="e.g., BMW X5 2020 - Perfect for family trips">
+                  <mat-icon matSuffix>title</mat-icon>
+                  @if (basicInfoFormControls['titlu'].errors?.['required'] && basicInfoFormControls['titlu'].touched) {
+                    <mat-error>Title is required</mat-error>
+                  }
+                  @if (basicInfoFormControls['titlu'].errors?.['minlength'] && basicInfoFormControls['titlu'].touched) {
+                    <mat-error>Title must be at least 10 characters</mat-error>
+                  }
+                  @if (basicInfoFormControls['titlu'].errors?.['maxlength'] && basicInfoFormControls['titlu'].touched) {
+                    <mat-error>Title cannot exceed 100 characters</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Brand -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Brand</mat-label>
+                  <mat-select formControlName="firma">
+                    @for (brand of carBrands; track brand) {
+                      <mat-option [value]="brand">{{ brand }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matSuffix>directions_car</mat-icon>
+                  @if (basicInfoFormControls['firma'].errors?.['required'] && basicInfoFormControls['firma'].touched) {
+                    <mat-error>Brand is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Model -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Model</mat-label>
+                  <input matInput formControlName="model" placeholder="e.g., X5, Golf, Civic">
+                  <mat-icon matSuffix>car_rental</mat-icon>
+                  @if (basicInfoFormControls['model'].errors?.['required'] && basicInfoFormControls['model'].touched) {
+                    <mat-error>Model is required</mat-error>
+                  }
+                  @if (basicInfoFormControls['model'].errors?.['minlength'] && basicInfoFormControls['model'].touched) {
+                    <mat-error>Model must be at least 2 characters</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Year -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Year</mat-label>
+                  <mat-select formControlName="anFabricatie">
+                    @for (year of years; track year) {
+                      <mat-option [value]="year">{{ year }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matSuffix>calendar_today</mat-icon>
+                  @if (basicInfoFormControls['anFabricatie'].errors?.['required'] && basicInfoFormControls['anFabricatie'].touched) {
+                    <mat-error>Year is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Color -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Color</mat-label>
+                  <mat-select formControlName="culoare">
+                    @for (color of carColors; track color.value) {
+                      <mat-option [value]="color.value">{{ color.label }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-icon matSuffix>palette</mat-icon>
+                  @if (basicInfoFormControls['culoare'].errors?.['required'] && basicInfoFormControls['culoare'].touched) {
+                    <mat-error>Color is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Price -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Daily Rate (€)</mat-label>
+                  <input matInput type="number" formControlName="pret" 
+                         placeholder="50" min="1" max="10000">
+                  <mat-icon matSuffix>euro</mat-icon>
+                  @if (basicInfoFormControls['pret'].errors?.['required'] && basicInfoFormControls['pret'].touched) {
+                    <mat-error>Price is required</mat-error>
+                  }
+                  @if (basicInfoFormControls['pret'].errors?.['min'] && basicInfoFormControls['pret'].touched) {
+                    <mat-error>Price must be at least €1</mat-error>
+                  }
+                  @if (basicInfoFormControls['pret'].errors?.['max'] && basicInfoFormControls['pret'].touched) {
+                    <mat-error>Price cannot exceed €10,000</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            </form>
+
+            <div class="step-actions">
+              <div></div>
+              <button mat-raised-button color="primary" matStepperNext 
+                      [disabled]="basicInfoForm.invalid">
+                Next
+                <mat-icon>navigate_next</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-step>
+
+        <!-- Step 2: Details & Location -->
+        <mat-step [stepControl]="detailsForm" label="Details & Location">
+          <div class="step-content">
+            <h2>Vehicle Details</h2>
+            <p>Provide detailed information about your vehicle</p>
+
+            <form [formGroup]="detailsForm">
+              <div class="form-grid">
+                <!-- Mileage -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Mileage (km)</mat-label>
+                  <input matInput type="number" formControlName="kilometraj" 
+                         placeholder="50000" min="0" max="1000000">
+                  <mat-icon matSuffix>speed</mat-icon>
+                  @if (detailsFormControls['kilometraj'].errors?.['required'] && detailsFormControls['kilometraj'].touched) {
+                    <mat-error>Mileage is required</mat-error>
+                  }
+                  @if (detailsFormControls['kilometraj'].errors?.['min'] && detailsFormControls['kilometraj'].touched) {
+                    <mat-error>Mileage cannot be negative</mat-error>
+                  }
+                  @if (detailsFormControls['kilometraj'].errors?.['max'] && detailsFormControls['kilometraj'].touched) {
+                    <mat-error>Mileage seems too high</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Location -->
+                <mat-form-field appearance="outline">
+                  <mat-label>Pickup Location</mat-label>
+                  <input matInput formControlName="locatie" 
+                         placeholder="e.g., Cluj-Napoca, Romania">
+                  <mat-icon matSuffix>location_on</mat-icon>
+                  @if (detailsFormControls['locatie'].errors?.['required'] && detailsFormControls['locatie'].touched) {
+                    <mat-error>Location is required</mat-error>
+                  }
+                  @if (detailsFormControls['locatie'].errors?.['minlength'] && detailsFormControls['locatie'].touched) {
+                    <mat-error>Please provide a more specific location</mat-error>
+                  }
+                </mat-form-field>
+
+                <!-- Description Section -->
+                <div class="description-section full-width">
+                  <div class="description-header">
+                    <mat-form-field appearance="outline" class="description-field">
+                      <mat-label>Description</mat-label>
+                      <textarea matInput formControlName="descriere" 
+                                rows="6" 
+                                placeholder="Describe your vehicle, its features, condition, and any special instructions for renters..."></textarea>
+                      <mat-icon matSuffix>description</mat-icon>
+                      @if (detailsFormControls['descriere'].errors?.['required'] && detailsFormControls['descriere'].touched) {
+                        <mat-error>Description is required</mat-error>
+                      }
+                      @if (detailsFormControls['descriere'].errors?.['minlength'] && detailsFormControls['descriere'].touched) {
+                        <mat-error>Description must be at least 50 characters</mat-error>
+                      }
+                      @if (detailsFormControls['descriere'].errors?.['maxlength'] && detailsFormControls['descriere'].touched) {
+                        <mat-error>Description cannot exceed 2000 characters</mat-error>
+                      }
+                    </mat-form-field>
+
+                    @if (enhancingDescription) {
+                      <button mat-raised-button color="accent" class="enhance-button" disabled>
+                        <mat-spinner diameter="20"></mat-spinner>
+                        Enhancing...
+                      </button>
+                    } @else {
+                      <button mat-raised-button color="accent" class="enhance-button" 
+                              (click)="enhanceDescription()"
+                              type="button">
+                        <mat-icon>auto_fix_high</mat-icon>
+                        Enhance with AI
+                      </button>
+                    }
+                  </div>
+                  
+                  <div class="character-count">
+                    {{ detailsFormControls['descriere'].value?.length || 0 }} / 2000 characters
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <div class="step-actions">
+              <button mat-button matStepperPrevious>
+                <mat-icon>navigate_before</mat-icon>
+                Back
+              </button>
+              <button mat-raised-button color="primary" matStepperNext 
+                      [disabled]="detailsForm.invalid">
+                Next
+                <mat-icon>navigate_next</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-step>
+
+        <!-- Step 3: Documents -->
+        <mat-step [stepControl]="documentsForm" label="Documents">
+          <div class="step-content">
+            <h2>Vehicle Documents</h2>
+            <p>Upload your vehicle's documents (optional but recommended for trust)</p>
+
+            <div class="documents-grid">
+              <!-- Vehicle Registration -->
+              <div class="document-upload">
+                <mat-card class="document-card">
+                  <mat-card-header>
+                    <div mat-card-avatar class="doc-icon">
+                      <mat-icon>assignment</mat-icon>
+                    </div>
+                    <mat-card-title>Vehicle Registration</mat-card-title>
+                    <mat-card-subtitle>Talon / Registration Document</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <input type="file" #talonFile (change)="onDocumentSelected($event, 'talon')" 
+                           accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                    <button mat-raised-button color="primary" (click)="talonFile.click()">
+                      <mat-icon>upload_file</mat-icon>
+                      {{ hasDocument('talon') ? 'Replace Document' : 'Upload Document' }}
+                    </button>
+                    @if (hasDocument('talon')) {
+                      <p class="file-selected">
+                        <mat-icon>check_circle</mat-icon>
+                        {{ getDocumentName('talon') }}
+                      </p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+              </div>
+
+              <!-- Vehicle Identity -->
+              <div class="document-upload">
+                <mat-card class="document-card">
+                  <mat-card-header>
+                    <div mat-card-avatar class="doc-icon">
+                      <mat-icon>badge</mat-icon>
+                    </div>
+                    <mat-card-title>Vehicle Identity</mat-card-title>
+                    <mat-card-subtitle>Identity Card / Title</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <input type="file" #identityFile (change)="onDocumentSelected($event, 'carteIdentitateMasina')" 
+                           accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                    <button mat-raised-button color="primary" (click)="identityFile.click()">
+                      <mat-icon>upload_file</mat-icon>
+                      {{ hasDocument('carteIdentitateMasina') ? 'Replace Document' : 'Upload Document' }}
+                    </button>
+                    @if (hasDocument('carteIdentitateMasina')) {
+                      <p class="file-selected">
+                        <mat-icon>check_circle</mat-icon>
+                        {{ getDocumentName('carteIdentitateMasina') }}
+                      </p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+              </div>
+
+              <!-- Insurance -->
+              <div class="document-upload">
+                <mat-card class="document-card">
+                  <mat-card-header>
+                    <div mat-card-avatar class="doc-icon">
+                      <mat-icon>security</mat-icon>
+                    </div>
+                    <mat-card-title>Insurance Policy</mat-card-title>
+                    <mat-card-subtitle>Current Insurance Document</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <input type="file" #insuranceFile (change)="onDocumentSelected($event, 'asigurare')" 
+                           accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                    <button mat-raised-button color="primary" (click)="insuranceFile.click()">
+                      <mat-icon>upload_file</mat-icon>
+                      {{ hasDocument('asigurare') ? 'Replace Document' : 'Upload Document' }}
+                    </button>
+                    @if (hasDocument('asigurare')) {
+                      <p class="file-selected">
+                        <mat-icon>check_circle</mat-icon>
+                        {{ getDocumentName('asigurare') }}
+                      </p>
+                    }
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </div>
+
+            <div class="step-actions">
+              <button mat-button matStepperPrevious>
+                <mat-icon>navigate_before</mat-icon>
+                Back
+              </button>
+              <button mat-raised-button color="primary" matStepperNext>
+                Next
+                <mat-icon>navigate_next</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-step>
+
+        <!-- Step 4: Photos -->
+        <mat-step [stepControl]="imagesForm" label="Photos">
+          <div class="step-content">
+            <h2>Vehicle Photos</h2>
+            <p>Upload high-quality photos of your vehicle (minimum 3 photos required)</p>
+
+            <div class="image-upload-section">
+              <!-- Upload Area -->
+              <div class="upload-area">
+                <div class="upload-dropzone" (click)="imageFileInput.click()">
+                  <mat-icon class="upload-icon">add_photo_alternate</mat-icon>
+                  <h3>Upload Vehicle Photos</h3>
+                  <p>Click here to select multiple photos</p>
+                  <p class="upload-hint">JPG, PNG, WebP • Max 5MB each • Up to {{ maxImages }} photos</p>
+                  
+                  @if (uploadingImages) {
+                    <mat-spinner diameter="30"></mat-spinner>
+                    <p>Processing images...</p>
+                  } @else {
+                    <button mat-raised-button color="primary" type="button">
+                      <mat-icon>cloud_upload</mat-icon>
+                      Choose Photos
+                    </button>
+                  }
+                </div>
+                
+                <input type="file" #imageFileInput 
+                       (change)="onImagesSelected($event)"
+                       accept="image/jpeg,image/jpg,image/png,image/webp"
+                       multiple style="display: none;">
+              </div>
+
+              <!-- Image Previews -->
+              @if (selectedImages.length > 0) {
+                <div class="image-preview-section">
+                  <h3>Selected Photos ({{ selectedImages.length }}/{{ maxImages }})</h3>
+                  
+                  <div class="image-grid">
+                    @for (previewUrl of imagePreviewUrls; track $index; let i = $index) {
+                      <div class="image-preview">
+                        <img [src]="previewUrl" [alt]="'Preview ' + (i + 1)">
+                        <div class="image-overlay">
+                          <div class="image-number">{{ i + 1 }}</div>
+                          <button mat-mini-fab color="warn" class="remove-button" 
+                                  (click)="removeImage(i)">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Photo Tips -->
+              <div class="photo-tips">
+                <h4>📸 Photo Tips for Better Results</h4>
+                <ul>
+                  <li>Include exterior shots from multiple angles (front, back, sides)</li>
+                  <li>Take clear interior photos showing seats, dashboard, and features</li>
+                  <li>Ensure good lighting - natural daylight works best</li>
+                  <li>Clean your vehicle before taking photos</li>
+                  <li>Avoid including personal items or license plates</li>
+                  <li>The first photo will be used as the main listing image</li>
+                </ul>
+              </div>
+
+              <!-- Error Messages -->
+              @if (imagesFormControls['imagini'].errors?.['minImages'] && imagesFormControls['imagini'].touched) {
+                <div class="error-text">
+                  <mat-icon>error</mat-icon>
+                  Please upload at least 3 photos of your vehicle
+                </div>
+              }
+
+              <!-- Progress Info -->
+              @if (selectedImages.length > 0) {
+                <p style="text-align: center; color: #666; margin-top: 1rem;">
+                  Total size: {{ getTotalImagesSize() }}
+                </p>
+              }
+            </div>
+
+            <div class="step-actions">
+              <button mat-button matStepperPrevious>
+                <mat-icon>navigate_before</mat-icon>
+                Back
+              </button>
+              <button mat-raised-button color="primary" matStepperNext 
+                      [disabled]="imagesForm.invalid || selectedImages.length < 3">
+                Next
+                <mat-icon>navigate_next</mat-icon>
+              </button>
+            </div>
+          </div>
+        </mat-step>
+
+        <!-- Step 5: Review & Submit -->
+        <mat-step label="Review & Submit">
+          <div class="step-content">
+            <h2>Review Your Listing</h2>
+            <p>Please review all information before submitting your vehicle listing</p>
+
+            <div class="review-section">
+              <!-- Basic Info Review -->
+              <mat-card class="review-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>info</mat-icon>
+                  <mat-card-title>Basic Information</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="review-grid">
+                    <div class="review-item">
+                      <strong>Title:</strong>
+                      {{ basicInfoForm.get('titlu')?.value }}
+                    </div>
+                    <div class="review-item">
+                      <strong>Vehicle:</strong>
+                      {{ basicInfoForm.get('firma')?.value }} {{ basicInfoForm.get('model')?.value }} ({{ basicInfoForm.get('anFabricatie')?.value }})
+                    </div>
+                    <div class="review-item">
+                      <strong>Color:</strong>
+                      {{ basicInfoForm.get('culoare')?.value | titlecase }}
+                    </div>
+                    <div class="review-item">
+                      <strong>Daily Rate:</strong>
+                      €{{ basicInfoForm.get('pret')?.value }}
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Details Review -->
+              <mat-card class="review-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>description</mat-icon>
+                  <mat-card-title>Vehicle Details</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="review-grid">
+                    <div class="review-item">
+                      <strong>Mileage:</strong>
+                      {{ detailsForm.get('kilometraj')?.value?.toLocaleString() }} km
+                    </div>
+                    <div class="review-item">
+                      <strong>Location:</strong>
+                      {{ detailsForm.get('locatie')?.value }}
+                    </div>
+                    <div class="review-item full-width">
+                      <strong>Description:</strong>
+                      <div class="description-preview">
+                        {{ detailsForm.get('descriere')?.value }}
+                      </div>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Documents Review -->
+              <mat-card class="review-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>folder</mat-icon>
+                  <mat-card-title>Documents</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="review-grid">
+                    <div class="review-item">
+                      <strong>Registration:</strong>
+                      @if (hasDocument('talon')) {
+                        <span class="file-status">✓ Uploaded</span>
+                      } @else {
+                        <span>Not uploaded</span>
+                      }
+                    </div>
+                    <div class="review-item">
+                      <strong>Vehicle Identity:</strong>
+                      @if (hasDocument('carteIdentitateMasina')) {
+                        <span class="file-status">✓ Uploaded</span>
+                      } @else {
+                        <span>Not uploaded</span>
+                      }
+                    </div>
+                    <div class="review-item">
+                      <strong>Insurance:</strong>
+                      @if (hasDocument('asigurare')) {
+                        <span class="file-status">✓ Uploaded</span>
+                      } @else {
+                        <span>Not uploaded</span>
+                      }
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+              <!-- Photos Review -->
+              <mat-card class="review-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>photo_library</mat-icon>
+                  <mat-card-title>Photos ({{ selectedImages.length }})</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="review-images">
+                    @for (previewUrl of imagePreviewUrls; track $index) {
+                      <img [src]="previewUrl" [alt]="'Photo ' + ($index + 1)" class="review-image">
+                    }
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <!-- Submit Section -->
+            <div class="submit-section">
+              <div class="submit-info">
+                <mat-icon>info</mat-icon>
+                <div>
+                  <h4>What happens next?</h4>
+                  <ul>
+                    <li>Your listing will be reviewed and published within 24 hours</li>
+                    <li>You'll receive email notifications for booking requests</li>
+                    <li>Renters can contact you through the platform</li>
+                    <li>You can manage your listing from your dashboard</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <button mat-button matStepperPrevious>
+                  <mat-icon>navigate_before</mat-icon>
+                  Back
+                </button>
+                
+                @if (loading) {
+                  <button mat-raised-button class="submit-button" disabled>
+                    <mat-spinner diameter="24"></mat-spinner>
+                    Publishing Listing...
+                  </button>
+                } @else {
+                  <button mat-raised-button class="submit-button" 
+                          (click)="onSubmit()"
+                          [disabled]="!isFormValid() || selectedImages.length < 3">
+                    <mat-icon>publish</mat-icon>
+                    Publish Listing
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        </mat-step>
+      </mat-stepper>
+    </mat-card>
+  </div>
+</div>
