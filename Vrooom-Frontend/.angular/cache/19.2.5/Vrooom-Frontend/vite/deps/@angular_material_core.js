@@ -1,10 +1,4 @@
 import {
-  DateAdapter,
-  MAT_DATE_FORMATS,
-  MAT_DATE_LOCALE,
-  MAT_DATE_LOCALE_FACTORY
-} from "./chunk-MATAZGZJ.js";
-import {
   MAT_OPTGROUP,
   MAT_OPTION_PARENT_COMPONENT,
   MatOptgroup,
@@ -15,10 +9,16 @@ import {
   MatPseudoCheckboxModule,
   _countGroupLabelsBeforeOption,
   _getOptionScrollPosition
-} from "./chunk-62ON7WLV.js";
+} from "./chunk-RWIO5UIE.js";
 import {
   _MatInternalFormField
 } from "./chunk-ASRRA6EN.js";
+import {
+  DateAdapter,
+  MAT_DATE_FORMATS,
+  MAT_DATE_LOCALE,
+  MAT_DATE_LOCALE_FACTORY
+} from "./chunk-MATAZGZJ.js";
 import {
   ErrorStateMatcher,
   ShowOnDirtyErrorStateMatcher,
@@ -26,10 +26,10 @@ import {
 } from "./chunk-BAC45G4Z.js";
 import {
   MatRippleLoader
-} from "./chunk-GRYJNXHC.js";
+} from "./chunk-PKDI7WI4.js";
 import {
   MatRippleModule
-} from "./chunk-HRJ5EHMZ.js";
+} from "./chunk-AV6RXC64.js";
 import {
   MAT_RIPPLE_GLOBAL_OPTIONS,
   MatRipple,
@@ -38,7 +38,7 @@ import {
   RippleState,
   _StructuralStylesLoader,
   defaultRippleAnimationConfig
-} from "./chunk-XUOXLUKC.js";
+} from "./chunk-FA5OWDQM.js";
 import "./chunk-52IT5FRW.js";
 import "./chunk-42FJBLFI.js";
 import "./chunk-JXBCBRYI.js";
@@ -136,7 +136,7 @@ var MatLineModule = class _MatLineModule {
 })();
 
 // node_modules/@angular/material/fesm2022/core.mjs
-var VERSION = new Version("19.2.17");
+var VERSION = new Version("19.2.16");
 var AnimationCurves = class {
   static STANDARD_CURVE = "cubic-bezier(0.4,0.0,0.2,1)";
   static DECELERATION_CURVE = "cubic-bezier(0.0,0.0,0.2,1)";

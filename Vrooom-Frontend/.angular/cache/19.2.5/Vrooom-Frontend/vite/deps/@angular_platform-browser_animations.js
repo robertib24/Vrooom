@@ -10,7 +10,7 @@ import {
   sequence,
   style,
   ɵPRE_STYLE
-} from "./chunk-HDNTNIOV.js";
+} from "./chunk-FRNU3IZH.js";
 import "./chunk-B4MA5VXV.js";
 import {
   DOCUMENT
@@ -38,7 +38,7 @@ import {
   __spreadValues
 } from "./chunk-WDMUDEB6.js";
 
-// node_modules/@angular/animations/fesm2022/util-D9FfmVnv.mjs
+// node_modules/@angular/animations/fesm2022/browser.mjs
 var LINE_START = "\n - ";
 function invalidTimingValue(exp) {
   return new RuntimeError(3e3, ngDevMode && `The provided timing value "${exp}" is invalid.`);
@@ -289,6 +289,66 @@ function invokeQuery(element, selector, multi) {
   const elem = element.querySelector(selector);
   return elem ? [elem] : [];
 }
+var NoopAnimationDriver = class _NoopAnimationDriver {
+  /**
+   * @returns Whether `prop` is a valid CSS property
+   */
+  validateStyleProperty(prop) {
+    return validateStyleProperty(prop);
+  }
+  /**
+   *
+   * @returns Whether elm1 contains elm2.
+   */
+  containsElement(elm1, elm2) {
+    return containsElement(elm1, elm2);
+  }
+  /**
+   * @returns Rhe parent of the given element or `null` if the element is the `document`
+   */
+  getParentElement(element) {
+    return getParentElement(element);
+  }
+  /**
+   * @returns The result of the query selector on the element. The array will contain up to 1 item
+   *     if `multi` is  `false`.
+   */
+  query(element, selector, multi) {
+    return invokeQuery(element, selector, multi);
+  }
+  /**
+   * @returns The `defaultValue` or empty string
+   */
+  computeStyle(element, prop, defaultValue) {
+    return defaultValue || "";
+  }
+  /**
+   * @returns An `NoopAnimationPlayer`
+   */
+  animate(element, keyframes, duration, delay, easing, previousPlayers = [], scrubberAccessRequested) {
+    return new NoopAnimationPlayer(duration, delay);
+  }
+  static ɵfac = function NoopAnimationDriver_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _NoopAnimationDriver)();
+  };
+  static ɵprov = ɵɵdefineInjectable({
+    token: _NoopAnimationDriver,
+    factory: _NoopAnimationDriver.ɵfac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NoopAnimationDriver, [{
+    type: Injectable
+  }], null, null);
+})();
+var AnimationDriver = class {
+  /**
+   * @deprecated Use the NoopAnimationDriver class.
+   */
+  static NOOP = new NoopAnimationDriver();
+};
+var AnimationStyleNormalizer = class {
+};
 var ONE_SECOND = 1e3;
 var SUBSTITUTION_EXPR_START = "{{";
 var SUBSTITUTION_EXPR_END = "}}";
@@ -493,68 +553,6 @@ function visitDslNode(visitor, node, context) {
 function computeStyle(element, prop) {
   return window.getComputedStyle(element)[prop];
 }
-
-// node_modules/@angular/animations/fesm2022/browser.mjs
-var NoopAnimationDriver = class _NoopAnimationDriver {
-  /**
-   * @returns Whether `prop` is a valid CSS property
-   */
-  validateStyleProperty(prop) {
-    return validateStyleProperty(prop);
-  }
-  /**
-   *
-   * @returns Whether elm1 contains elm2.
-   */
-  containsElement(elm1, elm2) {
-    return containsElement(elm1, elm2);
-  }
-  /**
-   * @returns Rhe parent of the given element or `null` if the element is the `document`
-   */
-  getParentElement(element) {
-    return getParentElement(element);
-  }
-  /**
-   * @returns The result of the query selector on the element. The array will contain up to 1 item
-   *     if `multi` is  `false`.
-   */
-  query(element, selector, multi) {
-    return invokeQuery(element, selector, multi);
-  }
-  /**
-   * @returns The `defaultValue` or empty string
-   */
-  computeStyle(element, prop, defaultValue) {
-    return defaultValue || "";
-  }
-  /**
-   * @returns An `NoopAnimationPlayer`
-   */
-  animate(element, keyframes, duration, delay, easing, previousPlayers = [], scrubberAccessRequested) {
-    return new NoopAnimationPlayer(duration, delay);
-  }
-  static ɵfac = function NoopAnimationDriver_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _NoopAnimationDriver)();
-  };
-  static ɵprov = ɵɵdefineInjectable({
-    token: _NoopAnimationDriver,
-    factory: _NoopAnimationDriver.ɵfac
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NoopAnimationDriver, [{
-    type: Injectable
-  }], null, null);
-})();
-var AnimationDriver = class {
-  /**
-   * @deprecated Use the NoopAnimationDriver class.
-   */
-  static NOOP = new NoopAnimationDriver();
-};
-var AnimationStyleNormalizer = class {
-};
 var DIMENSIONAL_PROP_SET = /* @__PURE__ */ new Set(["width", "height", "minWidth", "minHeight", "maxWidth", "maxHeight", "left", "top", "bottom", "right", "fontSize", "outlineWidth", "outlineOffset", "paddingTop", "paddingLeft", "paddingBottom", "paddingRight", "marginTop", "marginLeft", "marginBottom", "marginRight", "borderRadius", "borderWidth", "borderTopWidth", "borderLeftWidth", "borderRightWidth", "borderBottomWidth", "textIndent", "perspective"]);
 var WebAnimationsStyleNormalizer = class extends AnimationStyleNormalizer {
   normalizePropertyName(propertyName, errors) {
@@ -4196,16 +4194,9 @@ export {
 };
 /*! Bundled license information:
 
-@angular/animations/fesm2022/util-D9FfmVnv.mjs:
-  (**
-   * @license Angular v19.2.12
-   * (c) 2010-2025 Google LLC. https://angular.io/
-   * License: MIT
-   *)
-
 @angular/animations/fesm2022/browser.mjs:
   (**
-   * @license Angular v19.2.12
+   * @license Angular v19.2.4
    * (c) 2010-2025 Google LLC. https://angular.io/
    * License: MIT
    *)

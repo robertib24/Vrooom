@@ -5,24 +5,16 @@ import {
   MatButton,
   MatButtonModule,
   MatIconButton
-} from "./chunk-QDPBIWWK.js";
-import "./chunk-OIBNGD5S.js";
-import {
-  FlexibleConnectedPositionStrategy,
-  Overlay,
-  OverlayConfig,
-  OverlayModule
-} from "./chunk-K327OP3B.js";
-import {
-  CdkPortalOutlet,
-  ComponentPortal,
-  PortalModule,
-  TemplatePortal
-} from "./chunk-2S63Y37P.js";
+} from "./chunk-D6ZEMLFI.js";
 import {
   DateAdapter,
   MAT_DATE_FORMATS
 } from "./chunk-MATAZGZJ.js";
+import {
+  MAT_FORM_FIELD,
+  MatFormFieldControl
+} from "./chunk-ZM5SLC4W.js";
+import "./chunk-ZWHEIUFL.js";
 import {
   ControlContainer,
   FormGroupDirective,
@@ -36,17 +28,25 @@ import {
   ErrorStateMatcher,
   _ErrorStateTracker
 } from "./chunk-BAC45G4Z.js";
-import "./chunk-GRYJNXHC.js";
-import "./chunk-HRJ5EHMZ.js";
+import "./chunk-PKDI7WI4.js";
+import "./chunk-AV6RXC64.js";
 import {
   _StructuralStylesLoader
-} from "./chunk-XUOXLUKC.js";
-import {
-  MAT_FORM_FIELD,
-  MatFormFieldControl
-} from "./chunk-ZM5SLC4W.js";
-import "./chunk-ZWHEIUFL.js";
+} from "./chunk-FA5OWDQM.js";
 import "./chunk-52IT5FRW.js";
+import "./chunk-OIBNGD5S.js";
+import {
+  FlexibleConnectedPositionStrategy,
+  Overlay,
+  OverlayConfig,
+  OverlayModule
+} from "./chunk-K327OP3B.js";
+import {
+  CdkPortalOutlet,
+  ComponentPortal,
+  PortalModule,
+  TemplatePortal
+} from "./chunk-2S63Y37P.js";
 import "./chunk-42FJBLFI.js";
 import {
   coerceStringArray
@@ -3000,7 +3000,6 @@ var MatCalendar = class _MatCalendar {
     optional: true
   });
   _changeDetectorRef = inject(ChangeDetectorRef);
-  _elementRef = inject(ElementRef);
   /** An input indicating the type of the header component, if set. */
   headerComponent;
   /** A portal containing the header component type for this calendar. */
@@ -3157,9 +3156,7 @@ var MatCalendar = class _MatCalendar {
     if (changeRequiringRerender && !changeRequiringRerender.firstChange) {
       const view = this._getCurrentViewComponent();
       if (view) {
-        if (this._elementRef.nativeElement.contains(_getFocusedElementPierceShadowDom())) {
-          this._moveFocusOnNextTick = true;
-        }
+        this._moveFocusOnNextTick = true;
         this._changeDetectorRef.detectChanges();
         view._init();
       }

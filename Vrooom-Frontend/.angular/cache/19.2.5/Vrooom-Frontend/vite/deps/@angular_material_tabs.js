@@ -1,18 +1,18 @@
+import {
+  SharedResizeObserver
+} from "./chunk-ZWHEIUFL.js";
+import {
+  MAT_RIPPLE_GLOBAL_OPTIONS,
+  MatRipple,
+  _StructuralStylesLoader
+} from "./chunk-FA5OWDQM.js";
+import "./chunk-52IT5FRW.js";
 import "./chunk-OIBNGD5S.js";
 import {
   CdkPortal,
   CdkPortalOutlet,
   TemplatePortal
 } from "./chunk-2S63Y37P.js";
-import {
-  MAT_RIPPLE_GLOBAL_OPTIONS,
-  MatRipple,
-  _StructuralStylesLoader
-} from "./chunk-XUOXLUKC.js";
-import {
-  SharedResizeObserver
-} from "./chunk-ZWHEIUFL.js";
-import "./chunk-52IT5FRW.js";
 import "./chunk-42FJBLFI.js";
 import "./chunk-JXBCBRYI.js";
 import {
@@ -68,12 +68,10 @@ import {
   ViewEncapsulation,
   afterNextRender,
   booleanAttribute,
-  computed,
   forwardRef,
   inject,
   numberAttribute,
   setClassMetadata,
-  signal,
   ɵɵInheritDefinitionFeature,
   ɵɵNgOnChangesFeature,
   ɵɵProvidersFeature,
@@ -790,7 +788,7 @@ var MatPaginatedTabHeader = class _MatPaginatedTabHeader {
       this._alignInkBarToSelectedTab();
     };
     this._keyManager = new FocusKeyManager(this._items).withHorizontalOrientation(this._getLayoutDirection()).withHomeAndEnd().withWrap().skipPredicate(() => false);
-    this._keyManager.updateActiveItem(Math.max(this._selectedIndex, 0));
+    this._keyManager.updateActiveItem(this._selectedIndex);
     afterNextRender(realign, {
       injector: this._injector
     });
@@ -801,7 +799,7 @@ var MatPaginatedTabHeader = class _MatPaginatedTabHeader {
           realign();
         });
       });
-      this._keyManager?.withHorizontalOrientation(this._getLayoutDirection());
+      this._keyManager.withHorizontalOrientation(this._getLayoutDirection());
     });
     this._keyManager.change.subscribe((newFocusIndex) => {
       this.indexFocused.emit(newFocusIndex);
@@ -873,7 +871,7 @@ var MatPaginatedTabHeader = class _MatPaginatedTabHeader {
         }
         break;
       default:
-        this._keyManager?.onKeydown(event);
+        this._keyManager.onKeydown(event);
     }
   }
   /**
@@ -2302,7 +2300,6 @@ var MatTabChangeEvent = class {
   tab;
 };
 var MatTabNav = class _MatTabNav extends MatPaginatedTabHeader {
-  _focusedItem = signal(null);
   /** Whether the ink bar should fit its width to the size of the tab label content. */
   get fitInkBarToContent() {
     return this._fitInkBarToContent.value;
@@ -2391,7 +2388,6 @@ var MatTabNav = class _MatTabNav extends MatPaginatedTabHeader {
     this._inkBar = new MatInkBar(this._items);
     this._items.changes.pipe(startWith(null), takeUntil(this._destroyed)).subscribe(() => this.updateActiveLink());
     super.ngAfterContentInit();
-    this._keyManager.change.pipe(startWith(null), takeUntil(this._destroyed)).subscribe(() => this._focusedItem.set(this._keyManager?.activeItem || null));
   }
   ngAfterViewInit() {
     if (!this.tabPanel && (typeof ngDevMode === "undefined" || ngDevMode)) {
@@ -2408,11 +2404,10 @@ var MatTabNav = class _MatTabNav extends MatPaginatedTabHeader {
     for (let i = 0; i < items.length; i++) {
       if (items[i].active) {
         this.selectedIndex = i;
+        this._changeDetectorRef.markForCheck();
         if (this.tabPanel) {
           this.tabPanel._activeTabId = items[i].id;
         }
-        this._focusedItem.set(items[i]);
-        this._changeDetectorRef.markForCheck();
         return;
       }
     }
@@ -2420,9 +2415,6 @@ var MatTabNav = class _MatTabNav extends MatPaginatedTabHeader {
   }
   _getRole() {
     return this.tabPanel ? "tablist" : this._elementRef.nativeElement.getAttribute("role");
-  }
-  _hasFocus(link) {
-    return this._keyManager?.activeItem === link;
   }
   static ɵfac = function MatTabNav_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _MatTabNav)();
@@ -2668,7 +2660,6 @@ var MatTabLink = class _MatTabLink extends InkBarItem {
   _destroyed = new Subject();
   /** Whether the tab link is active or not. */
   _isActive = false;
-  _tabIndex = computed(() => this._tabNavBar._focusedItem() === this ? this.tabIndex : -1);
   /** Whether the link is active. */
   get active() {
     return this._isActive;
@@ -2768,6 +2759,13 @@ var MatTabLink = class _MatTabLink extends InkBarItem {
   _getRole() {
     return this._tabNavBar.tabPanel ? "tab" : this.elementRef.nativeElement.getAttribute("role");
   }
+  _getTabIndex() {
+    if (this._tabNavBar.tabPanel) {
+      return this._isActive && !this.disabled ? 0 : -1;
+    } else {
+      return this.disabled ? -1 : this.tabIndex;
+    }
+  }
   static ɵfac = function MatTabLink_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _MatTabLink)();
   };
@@ -2785,7 +2783,7 @@ var MatTabLink = class _MatTabLink extends InkBarItem {
         });
       }
       if (rf & 2) {
-        ɵɵattribute("aria-controls", ctx._getAriaControls())("aria-current", ctx._getAriaCurrent())("aria-disabled", ctx.disabled)("aria-selected", ctx._getAriaSelected())("id", ctx.id)("tabIndex", ctx._tabIndex())("role", ctx._getRole());
+        ɵɵattribute("aria-controls", ctx._getAriaControls())("aria-current", ctx._getAriaCurrent())("aria-disabled", ctx.disabled)("aria-selected", ctx._getAriaSelected())("id", ctx.id)("tabIndex", ctx._getTabIndex())("role", ctx._getRole());
         ɵɵclassProp("mat-mdc-tab-disabled", ctx.disabled)("mdc-tab--active", ctx.active);
       }
     },
@@ -2837,7 +2835,7 @@ var MatTabLink = class _MatTabLink extends InkBarItem {
         "[attr.aria-disabled]": "disabled",
         "[attr.aria-selected]": "_getAriaSelected()",
         "[attr.id]": "id",
-        "[attr.tabIndex]": "_tabIndex()",
+        "[attr.tabIndex]": "_getTabIndex()",
         "[attr.role]": "_getRole()",
         "[class.mat-mdc-tab-disabled]": "disabled",
         "[class.mdc-tab--active]": "active",
