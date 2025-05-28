@@ -1,0 +1,193 @@
+<div class="admin-support-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>
+        <mat-icon class="hero-icon">admin_panel_settings</mat-icon>
+        Admin Support Dashboard
+      </h1>
+      <p>Manage customer support tickets and provide assistance</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-container">
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading support tickets...</p>
+      </div>
+    } @else if (error) {
+      <div class="error-container">
+        <mat-card class="error-card">
+          <mat-card-content>
+            <div class="error-content">
+              <mat-icon class="error-icon">error_outline</mat-icon>
+              <h3>Failed to Load Support Tickets</h3>
+              <p>We couldn't load the support tickets. Please try again.</p>
+              <button mat-raised-button color="primary" (click)="loadAllSupportTickets()">
+                <mat-icon>refresh</mat-icon>
+                Retry
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    } @else if (getUniqueTickets().length === 0) {
+      <div class="empty-container">
+        <mat-card class="empty-card">
+          <mat-card-content>
+            <div class="empty-content">
+              <mat-icon class="empty-icon">support_agent</mat-icon>
+              <h3>No Support Tickets</h3>
+              <p>No support tickets have been submitted yet.</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    } @else {
+      <!-- Statistics Summary -->
+      <div class="stats-section">
+        <mat-card class="stats-card">
+          <mat-card-content>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <mat-icon>support</mat-icon>
+                </div>
+                <div class="stat-content">
+                  <h3>{{ getUniqueTickets().length }}</h3>
+                  <p>Total Tickets</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <mat-icon>schedule</mat-icon>
+                </div>
+                <div class="stat-content">
+                  <h3>{{ getUniqueTickets().length }}</h3>
+                  <p>Pending</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <mat-icon>check_circle</mat-icon>
+                </div>
+                <div class="stat-content">
+                  <h3>0</h3>
+                  <p>Resolved</p>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Support Tickets -->
+      <div class="tickets-section">
+        <mat-accordion class="tickets-accordion">
+          @for (ticket of getUniqueTickets(); track ticket.supportId) {
+            <mat-expansion-panel class="ticket-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <div class="ticket-header">
+                    <div class="ticket-info">
+                      <span class="ticket-id">#{{ ticket.supportId }}</span>
+                      <span class="ticket-title">{{ ticket.titlu }}</span>
+                    </div>
+                    <div class="ticket-meta">
+                      <mat-chip 
+                        [style.background-color]="
+                          getTicketPriority(ticket) === 'high' ? '#f44336' :
+                          getTicketPriority(ticket) === 'medium' ? '#ff9800' : '#4caf50'
+                        "
+                        [style.color]="'white'"
+                        class="priority-chip">
+                        {{ getTicketPriority(ticket) | titlecase }} Priority
+                      </mat-chip>
+                    </div>
+                  </div>
+                </mat-panel-title>
+                <mat-panel-description>
+                  <span class="ticket-user">{{ getUserName(ticket.userId) }}</span>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <!-- Ticket Conversation -->
+              <div class="ticket-conversation">
+                @for (conversationTicket of getTicketConversation(ticket.supportId); track conversationTicket.supportId + '-' + $index) {
+                  <div class="message" [class.admin-message]="isFromAdmin(conversationTicket)">
+                    <div class="message-header">
+                      <div class="message-sender">
+                        @if (isFromAdmin(conversationTicket)) {
+                          <mat-icon>admin_panel_settings</mat-icon>
+                          <span>Admin Support</span>
+                        } @else {
+                          <mat-icon>person</mat-icon>
+                          <span>{{ getUserName(conversationTicket.userId) }}</span>
+                        }
+                      </div>
+                      <div class="message-title">{{ conversationTicket.titlu }}</div>
+                    </div>
+                    <div class="message-content">
+                      {{ conversationTicket.comentariu }}
+                    </div>
+                  </div>
+                }
+
+                <!-- Admin Reply Form -->
+                <div class="reply-section">
+                  <h4>Admin Reply</h4>
+                  <form [formGroup]="replyForms[ticket.supportId]" (ngSubmit)="replyToTicket(ticket.supportId)">
+                    <mat-form-field appearance="outline" class="reply-field">
+                      <mat-label>Your reply to the customer</mat-label>
+                      <textarea 
+                        matInput 
+                        formControlName="reply"
+                        rows="4"
+                        placeholder="Type your response to help the customer..."></textarea>
+                      <mat-icon matSuffix>message</mat-icon>
+                      @if (replyForms[ticket.supportId]?.get('reply')?.errors?.['required'] && replyForms[ticket.supportId]?.get('reply')?.touched) {
+                        <mat-error>Reply is required</mat-error>
+                      }
+                      @if (replyForms[ticket.supportId]?.get('reply')?.errors?.['minlength'] && replyForms[ticket.supportId]?.get('reply')?.touched) {
+                        <mat-error>Reply must be at least 10 characters</mat-error>
+                      }
+                    </mat-form-field>
+
+                    <div class="reply-actions">
+                      @if (replyingToTicket === ticket.supportId) {
+                        <button mat-raised-button disabled>
+                          <mat-spinner diameter="20"></mat-spinner>
+                          Sending Reply...
+                        </button>
+                      } @else {
+                        <button 
+                          mat-raised-button 
+                          color="primary" 
+                          type="submit"
+                          [disabled]="replyForms[ticket.supportId]?.invalid">
+                          <mat-icon>send</mat-icon>
+                          Send Reply
+                        </button>
+                      }
+
+                      <button 
+                        mat-button 
+                        color="accent"
+                        type="button"
+                        (click)="markAsResolved(ticket.supportId)">
+                        <mat-icon>check_circle</mat-icon>
+                        Mark as Resolved
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      </div>
+    }
+  </div>
+</div>

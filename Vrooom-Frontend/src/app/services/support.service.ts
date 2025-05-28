@@ -1,3 +1,4 @@
+// Updated support.service.ts
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
@@ -13,7 +14,7 @@ export interface SupportTicket {
 export interface CreateSupportTicket {
   titlu: string;
   comentariu: string;
-  userId: number;
+  userId: number; // Add this missing property
 }
 
 @Injectable({
@@ -47,7 +48,7 @@ export class SupportService {
 
     const replyTicket: SupportTicket = {
       supportId,
-      titlu: '',
+      titlu: '', // Empty title for replies
       comentariu: reply,
       userId: parseInt(userId)
     };

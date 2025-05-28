@@ -222,7 +222,7 @@ namespace Vrooom.Services.UserServices
                     new Claim(ClaimTypes.Name , user.nume),
                     new Claim(ClaimTypes.Email , user.Email),
                     new Claim(ClaimTypes.MobilePhone , user.PhoneNumber),
-                    new Claim(ClaimTypes.Role,Role.FirstOrDefault(Roles.Default.ToString()))
+                    new Claim(ClaimTypes.Role, Role.FirstOrDefault() ?? Roles.Default.ToString())
                 };
             var token = new JwtSecurityToken(
                 issuer: "https://localhost:7215/",

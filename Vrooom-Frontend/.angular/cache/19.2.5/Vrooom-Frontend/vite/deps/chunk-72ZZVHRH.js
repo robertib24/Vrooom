@@ -1,15 +1,15 @@
 import {
+  BidiModule
+} from "./chunk-TJL5PQPP.js";
+import {
   _CdkPrivateStyleLoader,
   _bindEventWithOptions
-} from "./chunk-XWFKI5ZP.js";
+} from "./chunk-VG5PJ5VT.js";
 import {
   Platform,
   coerceElement,
   coerceNumberProperty
-} from "./chunk-4RWJWCP5.js";
-import {
-  BidiModule
-} from "./chunk-TJL5PQPP.js";
+} from "./chunk-EXWAHJ5U.js";
 import {
   DOCUMENT
 } from "./chunk-D6ZLATY2.js";
@@ -3179,4 +3179,4 @@ export {
   MATERIAL_SANITY_CHECKS,
   MatCommonModule
 };
-//# sourceMappingURL=chunk-MNP3PNFN.js.map
+//# sourceMappingURL=chunk-72ZZVHRH.js.map

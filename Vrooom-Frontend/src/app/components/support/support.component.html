@@ -1,0 +1,241 @@
+<div class="support-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>
+        <mat-icon class="hero-icon">support_agent</mat-icon>
+        Support Center
+      </h1>
+      <p>We're here to help! Get support for your Vrooom experience</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-container">
+    <mat-tab-group animationDuration="300ms" class="support-tabs" #supportTabs>
+      
+      <!-- Create New Ticket Tab -->
+      <mat-tab label="Create Ticket">
+        <div class="tab-content">
+          <!-- Support Topics -->
+          <div class="topics-section">
+            <h2>What can we help you with?</h2>
+            <div class="topics-grid">
+              @for (topic of supportTopics; track topic.title) {
+                <mat-card 
+                  class="topic-card"
+                  [class.selected]="selectedTopic === topic.title"
+                  (click)="selectTopic(topic.title)">
+                  <mat-card-content>
+                    <div class="topic-icon">
+                      <mat-icon>{{ topic.icon }}</mat-icon>
+                    </div>
+                    <h3>{{ topic.title }}</h3>
+                    <p>{{ topic.description }}</p>
+                  </mat-card-content>
+                </mat-card>
+              }
+            </div>
+          </div>
+
+          <!-- Quick Title Suggestions -->
+          @if (selectedTopic && quickTitles[selectedTopic]) {
+            <div class="quick-titles-section">
+              <h3>Quick Titles for {{ selectedTopic }}</h3>
+              <div class="quick-titles">
+                @for (title of quickTitles[selectedTopic]; track title) {
+                  <mat-chip 
+                    class="quick-title-chip"
+                    [class.selected]="selectedQuickTitle === title"
+                    (click)="selectQuickTitle(title)">
+                    {{ title }}
+                  </mat-chip>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Support Form -->
+          <div class="form-section">
+            <mat-card class="form-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>create</mat-icon>
+                <mat-card-title>Create Support Ticket</mat-card-title>
+                <mat-card-subtitle>Describe your issue and we'll help you resolve it</mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <form [formGroup]="supportForm" (ngSubmit)="onSubmit()">
+                  <div class="form-grid">
+                    <!-- Title Field -->
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Subject</mat-label>
+                      <input matInput formControlName="titlu" 
+                             placeholder="Brief description of your issue">
+                      <mat-icon matSuffix>title</mat-icon>
+                      @if (formControls['titlu'].errors?.['required'] && formControls['titlu'].touched) {
+                        <mat-error>Subject is required</mat-error>
+                      }
+                      @if (formControls['titlu'].errors?.['minlength'] && formControls['titlu'].touched) {
+                        <mat-error>Subject must be at least 5 characters</mat-error>
+                      }
+                      @if (formControls['titlu'].errors?.['maxlength'] && formControls['titlu'].touched) {
+                        <mat-error>Subject cannot exceed 100 characters</mat-error>
+                      }
+                    </mat-form-field>
+
+                    <!-- Description Field -->
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Description</mat-label>
+                      <textarea matInput formControlName="comentariu" 
+                                rows="6"
+                                placeholder="Please provide detailed information about your issue, including steps to reproduce if applicable..."></textarea>
+                      <mat-icon matSuffix>description</mat-icon>
+                      @if (formControls['comentariu'].errors?.['required'] && formControls['comentariu'].touched) {
+                        <mat-error>Description is required</mat-error>
+                      }
+                      @if (formControls['comentariu'].errors?.['minlength'] && formControls['comentariu'].touched) {
+                        <mat-error>Description must be at least 20 characters</mat-error>
+                      }
+                      @if (formControls['comentariu'].errors?.['maxlength'] && formControls['comentariu'].touched) {
+                        <mat-error>Description cannot exceed 2000 characters</mat-error>
+                      }
+                    </mat-form-field>
+
+                    <!-- Character Count -->
+                    <div class="character-count">
+                      {{ formControls['comentariu'].value?.length || 0 }} / 2000 characters
+                    </div>
+                  </div>
+
+                  <!-- Submit Actions -->
+                  <div class="form-actions">
+                    @if (loading) {
+                      <button mat-raised-button color="primary" disabled class="submit-button">
+                        <mat-spinner diameter="24"></mat-spinner>
+                        Creating Ticket...
+                      </button>
+                    } @else {
+                      <button mat-raised-button color="primary" type="submit" 
+                              [disabled]="supportForm.invalid" class="submit-button">
+                        <mat-icon>send</mat-icon>
+                        Create Support Ticket
+                      </button>
+                    }
+                  </div>
+                </form>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- My Tickets Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span>My Tickets</span>
+          @if (getGroupedTicketsCount() > 0) {
+            <span class="ticket-count-badge">{{ getGroupedTicketsCount() }}</span>
+          }
+        </ng-template>
+
+        <div class="tab-content">
+          @if (ticketsLoading) {
+            <div class="loading-container">
+              <mat-spinner diameter="50"></mat-spinner>
+              <p>Loading your support tickets...</p>
+            </div>
+          } @else if (error) {
+            <div class="error-container">
+              <mat-card class="error-card">
+                <mat-card-content>
+                  <div class="error-content">
+                    <mat-icon class="error-icon">error_outline</mat-icon>
+                    <h3>Failed to Load Tickets</h3>
+                    <p>We couldn't load your support tickets. Please try again.</p>
+                    <button mat-raised-button color="primary" (click)="loadMyTickets()">
+                      <mat-icon>refresh</mat-icon>
+                      Retry
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          } @else if (getGroupedTicketsCount() === 0) {
+            <div class="empty-container">
+              <mat-card class="empty-card">
+                <mat-card-content>
+                  <div class="empty-content">
+                    <mat-icon class="empty-icon">support_agent</mat-icon>
+                    <h3>No Support Tickets Yet</h3>
+                    <p>You haven't created any support tickets. If you need help, create a new ticket!</p>
+                    <button mat-raised-button color="primary" (click)="supportTabs.selectedIndex = 0">
+                      <mat-icon>add_circle</mat-icon>
+                      Create First Ticket
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          } @else {
+            <div class="tickets-section">
+              <h2>Your Support Tickets</h2>
+              
+              <div class="tickets-list">
+                @for (conversationId of getConversationIds(); track conversationId) {
+                  <mat-expansion-panel class="ticket-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <div class="ticket-header">
+                          <div class="ticket-info">
+                            <div class="ticket-title">
+                              <mat-icon>support</mat-icon>
+                              {{ getConversationTitle(conversationId) }}
+                            </div>
+                            <div class="ticket-id">Ticket #{{ conversationId }}</div>
+                          </div>
+                          <div class="ticket-meta">
+                            <mat-chip class="message-count">
+                              <mat-icon>chat</mat-icon>
+                              {{ getMessageCount(conversationId) }} message{{ getMessageCount(conversationId) !== 1 ? 's' : '' }}
+                            </mat-chip>
+                          </div>
+                        </div>
+                      </mat-panel-title>
+                      <mat-panel-description>
+                        {{ getConversationPreview(conversationId) }}
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+
+                    <div class="ticket-conversation">
+                      @for (ticket of groupedTickets[conversationId]; track ticket.supportId + ticket.comentariu) {
+                        <div class="message" 
+                             [class.user-message]="isUserMessage(ticket)" 
+                             [class.support-message]="!isUserMessage(ticket)">
+                          <div class="message-header">
+                            <mat-icon>{{ isUserMessage(ticket) ? 'person' : 'support_agent' }}</mat-icon>
+                            <span class="sender">{{ isUserMessage(ticket) ? 'You' : 'Vrooom Support' }}</span>
+                          </div>
+                          <div class="message-content">
+                            {{ ticket.comentariu }}
+                          </div>
+                        </div>
+                      }
+                      
+                      <div class="conversation-actions">
+                        <button mat-raised-button color="primary" (click)="openReplyDialog(conversationId)">
+                          <mat-icon>reply</mat-icon>
+                          Add Reply
+                        </button>
+                      </div>
+                    </div>
+                  </mat-expansion-panel>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

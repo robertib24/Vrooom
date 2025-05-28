@@ -8,6 +8,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from './services/auth.service';
+import { AdminService } from './services/admin.service';
 import { TokenService } from './services/token.service';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -32,6 +33,7 @@ export class AppComponent implements OnInit {
 
   private authService = inject(AuthService);
   private tokenService = inject(TokenService);
+  private adminService = inject(AdminService);
   private router = inject(Router);
 
   public readonly isAuthenticated: Signal<any | undefined> = toSignal(
@@ -67,6 +69,14 @@ export class AppComponent implements OnInit {
         });
       }
     }
+  }
+
+  isAdmin(): boolean {
+  return this.adminService.isAdmin();
+  }
+  
+  navigateToAdminSupport() {
+  this.router.navigate(['/admin-support']);
   }
 
   signout() {

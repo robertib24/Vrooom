@@ -96,6 +96,13 @@
             <mat-icon>event</mat-icon>
             <span>My Bookings</span>
           </button>
+
+          @if (isAdmin()) {
+            <button mat-menu-item (click)="navigateToAdminSupport()">
+              <mat-icon>admin_panel_settings</mat-icon>
+              <span>Admin Support</span>
+            </button>
+          }
           
           <button mat-menu-item (click)="navigateToSupport()">
             <mat-icon>support</mat-icon>
