@@ -2,6 +2,7 @@
 {
     public class ChirieDTO
     {
+        public int chirieId { get; set; }
         public int userId { get; set; }
         public int postareId { get; set; }
         public DateTime dataStart { get; set; }

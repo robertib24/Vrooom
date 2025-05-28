@@ -6,6 +6,7 @@ namespace Vrooom.Repos.ChirieRepo
         Task AddChirie(Chirie c);
         Task DeleteChirie(int id);
         Task<Chirie> ChirieByID(int id);
+        Task<IEnumerable<Chirie>> GetChirieByUserId(int userId);
         Task UpdateChirie(Chirie c);
         Task<IEnumerable<Chirie>> ChirieByDataStart(DateTime dataStart);
         Task<IEnumerable<Chirie>> ChirieByDataStop(DateTime dataStop);

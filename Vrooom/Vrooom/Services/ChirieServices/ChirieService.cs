@@ -25,6 +25,34 @@ namespace Vrooom.Services.ChirieServices
             _googleService = googleService;
         }
 
+        public async Task<IEnumerable<ChirieDTO>> GetChirieByUserId(int userId)
+        {
+            try
+            {
+                var chirii = await _chirieRepository.GetChirieByUserId(userId);
+
+                if (chirii == null || !chirii.Any())
+                {
+                    return new List<ChirieDTO>();
+                }
+
+                var result = chirii.Select(c => new ChirieDTO
+                {
+                    chirieId = c.ChirieId,
+                    userId = c.UserId,
+                    postareId = c.PostareId,
+                    dataStart = c.dataStart,
+                    dataStop = c.dataStop
+                });
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving bookings for user {userId}: {ex.Message}");
+            }
+        }
+
         public async Task addChirie(ChirieDTO chirieDTO)
         {
             var chirie = new Chirie()

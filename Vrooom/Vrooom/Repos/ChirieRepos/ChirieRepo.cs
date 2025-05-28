@@ -51,6 +51,23 @@ namespace Vrooom.Repos.ChirieRepos
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task<IEnumerable<Chirie>> GetChirieByUserId(int userId)
+        {
+            try
+            {
+                var chirii = await _dbContext.Chirie
+                    .Where(c => c.UserId == userId)
+                    .OrderByDescending(c => c.dataStart)
+                    .ToListAsync();
+
+                return chirii;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving bookings from database for user {userId}: {ex.Message}");
+            }
+        }
+
         public async Task<Chirie> ChirieByID(int id)
         {
             var c = await _dbContext.Chirie.FirstOrDefaultAsync(i => i.ChirieId == id);

@@ -74,6 +74,20 @@ namespace Vrooom.Controllers
             return Ok();
         }
 
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetChirieByUserId(int userId)
+        {
+            try
+            {
+                var chirii = await _chirieService.GetChirieByUserId(userId);
+                return Ok(chirii);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
         [HttpPost("rentConfirmationEmail")]
         [AllowAnonymous]
         public async Task<IActionResult> rentConfirmationEmail(ChirieDTO chirie)
