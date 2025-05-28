@@ -159,6 +159,7 @@ export class VehiclesService {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
+
   // Standard CRUD operations
   getVehicles(): Observable<Vehicle[]> {
     return this.apiService.get<Vehicle[]>('Postare');
