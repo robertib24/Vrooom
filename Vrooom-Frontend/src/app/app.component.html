@@ -43,6 +43,17 @@
           My Vehicles
         </button>
         
+        @if (isAdmin()) {
+          <button 
+            mat-button 
+            class="nav-button"
+            [class.active]="isActiveRoute('/admin')"
+            routerLink="/admin">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Admin Panel
+          </button>
+        }
+        
         <button 
           mat-button 
           class="nav-button"
@@ -98,9 +109,9 @@
           </button>
 
           @if (isAdmin()) {
-            <button mat-menu-item (click)="navigateToAdminSupport()">
+            <button mat-menu-item [routerLink]="'/admin'">
               <mat-icon>admin_panel_settings</mat-icon>
-              <span>Admin Support</span>
+              <span>Admin Panel</span>
             </button>
           }
           

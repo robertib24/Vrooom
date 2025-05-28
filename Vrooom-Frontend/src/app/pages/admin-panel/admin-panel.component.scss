@@ -1,0 +1,343 @@
+// Admin Panel - Vrooom Style
+
+$primary: #667eea;
+$secondary: #764ba2;
+$gold: #ffd700;
+$background: #f8f9fa;
+$card-radius: 20px;
+$card-shadow: 0 4px 24px rgba(102, 126, 234, 0.08);
+$transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+
+.admin-panel-container {
+  min-height: 100vh;
+  background: $background;
+  padding: 0 0 32px 0;
+
+  .hero-section {
+    background: linear-gradient(135deg, $primary 0%, $secondary 100%);
+    color: #fff;
+    padding: 40px 0 28px 0;
+    margin-bottom: 36px;
+    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.10);
+    .hero-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      h1 {
+        display: flex;
+        align-items: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        .hero-icon {
+          font-size: 2.7rem;
+          margin-right: 14px;
+          color: $gold;
+        }
+      }
+      p {
+        margin: 0;
+        font-size: 1.15rem;
+        opacity: 0.92;
+        font-weight: 400;
+      }
+    }
+  }
+
+  .content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 18px 32px 18px;
+  }
+}
+
+// Loading
+.loading-container, .loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: $primary;
+  mat-spinner {
+    margin-bottom: 18px;
+  }
+}
+
+// Stats Section
+.stats-section {
+  margin-bottom: 36px;
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 28px;
+  }
+  .stat-card {
+    border-radius: $card-radius;
+    box-shadow: $card-shadow;
+    background: #fff;
+    border: 1.5px solid #e3e6f0;
+    .stat-content {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      .stat-icon {
+        font-size: 2.3rem;
+        color: $primary;
+        &.success { color: #43a047; }
+        &.accent { color: $gold; }
+        &.warning { color: #f44336; }
+      }
+      .stat-info {
+        h3 {
+          margin: 0;
+          font-size: 2.1rem;
+          font-weight: 700;
+          background: linear-gradient(45deg, #ffd700, #ffed4e);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        p {
+          margin: 0;
+          font-size: 1.08rem;
+          color: #666;
+        }
+        .stat-change {
+          font-size: 0.98rem;
+          color: $gold;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+}
+
+// Brands & Activity
+.brands-card, .activity-card {
+  margin-bottom: 28px;
+  border-radius: $card-radius;
+  box-shadow: $card-shadow;
+  background: #fff;
+  border: 1.5px solid #e3e6f0;
+}
+.brands-list {
+  .brand-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+    .brand-name {
+      min-width: 80px;
+      font-weight: 600;
+      color: $secondary;
+    }
+    .brand-bar {
+      flex: 1;
+      background: #e3e3e3;
+      border-radius: 4px;
+      height: 8px;
+      margin: 0 8px;
+      .brand-progress {
+        background: $primary;
+        height: 100%;
+        border-radius: 4px;
+        transition: width $transition;
+      }
+    }
+    .brand-count {
+      min-width: 32px;
+      text-align: right;
+      font-size: 1rem;
+      color: #555;
+      font-weight: 500;
+    }
+  }
+}
+.activity-list {
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 14px;
+    .activity-icon {
+      font-size: 2.1rem;
+      &.user_registration { color: $primary; }
+      &.vehicle_listing { color: $secondary; }
+      &.booking { color: #f44336; }
+      &.review { color: $gold; }
+    }
+    .activity-info {
+      p {
+        margin: 0;
+        font-size: 1.08rem;
+        font-weight: 500;
+      }
+      .activity-time {
+        font-size: 0.93rem;
+        color: #888;
+      }
+    }
+  }
+}
+
+// Management Tabs
+.management-card {
+  border-radius: $card-radius;
+  box-shadow: $card-shadow;
+  background: #fff;
+  margin-bottom: 36px;
+  border: 1.5px solid #e3e6f0;
+  .mat-tab-label {
+    font-weight: 600;
+    font-size: 1.13rem;
+    .tab-icon {
+      margin-right: 8px;
+      font-size: 1.35rem;
+      color: $gold;
+    }
+  }
+  .tab-content {
+    padding: 28px 0 0 0;
+  }
+}
+
+// Filters
+.filters-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 20px;
+  .search-field, .filter-field {
+    min-width: 220px;
+    flex: 1 1 220px;
+  }
+}
+
+// Table Styles
+.table-container {
+  background: #fff;
+  border-radius: $card-radius;
+  box-shadow: $card-shadow;
+  padding: 0 0 18px 0;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  border: 1.5px solid #e3e6f0;
+}
+.vehicles-table, .users-table {
+  width: 100%;
+  th.mat-header-cell {
+    font-weight: 700;
+    background: linear-gradient(90deg, #f3f6fa 60%, #f8f9fa 100%);
+    color: $primary;
+    font-size: 1.08rem;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  td.mat-cell {
+    font-size: 1rem;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+  }
+  .vehicle-thumbnail, .user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid #e3e6f0;
+    background: #fafafa;
+  }
+  .vehicle-info, .user-info {
+    display: flex;
+    flex-direction: column;
+    .subtitle {
+      font-size: 0.97rem;
+      color: #888;
+    }
+  }
+  .owner-info {
+    display: flex;
+    flex-direction: column;
+    .subtitle {
+      font-size: 0.95rem;
+      color: #aaa;
+    }
+  }
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    button[mat-icon-button] {
+      transition: background $transition;
+      &:hover {
+        background: #f3f6fa;
+      }
+    }
+  }
+}
+
+// Chips
+mat-chip {
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 30px;
+  &.mat-primary { background: #e3eafc; color: $primary; }
+  &.mat-warn { background: #ffeaea; color: #f44336; }
+  &.mat-accent { background: #fffbe6; color: $gold; }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  margin: 36px 0 18px 0;
+  mat-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: $gold;
+  }
+  p {
+    font-size: 1.13rem;
+    margin: 0;
+  }
+}
+
+// Responsive
+@media (max-width: 900px) {
+  .admin-panel-container .content-container {
+    padding: 0 4px 32px 4px;
+  }
+  .stats-section .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .admin-panel-container .hero-section {
+    padding: 18px 0 12px 0;
+    .hero-content h1 {
+      font-size: 1.4rem;
+      .hero-icon { font-size: 1.6rem; }
+    }
+  }
+  .stats-section .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .filters-section {
+    flex-direction: column;
+    gap: 8px;
+    .search-field, .filter-field {
+      min-width: 100%;
+      flex: 1 1 100%;
+    }
+  }
+  .management-card .tab-content {
+    padding: 8px 0 0 0;
+  }
+}

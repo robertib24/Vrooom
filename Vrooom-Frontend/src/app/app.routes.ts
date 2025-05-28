@@ -13,6 +13,7 @@ import { AddVehicleComponent } from './components/add-vehicle/add-vehicle.compon
 import { MyVehiclesComponent } from './pages/my-vehicles/my-vehicles.component';
 import { SupportComponent } from './components/support/support.component';
 import { AdminSupportComponent } from './components/admin-support/admin-support.component';
+import { AdminPanelComponent } from './pages/admin-panel/admin-panel.component';
 import { BookingsComponent } from './pages/bookings/bookings.component';
 
 export const routes: Routes = [
@@ -32,6 +33,7 @@ export const routes: Routes = [
       { path: 'bookings', component: BookingsComponent },
       { path: 'admin/support', component: AdminSupportComponent },
       { path: 'admin-support', component: AdminSupportComponent, canActivate: [adminGuard] },
+      { path: 'admin', component: AdminPanelComponent, canActivate: [adminGuard] },
     ],
   },
   { path: 'signup', component: SignupComponent },
