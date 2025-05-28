@@ -9,6 +9,7 @@ import { VehicleDetailsComponent } from './pages/vehicle-details/vehicle-details
 import { SearchComponent } from './components/search/search.component';
 import { ProfileComponent } from './components/profile/profile.component';
 import { AddVehicleComponent } from './components/add-vehicle/add-vehicle.component';
+import { MyVehiclesComponent } from './pages/my-vehicles/my-vehicles.component';
 
 export const routes: Routes = [
   {
@@ -20,6 +21,7 @@ export const routes: Routes = [
       { path: 'vehicles', component: VehiclesComponent },
       { path: 'vehicle/:id', component: VehicleDetailsComponent },
       { path: 'add-vehicle', component: AddVehicleComponent },
+      { path: 'my-vehicles', component: MyVehiclesComponent },
       { path: 'search', component: SearchComponent },
       { path: 'profile', component: ProfileComponent },
     ],

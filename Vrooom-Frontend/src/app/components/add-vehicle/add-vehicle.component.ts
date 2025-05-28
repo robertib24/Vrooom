@@ -306,7 +306,8 @@ export class AddVehicleComponent implements OnInit, OnDestroy {
       userId: parseInt(this.tokenService.getUserId() || '0'),
       ...this.basicInfoForm.value,
       ...this.detailsForm.value,
-      // Use document names as placeholders since backend expects strings
+      linkMaps: '',
+      locatie_formala: '',
       talon: this.selectedDocuments['talon']?.name || 'vehicle_registration.pdf',
       carteIdentitateMasina: this.selectedDocuments['carteIdentitateMasina']?.name || 'vehicle_identity.pdf',
       asigurare: this.selectedDocuments['asigurare']?.name || 'vehicle_insurance.pdf'

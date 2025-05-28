@@ -22,14 +22,42 @@ namespace Vrooom.Repos.PostareRepos
             await _dbContext.Postare.AddAsync(postare);
             await _dbContext.SaveChangesAsync();
         }
-
         public async Task deletePostare(int id)
         {
-            var k = await _dbContext.Postare.Where(x => x.PostareId == id).FirstOrDefaultAsync();
-            if (k != null)
-                _dbContext.Postare.Remove(k);
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                var postare = await _dbContext.Postare
+                    .Include(p => p.chirie)
+                    .Include(p => p.review)
+                    .FirstOrDefaultAsync(x => x.PostareId == id);
+
+                if (postare == null)
+                {
+                    throw new NotFoundException($"Postarea cu ID {id} nu a fost găsită");
+                }
+
+                if (postare.chirie != null && postare.chirie.Any())
+                {
+                    _dbContext.Chirie.RemoveRange(postare.chirie);
+                }
+
+                if (postare.review != null && postare.review.Any())
+                {
+                    _dbContext.Review.RemoveRange(postare.review);
+                }
+
+                _dbContext.Postare.Remove(postare);
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         public async Task<IEnumerable<Postare>> execQuery(string query)
         {

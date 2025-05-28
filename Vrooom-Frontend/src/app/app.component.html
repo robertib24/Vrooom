@@ -33,6 +33,15 @@
           <mat-icon>add_circle</mat-icon>
           List Your Car
         </button>
+
+        <button 
+          mat-button 
+          class="nav-button"
+          [class.active]="isActiveRoute('/my-vehicles')"
+          routerLink="/my-vehicles">
+          <mat-icon>garage</mat-icon>
+          My Vehicles
+        </button>
         
         <button 
           mat-button 

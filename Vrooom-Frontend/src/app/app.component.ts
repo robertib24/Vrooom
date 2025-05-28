@@ -90,7 +90,7 @@ export class AppComponent implements OnInit {
   navigateToSupport() {
     this.router.navigate(['/support']);
   }
-
+  
   isActiveRoute(route: string): boolean {
     return this.currentRoute === route || this.currentRoute.startsWith(route + '/');
   }

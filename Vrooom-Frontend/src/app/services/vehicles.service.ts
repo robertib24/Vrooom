@@ -58,43 +58,49 @@ export class VehiclesService {
   ) {}
 
   addVehicle(vehicleData: any, images: File[]): Observable<number> {
-    const formData = new FormData();
-    
-    formData.append('userId', vehicleData.userId.toString());
-    formData.append('titlu', vehicleData.titlu || '');
-    formData.append('descriere', vehicleData.descriere || '');
-    formData.append('pret', vehicleData.pret.toString());
-    formData.append('firma', vehicleData.firma || '');
-    formData.append('model', vehicleData.model || '');
-    formData.append('kilometraj', vehicleData.kilometraj.toString());
-    formData.append('anFabricatie', vehicleData.anFabricatie.toString());
-    formData.append('culoare', vehicleData.culoare || '');
-    formData.append('locatie', vehicleData.locatie || '');
-    
-    formData.append('talon', this.PLACEHOLDER_IMAGE);
-    formData.append('carteIdentitateMasina', this.PLACEHOLDER_IMAGE);
-    formData.append('asigurare', this.PLACEHOLDER_IMAGE);
+  const formData = new FormData();
+  
+  // Add basic vehicle data
+  formData.append('userId', vehicleData.userId.toString());
+  formData.append('titlu', vehicleData.titlu || '');
+  formData.append('descriere', vehicleData.descriere || '');
+  formData.append('pret', vehicleData.pret.toString());
+  formData.append('firma', vehicleData.firma || '');
+  formData.append('model', vehicleData.model || '');
+  formData.append('kilometraj', vehicleData.kilometraj.toString());
+  formData.append('anFabricatie', vehicleData.anFabricatie.toString());
+  formData.append('culoare', vehicleData.culoare || '');
+  formData.append('locatie', vehicleData.locatie || '');
+  
+  // Add document URLs (backend expects these as strings)
+  formData.append('talon', this.PLACEHOLDER_IMAGE);
+  formData.append('carteIdentitateMasina', this.PLACEHOLDER_IMAGE);
+  formData.append('asigurare', this.PLACEHOLDER_IMAGE);
 
-    images.forEach((image, index) => {
-      const imageNumber = index + 1;
-      const fileExtension = this.getFileExtension(image.name) || 'jpg';
-      const fileName = `${imageNumber}.${fileExtension}`;
-      
-      formData.append('imagini', image, fileName);
-    });
+  // IMPORTANT: Backend expects 'imagini' as array, not individual files
+  // Add each image with the same field name 'imagini'
+  images.forEach((image, index) => {
+    const imageNumber = index + 1;
+    const fileExtension = this.getFileExtension(image.name) || 'jpg';
+    const fileName = `${imageNumber}.${fileExtension}`;
+    
+    // Use 'imagini' as field name for ALL images (not 'imagini[0]', 'imagini[1]', etc.)
+    formData.append('imagini', image, fileName);
+  });
 
-    console.log('FormData contents for S3 upload:');
-    console.log(`- Total images: ${images.length}`);
-    for (let [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File - ${value.name} (${this.formatFileSize(value.size)})`);
-      } else {
-        console.log(`${key}: ${value}`);
-      }
+  // Debug logging
+  console.log('FormData contents:');
+  console.log(`- Total images: ${images.length}`);
+  for (let [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      console.log(`${key}: File - ${value.name} (${this.formatFileSize(value.size)})`);
+    } else {
+      console.log(`${key}: ${value}`);
     }
-
-    return this.apiService.postFormData<number>('Postare', formData);
   }
+
+  return this.apiService.postFormData<number>('Postare', formData);
+}
 
   getVehicleImageUrl(vehicleId: number, imageIndex: number = 1): string {
     // Format: https://vrooom1224.s3.amazonaws.com/post{vehicleId}/{imageIndex}.jpg

@@ -1,39 +1,176 @@
-<h2 mat-dialog-title>Book Vehicle</h2>
-<mat-dialog-content class="mat-typography">
-  <form [formGroup]="range">
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Enter a date range</mat-label>
-      <mat-date-range-input [rangePicker]="picker">
-        <input matStartDate formControlName="start" placeholder="Start date" />
-        <input matEndDate formControlName="end" placeholder="End date" />
-      </mat-date-range-input>
-      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-date-range-picker #picker></mat-date-range-picker>
+<h2 mat-dialog-title>Book {{ data.vehicle?.firma }} {{ data.vehicle?.model }}</h2>
 
-      @if (range.controls.start.hasError("required") && range.controls.start.touched) {
-        <mat-error>Start date is required</mat-error>
-      }
-      @if (range.controls.end.hasError("required") && range.controls.end.touched) {
-        <mat-error>End date is required</mat-error>
-      }
-      @if (range.controls.start.hasError("matStartDateInvalid")) {
-        <mat-error>Invalid start date</mat-error>
-      }
-      @if (range.controls.end.hasError("matEndDateInvalid")) {
-        <mat-error>Invalid end date</mat-error>
-      }
-    </mat-form-field>
-  </form>
-  
-  <p class="info-text">
-    Please select the date range for which you want to rent this vehicle.
-    Note that the vehicle will be available from 9 AM on the start date until 5 PM on the end date.
-  </p>
+<mat-dialog-content class="mat-typography">
+  <mat-stepper linear #stepper>
+    <!-- Step 1: Select Dates -->
+    <mat-step [stepControl]="datesForm" label="Select Dates">
+      <form [formGroup]="datesForm">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Select rental period</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate formControlName="start" placeholder="Start date" />
+            <input matEndDate formControlName="end" placeholder="End date" />
+          </mat-date-range-input>
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+
+          @if (datesForm.controls.start.hasError("required") && datesForm.controls.start.touched) {
+            <mat-error>Start date is required</mat-error>
+          }
+          @if (datesForm.controls.end.hasError("required") && datesForm.controls.end.touched) {
+            <mat-error>End date is required</mat-error>
+          }
+        </mat-form-field>
+
+        @if (totalDays > 0) {
+          <div class="price-summary">
+            <h3>Rental Summary</h3>
+            <p><strong>Duration:</strong> {{ totalDays }} day{{ totalDays !== 1 ? 's' : '' }}</p>
+            <p><strong>Daily Rate:</strong> €{{ data.vehicle?.pret }}/day</p>
+            <p><strong>Total Price:</strong> €{{ totalPrice }}</p>
+          </div>
+        }
+      </form>
+      
+      <div class="step-actions">
+        <button mat-button matStepperNext [disabled]="datesForm.invalid">
+          Next
+        </button>
+      </div>
+    </mat-step>
+
+    <!-- Step 2: Payment Information -->
+    <mat-step [stepControl]="paymentForm" label="Payment">
+      <form [formGroup]="paymentForm">
+        <div class="payment-form">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Card Number</mat-label>
+            <input matInput formControlName="cardNumber" placeholder="1234 5678 9012 3456" maxlength="16">
+            <mat-icon matSuffix>credit_card</mat-icon>
+            @if (paymentForm.controls.cardNumber.hasError("required") && paymentForm.controls.cardNumber.touched) {
+              <mat-error>Card number is required</mat-error>
+            }
+            @if (paymentForm.controls.cardNumber.hasError("pattern") && paymentForm.controls.cardNumber.touched) {
+              <mat-error>Please enter a valid 16-digit card number</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="card-details">
+            <mat-form-field appearance="outline">
+              <mat-label>Expiry Date</mat-label>
+              <input matInput formControlName="expiryDate" placeholder="MM/YY" maxlength="5">
+              <mat-icon matSuffix>date_range</mat-icon>
+              @if (paymentForm.controls.expiryDate.hasError("required") && paymentForm.controls.expiryDate.touched) {
+                <mat-error>Expiry date is required</mat-error>
+              }
+              @if (paymentForm.controls.expiryDate.hasError("pattern") && paymentForm.controls.expiryDate.touched) {
+                <mat-error>Format: MM/YY</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>CVV</mat-label>
+              <input matInput formControlName="cvv" placeholder="123" maxlength="4" type="password">
+              <mat-icon matSuffix>security</mat-icon>
+              @if (paymentForm.controls.cvv.hasError("required") && paymentForm.controls.cvv.touched) {
+                <mat-error>CVV is required</mat-error>
+              }
+              @if (paymentForm.controls.cvv.hasError("pattern") && paymentForm.controls.cvv.touched) {
+                <mat-error>3-4 digits required</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Cardholder Name</mat-label>
+            <input matInput formControlName="cardName" placeholder="John Doe">
+            <mat-icon matSuffix>person</mat-icon>
+            @if (paymentForm.controls.cardName.hasError("required") && paymentForm.controls.cardName.touched) {
+              <mat-error>Cardholder name is required</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="final-summary">
+          <h3>Final Summary</h3>
+          <div class="summary-item">
+            <span>Vehicle:</span>
+            <span>{{ data.vehicle?.firma }} {{ data.vehicle?.model }}</span>
+          </div>
+          <div class="summary-item">
+            <span>Duration:</span>
+            <span>{{ totalDays }} day{{ totalDays !== 1 ? 's' : '' }}</span>
+          </div>
+          <div class="summary-item total">
+            <span><strong>Total Amount:</strong></span>
+            <span><strong>€{{ totalPrice }}</strong></span>
+          </div>
+        </div>
+      </form>
+
+      <div class="step-actions">
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-raised-button color="primary" (click)="completeBooking()" [disabled]="paymentForm.invalid">
+          <mat-icon>payment</mat-icon>
+          Complete Booking
+        </button>
+      </div>
+    </mat-step>
+  </mat-stepper>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button class="custom-button" mat-dialog-close>Cancel</button>
-  <button mat-button class="custom-button" [disabled]="range.invalid" (click)="book()">
-    Book
-  </button>
-</mat-dialog-actions>
+<style>
+.full-width {
+  width: 100%;
+}
+
+.price-summary {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.final-summary {
+  background: #e3f2fd;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.5rem 0;
+}
+
+.summary-item.total {
+  border-top: 1px solid #ccc;
+  padding-top: 0.5rem;
+  margin-top: 1rem;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+@media (max-width: 600px) {
+  .card-details {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

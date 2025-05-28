@@ -25,8 +25,8 @@
         public string asigurare { get; set; }
         public string culoare { get; set; }
         public string locatie { get; set; }
-        public string locatie_formala { get; set; }
-        public string linkMaps { get; set; }
+        public string? locatie_formala { get; set; }
+        public string? linkMaps { get; set; }
 
         public List<IFormFile> imagini { get; set; }
     }

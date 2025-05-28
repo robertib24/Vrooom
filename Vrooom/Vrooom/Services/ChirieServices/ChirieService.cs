@@ -57,6 +57,46 @@ namespace Vrooom.Services.ChirieServices
             await _chirieRepository.UpdatePuncteFid(user);
         }
 
+        private async Task<PaymentResult> ProcessPayment(PaymentInfoDTO paymentInfo, decimal amount)
+        {
+            // Simulare procesare plată
+            try
+            {
+                // Validare de bază a cardului
+                if (string.IsNullOrEmpty(paymentInfo.cardNumber) || paymentInfo.cardNumber.Length != 16)
+                {
+                    return new PaymentResult { Success = false, ErrorMessage = "Invalid card number" };
+                }
+
+                if (string.IsNullOrEmpty(paymentInfo.cvv) || paymentInfo.cvv.Length < 3)
+                {
+                    return new PaymentResult { Success = false, ErrorMessage = "Invalid CVV" };
+                }
+
+                // Simulare delay pentru procesare
+                await Task.Delay(1000);
+
+                // Simulare succes (90% succes pentru testing)
+                var random = new Random();
+                if (random.Next(1, 11) <= 9)
+                {
+                    return new PaymentResult
+                    {
+                        Success = true,
+                        TransactionId = Guid.NewGuid().ToString(),
+                        ProcessedAmount = amount
+                    };
+                }
+                else
+                {
+                    return new PaymentResult { Success = false, ErrorMessage = "Payment declined by bank" };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new PaymentResult { Success = false, ErrorMessage = $"Payment processing error: {ex.Message}" };
+            }
+        }
         public async Task<IEnumerable<ChirieDTO>> ChirieByDataStart(DateTime dataStart)
         {
             var c = await _chirieRepository.ChirieByDataStart(dataStart);
@@ -135,6 +175,14 @@ namespace Vrooom.Services.ChirieServices
             c.dataStop = chirie.dataStop;
 
             await _chirieRepository.UpdateChirie(c);
+        }
+
+        public class PaymentResult
+        {
+            public bool Success { get; set; }
+            public string? ErrorMessage { get; set; }
+            public string? TransactionId { get; set; }
+            public decimal ProcessedAmount { get; set; }
         }
 
         public async Task rentConfirmationMail(ChirieDTO chirie)

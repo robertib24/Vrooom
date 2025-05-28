@@ -1,0 +1,174 @@
+<div class="my-vehicles-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>
+        <mat-icon class="hero-icon">garage</mat-icon>
+        My Vehicles
+      </h1>
+      <p>Manage your vehicle listings and track their performance</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-container">
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading your vehicles...</p>
+      </div>
+    } @else if (error) {
+      <div class="error-container">
+        <mat-card class="error-card">
+          <mat-card-content>
+            <div class="error-content">
+              <mat-icon class="error-icon">error_outline</mat-icon>
+              <h3>Failed to Load Vehicles</h3>
+              <p>We couldn't load your vehicles. Please try again.</p>
+              <button mat-raised-button color="primary" (click)="loadMyVehicles()">
+                <mat-icon>refresh</mat-icon>
+                Retry
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    } @else if (myVehicles.length === 0) {
+      <div class="empty-container">
+        <mat-card class="empty-card">
+          <mat-card-content>
+            <div class="empty-content">
+              <mat-icon class="empty-icon">directions_car_filled</mat-icon>
+              <h3>No Vehicles Listed Yet</h3>
+              <p>Start earning money by listing your first vehicle!</p>
+              <button mat-raised-button color="primary" (click)="addNewVehicle()">
+                <mat-icon>add_circle</mat-icon>
+                List Your First Vehicle
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    } @else {
+      <!-- Statistics Summary -->
+      <div class="stats-section">
+        <mat-card class="stats-card">
+          <mat-card-content>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <mat-icon>directions_car</mat-icon>
+                </div>
+                <div class="stat-content">
+                  <h3>{{ myVehicles.length }}</h3>
+                  <p>Active Listings</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <mat-icon>visibility</mat-icon>
+                </div>
+                <div class="stat-content">
+                  <h3>-</h3>
+                  <p>Total Views</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <mat-icon>event</mat-icon>
+                </div>
+                <div class="stat-content">
+                  <h3>-</h3>
+                  <p>Bookings</p>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Add New Vehicle Button -->
+      <div class="actions-section">
+        <button mat-raised-button color="primary" class="add-vehicle-btn" (click)="addNewVehicle()">
+          <mat-icon>add_circle</mat-icon>
+          List New Vehicle
+        </button>
+      </div>
+
+      <!-- Vehicles Grid -->
+      <div class="vehicles-grid">
+        @for (vehicle of myVehicles; track vehicle.id) {
+          <mat-card class="vehicle-card">
+            <div class="vehicle-image-container">
+              <img 
+                mat-card-image 
+                [src]="getVehicleImageUrl(vehicle.id)"
+                [alt]="vehicle.firma + ' ' + vehicle.model"
+                (error)="onImageError($event)"
+                class="vehicle-image">
+              
+              <div class="price-badge">
+                €{{ vehicle.pret }}/day
+              </div>
+
+              <!-- Status Badge -->
+              <div class="status-badge active">
+                <mat-icon>check_circle</mat-icon>
+                Active
+              </div>
+            </div>
+
+            <mat-card-header>
+              <div mat-card-avatar class="vehicle-avatar">
+                <mat-icon>directions_car</mat-icon>
+              </div>
+              <mat-card-title>{{ vehicle.firma }} {{ vehicle.model }}</mat-card-title>
+              <mat-card-subtitle>{{ vehicle.anFabricatie }} • {{ vehicle.kilometraj.toLocaleString() }} km</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content>
+              <p class="vehicle-description">
+                {{ vehicle.descriere | slice:0:100 }}{{ vehicle.descriere.length > 100 ? '...' : '' }}
+              </p>
+              
+              <div class="vehicle-stats">
+                <div class="stat">
+                  <mat-icon>location_on</mat-icon>
+                  <span>{{ vehicle.locatie }}</span>
+                </div>
+                <div class="stat">
+                  <mat-icon>palette</mat-icon>
+                  <span>{{ vehicle.culoare | titlecase }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+
+            <mat-card-actions class="card-actions">
+              <button mat-button color="primary" (click)="viewVehicleDetails(vehicle)">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
+              
+              <button mat-button (click)="editVehicle(vehicle)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              
+              @if (deletingVehicleId === vehicle.id) {
+                <button mat-button disabled>
+                  <mat-spinner diameter="20"></mat-spinner>
+                  Deleting...
+                </button>
+              } @else {
+                <button mat-button color="warn" (click)="confirmDelete(vehicle)">
+                  <mat-icon>delete</mat-icon>
+                  Delete
+                </button>
+              }
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  </div>
+</div>
