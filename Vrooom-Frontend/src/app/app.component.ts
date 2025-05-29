@@ -14,7 +14,7 @@ import { AnimationService } from './services/animation.service';
 import { CommonModule } from '@angular/common';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-import { slideInAnimation, fadeAnimation } from './animations/route-animations';
+import { slideInAnimation, fadeAnimation, zoomAnimation, verticalSlideAnimation, flipAnimation, noAnimation } from './animations/route-animations';
 
 @Component({
   selector: 'app-root',
@@ -30,7 +30,7 @@ import { slideInAnimation, fadeAnimation } from './animations/route-animations';
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  animations: [slideInAnimation, fadeAnimation]
+  animations: [slideInAnimation, fadeAnimation, zoomAnimation, verticalSlideAnimation, flipAnimation, noAnimation]
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Vrooom';
@@ -89,13 +89,24 @@ export class AppComponent implements OnInit, OnDestroy {
   prepareRoute(outlet: RouterOutlet) {
     const routeData = outlet?.activatedRouteData;
     const animationType = routeData?.['animation'] || 'default';
-    
-    // Respect user's reduced motion preference
     if (!this.animationService.shouldAnimate()) {
-      return 'no-animation';
+      return 'noAnimation';
     }
-    
-    return animationType;
+    // Mapare explicită pentru animatii speciale
+    if ([
+      'zoom',
+      'vertical',
+      'flip',
+      'fade',
+      'noAnimation',
+      'auth-page',
+      'admin-page',
+      'main-page',
+      'slide',
+    ].includes(animationType)) {
+      return animationType;
+    }
+    return 'slide'; // fallback
   }
 
   // Get animation trigger based on route

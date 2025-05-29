@@ -140,7 +140,13 @@
 }
 
 <main class="main-content" [class.with-toolbar]="isAuthenticated()">
-  <div class="route-container" [@routeAnimations]="prepareRoute(outlet)">
+  <div class="route-container"
+       [@routeAnimations]="prepareRoute(outlet)"
+       [@zoomAnimation]="prepareRoute(outlet) === 'zoom' ? 'zoom' : null"
+       [@verticalSlideAnimation]="prepareRoute(outlet) === 'vertical' ? 'vertical' : null"
+       [@flipAnimation]="prepareRoute(outlet) === 'flip' ? 'flip' : null"
+       [@fadeAnimation]="prepareRoute(outlet) === 'fade' ? 'fade' : null"
+       [@noAnimation]="prepareRoute(outlet) === 'noAnimation' ? 'noAnimation' : null">
     <router-outlet #outlet="outlet"></router-outlet>
   </div>
 </main>

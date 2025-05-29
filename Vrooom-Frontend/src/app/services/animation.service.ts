@@ -37,7 +37,7 @@ export class AnimationService {
   /**
    * Detect if user prefers reduced motion and set up listener
    */
-  private detectReducedMotionPreference(): void {
+  public detectReducedMotionPreference(): void {
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
       
