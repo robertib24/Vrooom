@@ -1,5 +1,5 @@
 import { Component, inject, Signal, OnInit, OnDestroy } from '@angular/core';
-import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { Router, RouterModule, NavigationEnd, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -10,9 +10,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from './services/auth.service';
 import { AdminService } from './services/admin.service';
 import { TokenService } from './services/token.service';
+import { AnimationService } from './services/animation.service';
 import { CommonModule } from '@angular/common';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { slideInAnimation, fadeAnimation } from './animations/route-animations';
 
 @Component({
   selector: 'app-root',
@@ -28,6 +30,7 @@ import { Subject } from 'rxjs';
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  animations: [slideInAnimation, fadeAnimation]
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Vrooom';
@@ -37,6 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private tokenService = inject(TokenService);
   private adminService = inject(AdminService);
   private router = inject(Router);
+  private animationService = inject(AnimationService);
 
   public readonly isAuthenticated: Signal<boolean> = toSignal(
     this.authService.isAuthenticated,
@@ -48,6 +52,9 @@ export class AppComponent implements OnInit, OnDestroy {
   loadingUser = false;
 
   ngOnInit() {
+    // Initialize animation service
+    this.animationService.detectReducedMotionPreference();
+    
     // Track route changes
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
@@ -78,8 +85,40 @@ export class AppComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // Animation trigger function for router outlet
+  prepareRoute(outlet: RouterOutlet) {
+    const routeData = outlet?.activatedRouteData;
+    const animationType = routeData?.['animation'] || 'default';
+    
+    // Respect user's reduced motion preference
+    if (!this.animationService.shouldAnimate()) {
+      return 'no-animation';
+    }
+    
+    return animationType;
+  }
+
+  // Get animation trigger based on route
+  getRouteAnimation(outlet: RouterOutlet) {
+    if (!outlet?.isActivated) return '';
+    
+    const routeData = outlet.activatedRouteData;
+    const currentRoute = this.currentRoute;
+    
+    // Different animations for different route types
+    if (currentRoute.includes('login') || currentRoute.includes('signup')) {
+      return 'auth-page';
+    } else if (currentRoute.includes('admin')) {
+      return 'admin-page';  
+    } else if (currentRoute.includes('vehicle') || currentRoute.includes('search')) {
+      return 'main-page';
+    }
+    
+    return routeData?.['animation'] || 'default';
+  }
+
   loadUserData() {
-    if (this.loadingUser) return; // Prevent multiple simultaneous calls
+    if (this.loadingUser) return;
     
     try {
       const username = this.tokenService.getUsername();
@@ -101,7 +140,6 @@ export class AppComponent implements OnInit, OnDestroy {
           error: (error) => {
             console.error('❌ Error loading user data:', error);
             this.loadingUser = false;
-            // Don't logout on profile load error, just set minimal user info
             this.currentUser = {
               username: username,
               nume: '',
@@ -136,7 +174,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.currentUser = null;
     } catch (error) {
       console.error('Error during signout:', error);
-      // Force cleanup even if there's an error
       this.currentUser = null;
       this.router.navigate(['/login']);
     }
@@ -162,7 +199,6 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.currentRoute === route || this.currentRoute.startsWith(route + '/');
   }
 
-  // Safe getters for template
   getCurrentUserName(): string {
     if (!this.currentUser) return '';
     return `${this.currentUser.prenume || ''} ${this.currentUser.nume || ''}`.trim() || 

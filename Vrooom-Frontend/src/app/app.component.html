@@ -140,5 +140,7 @@
 }
 
 <main class="main-content" [class.with-toolbar]="isAuthenticated()">
-  <router-outlet></router-outlet>
+  <div class="route-container" [@routeAnimations]="prepareRoute(outlet)">
+    <router-outlet #outlet="outlet"></router-outlet>
+  </div>
 </main>

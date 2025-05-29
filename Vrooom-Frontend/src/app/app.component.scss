@@ -1,3 +1,27 @@
+:root {
+  --animation-duration: 400ms;
+  --animation-duration-fast: 200ms;
+  --animation-duration-slow: 600ms;
+  --animation-easing: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --animation-easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+// Respect reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animation-duration: 0ms;
+    --animation-duration-fast: 0ms;
+    --animation-duration-slow: 0ms;
+  }
+  
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .custom-toolbar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -6,6 +30,7 @@
   top: 0;
   z-index: 1000;
   height: 70px;
+  transition: all var(--animation-duration-fast) var(--animation-easing);
   
   .toolbar-content {
     display: flex;
@@ -23,12 +48,18 @@
     gap: 12px;
     font-weight: 700;
     font-size: 1.5rem;
+    transition: transform var(--animation-duration-fast) var(--animation-easing);
+    
+    &:hover {
+      transform: scale(1.05);
+    }
     
     .brand-icon {
       font-size: 2rem;
       width: 2rem;
       height: 2rem;
       color: #ffd700;
+      animation: pulse 2s ease-in-out infinite alternate;
     }
     
     .brand-name {
@@ -48,30 +79,67 @@
       font-weight: 500;
       border-radius: 20px;
       padding: 8px 16px;
-      transition: all 0.3s ease;
+      transition: all var(--animation-duration) var(--animation-easing);
       display: flex;
       align-items: center;
       gap: 8px;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left var(--animation-duration-slow) var(--animation-easing);
+      }
       
       mat-icon {
         font-size: 1.1rem;
         width: 1.1rem;
         height: 1.1rem;
+        transition: transform var(--animation-duration-fast) var(--animation-easing);
       }
       
       &:hover {
         background-color: rgba(255, 255, 255, 0.15);
         color: white;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        
+        &::before {
+          left: 100%;
+        }
+        
+        mat-icon {
+          transform: rotate(5deg) scale(1.1);
+        }
       }
       
       &.active {
         background-color: rgba(255, 255, 255, 0.2);
         color: #ffd700;
         font-weight: 600;
+        transform: translateY(-1px);
         
         mat-icon {
           color: #ffd700;
+          transform: scale(1.1);
+        }
+        
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          width: 80%;
+          height: 2px;
+          background: #ffd700;
+          transform: translateX(-50%);
+          border-radius: 1px;
         }
       }
     }
@@ -86,6 +154,11 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      transition: all var(--animation-duration-fast) var(--animation-easing);
+      
+      &:hover {
+        transform: scale(1.02);
+      }
       
       .user-avatar {
         width: 40px;
@@ -93,11 +166,23 @@
         border-radius: 50%;
         border: 2px solid rgba(255, 255, 255, 0.3);
         object-fit: cover;
+        transition: all var(--animation-duration) var(--animation-easing);
+        
+        &:hover {
+          border-color: #ffd700;
+          transform: rotate(5deg) scale(1.1);
+        }
       }
       
       .user-name {
         font-weight: 500;
         font-size: 0.9rem;
+        opacity: 0.9;
+        transition: opacity var(--animation-duration-fast) var(--animation-easing);
+        
+        &:hover {
+          opacity: 1;
+        }
       }
       
       .loyalty-points {
@@ -110,20 +195,29 @@
         font-size: 0.8rem;
         font-weight: 600;
         color: #ffd700;
+        transition: all var(--animation-duration) var(--animation-easing-bounce);
+        
+        &:hover {
+          background-color: rgba(255, 215, 0, 0.3);
+          transform: scale(1.05);
+        }
         
         mat-icon {
           font-size: 1rem;
           width: 1rem;
           height: 1rem;
+          animation: sparkle 3s ease-in-out infinite;
         }
       }
     }
     
     .user-menu-trigger {
       color: rgba(255, 255, 255, 0.9);
+      transition: all var(--animation-duration) var(--animation-easing);
       
       &:hover {
         background-color: rgba(255, 255, 255, 0.15);
+        transform: rotate(180deg);
       }
     }
   }
@@ -138,6 +232,7 @@
   top: 0;
   z-index: 1000;
   height: 70px;
+  transition: all var(--animation-duration-fast) var(--animation-easing);
 
   .login-toolbar-content {
     display: flex;
@@ -181,7 +276,7 @@
       font-weight: 500;
       border-radius: 20px;
       padding: 8px 16px;
-      transition: all 0.3s ease;
+      transition: all var(--animation-duration) var(--animation-easing);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -210,6 +305,11 @@
 .user-menu {
   .logout-button {
     color: #f44336;
+    transition: all var(--animation-duration-fast) var(--animation-easing);
+    
+    &:hover {
+      background-color: rgba(244, 67, 54, 0.1);
+    }
     
     mat-icon {
       color: #f44336;
@@ -219,9 +319,124 @@
 
 .main-content {
   min-height: 100vh;
+  position: relative;
   
   &.with-toolbar {
     min-height: calc(100vh - 70px);
+  }
+}
+
+// Route animation container
+.route-container {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden; // Prevent horizontal scroll during animations
+}
+
+// Keyframe animations
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.05);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% { 
+    transform: rotate(0deg) scale(1);
+    filter: brightness(1);
+  }
+  25% { 
+    transform: rotate(90deg) scale(1.1);
+    filter: brightness(1.2);
+  }
+  50% { 
+    transform: rotate(180deg) scale(1);
+    filter: brightness(1.4);
+  }
+  75% { 
+    transform: rotate(270deg) scale(1.1);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+// Stagger animation for lists/grids
+.stagger-animation {
+  .stagger-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: staggerFadeIn var(--animation-duration) var(--animation-easing) forwards;
+    
+    @for $i from 1 through 20 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.1}s;
+      }
+    }
+  }
+}
+
+@keyframes staggerFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Micro-interactions for buttons and interactive elements
+.interactive-element {
+  transition: all var(--animation-duration-fast) var(--animation-easing);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    transition-duration: calc(var(--animation-duration-fast) / 2);
+  }
+}
+
+// Loading animations
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
   }
 }
 
