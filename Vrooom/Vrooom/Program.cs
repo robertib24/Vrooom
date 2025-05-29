@@ -134,6 +134,12 @@ builder.Services.AddAuthentication(options => {
         RoleClaimType = ClaimTypes.Role
     };
 });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
+
 builder.Services.AddAuthorization();
 var app = builder.Build();
 app.UseCors(builder =>

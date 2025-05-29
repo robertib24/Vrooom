@@ -1,4 +1,3 @@
-// Updated support.component.ts (key parts)
 import { Component, OnInit, Inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -46,6 +45,9 @@ export class SupportComponent implements OnInit {
   loading = false;
   ticketsLoading = true;
   error = false;
+
+  // Current user ID for comparison
+  currentUserId: number = 0;
 
   // Common support topics
   supportTopics = [
@@ -105,6 +107,10 @@ export class SupportComponent implements OnInit {
       titlu: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
       comentariu: ['', [Validators.required, Validators.minLength(20), Validators.maxLength(2000)]]
     });
+
+    // Get current user ID
+    const userId = this.tokenService.getUserId();
+    this.currentUserId = userId ? parseInt(userId) : 0;
   }
 
   ngOnInit() {
@@ -126,6 +132,7 @@ export class SupportComponent implements OnInit {
       .pipe(finalize(() => this.ticketsLoading = false))
       .subscribe({
         next: (tickets) => {
+          console.log('📋 Loaded tickets:', tickets);
           this.myTickets = tickets.sort((a, b) => b.supportId - a.supportId);
           this.groupTicketsByConversation();
         },
@@ -139,6 +146,8 @@ export class SupportComponent implements OnInit {
 
   groupTicketsByConversation() {
     this.groupedTickets = {};
+    
+    // Group tickets by supportId
     this.myTickets.forEach(ticket => {
       if (!this.groupedTickets[ticket.supportId]) {
         this.groupedTickets[ticket.supportId] = [];
@@ -146,13 +155,30 @@ export class SupportComponent implements OnInit {
       this.groupedTickets[ticket.supportId].push(ticket);
     });
 
-    // Sort messages within each conversation by timestamp (if available) or by order
-    Object.keys(this.groupedTickets).forEach(key => {
-      this.groupedTickets[parseInt(key)].sort((a, b) => {
-        // Assuming first message is user's, subsequent ones are support replies
-        // You might want to add a timestamp field to properly sort
-        return a.titlu ? -1 : 1;
+    // Sort messages within each conversation
+    Object.keys(this.groupedTickets).forEach(supportIdStr => {
+      const supportId = parseInt(supportIdStr);
+      const conversation = this.groupedTickets[supportId];
+      
+      // Sort by: original message first (with title), then replies (without title or with specific patterns)
+      conversation.sort((a, b) => {
+        // Original user message (has meaningful title, is from current user)
+        const aIsOriginal = a.userId === this.currentUserId && a.titlu && a.titlu !== '' && a.titlu !== 'Admin Reply';
+        const bIsOriginal = b.userId === this.currentUserId && b.titlu && b.titlu !== '' && b.titlu !== 'Admin Reply';
+        
+        if (aIsOriginal && !bIsOriginal) return -1;
+        if (!aIsOriginal && bIsOriginal) return 1;
+        
+        // Both are replies - we don't have timestamps, so keep insertion order
+        return 0;
       });
+      
+      console.log(`🗂️ Conversation ${supportId}:`, conversation.map(t => ({
+        userId: t.userId,
+        titlu: t.titlu,
+        isFromCurrentUser: t.userId === this.currentUserId,
+        isAdminReply: this.isAdminReply(t)
+      })));
     });
   }
 
@@ -214,7 +240,8 @@ export class SupportComponent implements OnInit {
       data: {
         conversationId,
         conversation,
-        originalTitle: conversation[0]?.titlu || 'Support Ticket'
+        originalTitle: conversation[0]?.titlu || 'Support Ticket',
+        currentUserId: this.currentUserId
       }
     });
 
@@ -225,21 +252,21 @@ export class SupportComponent implements OnInit {
     });
   }
 
-  // FIX: Add this method to handle Object.keys() in template
+  // FIXED: Methods for template
   getConversationIds(): number[] {
     return Object.keys(this.groupedTickets)
       .map(key => parseInt(key))
       .sort((a, b) => b - a);
   }
 
-  // FIX: Add this method to get the count of grouped tickets
   getGroupedTicketsCount(): number {
     return Object.keys(this.groupedTickets).length;
   }
 
   getConversationTitle(conversationId: number): string {
     const conversation = this.groupedTickets[conversationId];
-    return conversation?.[0]?.titlu || `Ticket #${conversationId}`;
+    const originalMessage = conversation?.find(t => t.userId === this.currentUserId && t.titlu && t.titlu !== 'Admin Reply');
+    return originalMessage?.titlu || `Ticket #${conversationId}`;
   }
 
   getConversationPreview(conversationId: number): string {
@@ -252,11 +279,22 @@ export class SupportComponent implements OnInit {
     return this.groupedTickets[conversationId]?.length || 0;
   }
 
+  // FIXED: Better logic for identifying user vs admin messages
   isUserMessage(ticket: SupportTicket): boolean {
-    // Assuming first message in conversation is always from user
-    // and messages with titles are from users, replies are from support
-    const conversation = this.groupedTickets[ticket.supportId];
-    return conversation?.[0] === ticket;
+    return ticket.userId === this.currentUserId;
+  }
+
+  isAdminReply(ticket: SupportTicket): boolean {
+    // Admin replies have specific patterns:
+    // 1. Title is "Admin Reply" or empty
+    // 2. User ID is different from current user (admin user ID)
+    // 3. Not the original ticket (which has a meaningful title)
+    
+    const isFromCurrentUser = ticket.userId === this.currentUserId;
+    const hasAdminReplyTitle = ticket.titlu === 'Admin Reply' || ticket.titlu === '';
+    const isOriginalTicket = isFromCurrentUser && ticket.titlu && ticket.titlu !== 'Admin Reply' && ticket.titlu !== '';
+    
+    return !isFromCurrentUser || (hasAdminReplyTitle && !isOriginalTicket);
   }
 
   get formControls() {
@@ -278,7 +316,7 @@ export class SupportComponent implements OnInit {
   }
 }
 
-// Support Reply Dialog Component
+// FIXED: Support Reply Dialog Component
 @Component({
   selector: 'app-support-reply-dialog',
   template: `
@@ -292,11 +330,16 @@ export class SupportComponent implements OnInit {
       <div class="conversation-history">
         <h3>Conversation History</h3>
         <div class="messages">
-          @for (message of data.conversation; track message.supportId + message.comentariu) {
-            <div class="message" [class.user-message]="isFirstMessage(message)" [class.support-message]="!isFirstMessage(message)">
+          @for (message of data.conversation; track message.supportId + '-' + message.comentariu.slice(0,10)) {
+            <div class="message" 
+                 [class.user-message]="isUserMessage(message)" 
+                 [class.support-message]="!isUserMessage(message)">
               <div class="message-header">
-                <mat-icon>{{ isFirstMessage(message) ? 'person' : 'support_agent' }}</mat-icon>
-                <span class="sender">{{ isFirstMessage(message) ? 'You' : 'Vrooom Support' }}</span>
+                <mat-icon>{{ isUserMessage(message) ? 'person' : 'support_agent' }}</mat-icon>
+                <span class="sender">{{ isUserMessage(message) ? 'You' : 'Vrooom Support' }}</span>
+                @if (message.titlu && message.titlu !== 'Admin Reply') {
+                  <span class="message-title"> - {{ message.titlu }}</span>
+                }
               </div>
               <div class="message-content">
                 {{ message.comentariu }}
@@ -373,11 +416,13 @@ export class SupportComponent implements OnInit {
             &.user-message {
               background: #e3f2fd;
               margin-left: 2rem;
+              border-left: 4px solid #2196f3;
             }
             
             &.support-message {
               background: #f3e5f5;
               margin-right: 2rem;
+              border-left: 4px solid #9c27b0;
             }
             
             .message-header {
@@ -393,11 +438,17 @@ export class SupportComponent implements OnInit {
                 width: 1.2rem;
                 height: 1.2rem;
               }
+              
+              .message-title {
+                font-style: italic;
+                color: #666;
+              }
             }
             
             .message-content {
               line-height: 1.5;
               color: #333;
+              white-space: pre-wrap;
             }
           }
         }
@@ -445,8 +496,8 @@ export class SupportReplyDialog {
     });
   }
 
-  isFirstMessage(message: any): boolean {
-    return this.data.conversation[0] === message;
+  isUserMessage(message: any): boolean {
+    return message.userId === this.data.currentUserId;
   }
 
   onSubmit() {

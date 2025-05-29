@@ -179,7 +179,7 @@
             </div>
           } @else {
             <div class="tickets-section">
-              <h2>Your Support Tickets</h2>
+              <h2>Your Support Tickets ({{ getGroupedTicketsCount() }})</h2>
               
               <div class="tickets-list">
                 @for (conversationId of getConversationIds(); track conversationId) {
@@ -208,13 +208,18 @@
                     </mat-expansion-panel-header>
 
                     <div class="ticket-conversation">
-                      @for (ticket of groupedTickets[conversationId]; track ticket.supportId + ticket.comentariu) {
+                      <!-- FIXED: Display all messages in conversation with proper identification -->
+                      @for (ticket of groupedTickets[conversationId]; track ticket.supportId + '-' + ticket.comentariu.slice(0,20)) {
                         <div class="message" 
                              [class.user-message]="isUserMessage(ticket)" 
                              [class.support-message]="!isUserMessage(ticket)">
                           <div class="message-header">
                             <mat-icon>{{ isUserMessage(ticket) ? 'person' : 'support_agent' }}</mat-icon>
                             <span class="sender">{{ isUserMessage(ticket) ? 'You' : 'Vrooom Support' }}</span>
+                            @if (ticket.titlu && ticket.titlu !== 'Admin Reply' && ticket.titlu !== '') {
+                              <span class="message-title"> - {{ ticket.titlu }}</span>
+                            }
+                            <span class="message-time">{{ ticket.supportId }}</span>
                           </div>
                           <div class="message-content">
                             {{ ticket.comentariu }}
@@ -239,3 +244,80 @@
     </mat-tab-group>
   </div>
 </div>
+
+<style>
+.ticket-count-badge {
+  background: #f44336;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+  min-width: 18px;
+  text-align: center;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: #999;
+  margin-left: auto;
+}
+
+.message-title {
+  font-style: italic;
+  color: #666;
+  font-weight: normal;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  
+  mat-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+.message-content {
+  line-height: 1.5;
+  color: #333;
+  white-space: pre-wrap;
+  padding-left: 1.7rem; /* Align with header text */
+}
+
+.user-message {
+  background: #e3f2fd;
+  margin-left: 2rem;
+  border-left: 4px solid #2196f3;
+}
+
+.support-message {
+  background: #f3e5f5;
+  margin-right: 2rem;
+  border-left: 4px solid #9c27b0;
+}
+
+.message {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.conversation-actions {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+
+  button {
+    border-radius: 20px;
+    font-weight: 600;
+  }
+}
+</style>

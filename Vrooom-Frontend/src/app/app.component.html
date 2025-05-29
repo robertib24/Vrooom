@@ -109,10 +109,17 @@
           </button>
 
           @if (isAdmin()) {
-            <button mat-menu-item [routerLink]="'/admin'">
-              <mat-icon>admin_panel_settings</mat-icon>
-              <span>Admin Panel</span>
+            <button mat-menu-item [routerLink]="'/admin-support'">
+              <mat-icon>support_agent</mat-icon>
+              <span>Admin Support</span>
             </button>
+          }
+
+          @if (isAdmin()) {
+          <button mat-menu-item [routerLink]="'/admin'">
+            <mat-icon>admin_panel_settings</mat-icon>
+            <span>Admin Panel</span>
+          </button>
           }
           
           <button mat-menu-item (click)="navigateToSupport()">

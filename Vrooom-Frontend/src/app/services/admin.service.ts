@@ -161,7 +161,7 @@ export class AdminService {
 
   // Support Management
   getAllSupportTickets(): Observable<SupportTicket[]> {
-    return this.apiService.get<SupportTicket[]>('Support');
+    return this.apiService.get<SupportTicket[]>('Admin/support-tickets');
   }
 
   adminReplyToTicket(supportId: number, reply: string): Observable<any> {
@@ -170,14 +170,14 @@ export class AdminService {
       throw new Error('User not authenticated');
     }
 
-    const replyTicket = {
+    const replyData = {
       supportId,
       titlu: 'Admin Reply',
       comentariu: reply,
       userId: parseInt(userId)
     };
 
-    return this.apiService.post('Support/reply', replyTicket);
+    return this.apiService.post(`Admin/support-tickets/${supportId}/reply`, replyData);
   }
 
   // Booking Management
@@ -186,7 +186,7 @@ export class AdminService {
     pageSize: number = 10,
     status: string = 'all'
   ): Observable<any> {
-    let endpoint = `Admin/bookings?page=${page}&pageSize=${pageSize}`;
+    let endpoint = `Chirie?page=${page}&pageSize=${pageSize}`;
     
     if (status !== 'all') {
       endpoint += `&status=${status}`;
@@ -196,7 +196,7 @@ export class AdminService {
   }
 
   cancelBooking(bookingId: number, reason: string): Observable<any> {
-    return this.apiService.put(`Admin/bookings/${bookingId}/cancel`, { reason });
+    return this.apiService.delete(`Chirie/${bookingId}`);
   }
 
   // System Settings

@@ -109,17 +109,26 @@
                   </div>
                 </mat-panel-title>
                 <mat-panel-description>
-                  <span class="ticket-user">{{ getUserName(ticket.userId) }}</span>
+                  <div class="ticket-meta-info">
+                    <span class="ticket-user">{{ getUserName(ticket.userId) }}</span>
+                    <mat-chip class="message-count">
+                      <mat-icon>chat</mat-icon>
+                      {{ getTicketConversation(ticket.supportId).length }} message{{ getTicketConversation(ticket.supportId).length !== 1 ? 's' : '' }}
+                    </mat-chip>
+                  </div>
                 </mat-panel-description>
               </mat-expansion-panel-header>
 
               <!-- Ticket Conversation -->
               <div class="ticket-conversation">
+                <!-- FIXED: Display all messages in conversation with proper identification -->
                 @for (conversationTicket of getTicketConversation(ticket.supportId); track conversationTicket.supportId + '-' + $index) {
-                  <div class="message" [class.admin-message]="isFromAdmin(conversationTicket)">
+                  <div class="message" 
+                       [class.admin-message]="isAdminMessage(conversationTicket)"
+                       [class.user-message]="isUserMessage(conversationTicket)">
                     <div class="message-header">
                       <div class="message-sender">
-                        @if (isFromAdmin(conversationTicket)) {
+                        @if (isAdminMessage(conversationTicket)) {
                           <mat-icon>admin_panel_settings</mat-icon>
                           <span>Admin Support</span>
                         } @else {
@@ -127,7 +136,10 @@
                           <span>{{ getUserName(conversationTicket.userId) }}</span>
                         }
                       </div>
-                      <div class="message-title">{{ conversationTicket.titlu }}</div>
+                      @if (conversationTicket.titlu && conversationTicket.titlu !== 'Admin Reply' && conversationTicket.titlu !== '') {
+                        <div class="message-title">{{ conversationTicket.titlu }}</div>
+                      }
+                      <div class="message-id">#{{ conversationTicket.supportId }}</div>
                     </div>
                     <div class="message-content">
                       {{ conversationTicket.comentariu }}
@@ -191,3 +203,103 @@
     }
   </div>
 </div>
+
+<style>
+.ticket-meta-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.message-count {
+  font-size: 0.8rem;
+  height: 24px;
+}
+
+.message-id {
+  font-size: 0.7rem;
+  color: #999;
+  margin-left: auto;
+}
+
+.message-title {
+  font-style: italic;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+
+  .message-sender {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #333;
+
+    mat-icon {
+      font-size: 1.2rem;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
+}
+
+.message-content {
+  line-height: 1.6;
+  color: #555;
+  white-space: pre-wrap;
+}
+
+.message {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.user-message {
+  background: #f8f9fa;
+  border-left: 4px solid #667eea;
+}
+
+.admin-message {
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+}
+
+.reply-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px dashed #dee2e6;
+
+  h4 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .reply-field {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .reply-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-start;
+
+    button {
+      border-radius: 20px;
+      font-weight: 500;
+
+      mat-spinner {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+</style>

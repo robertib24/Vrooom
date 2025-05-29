@@ -1,4 +1,3 @@
-// src/app/pages/admin-support/admin-support.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -13,6 +12,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminService } from '../../services/admin.service';
 import { SupportService, SupportTicket } from '../../services/support.service';
+import { TokenService } from '../../services/token.service';
 import { finalize } from 'rxjs/operators';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -43,13 +43,21 @@ export class AdminSupportComponent implements OnInit {
   replyingToTicket: number | null = null;
   
   replyForms: { [key: number]: FormGroup } = {};
+  
+  // Current admin user ID for comparison
+  currentAdminId: number = 0;
 
   constructor(
     private adminService: AdminService,
     private supportService: SupportService,
+    private tokenService: TokenService,
     private fb: FormBuilder,
     private snackBar: MatSnackBar
-  ) {}
+  ) {
+    // Get current admin user ID
+    const userId = this.tokenService.getUserId();
+    this.currentAdminId = userId ? parseInt(userId) : 0;
+  }
 
   ngOnInit() {
     if (!this.adminService.isAdmin()) {
@@ -67,6 +75,7 @@ export class AdminSupportComponent implements OnInit {
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (tickets) => {
+          console.log('🎫 Admin loaded tickets:', tickets);
           this.supportTickets = tickets;
           this.groupTicketsBySupport();
           this.initializeReplyForms();
@@ -81,6 +90,8 @@ export class AdminSupportComponent implements OnInit {
 
   groupTicketsBySupport() {
     this.groupedTickets = {};
+    
+    // Group all tickets by supportId
     this.supportTickets.forEach(ticket => {
       if (!this.groupedTickets[ticket.supportId]) {
         this.groupedTickets[ticket.supportId] = [];
@@ -88,12 +99,30 @@ export class AdminSupportComponent implements OnInit {
       this.groupedTickets[ticket.supportId].push(ticket);
     });
     
-    // Sort tickets within each group by timestamp (if you have timestamps)
-    Object.keys(this.groupedTickets).forEach(supportId => {
-      this.groupedTickets[parseInt(supportId)].sort((a, b) => {
-        // Sort logic here - assuming supportId is roughly chronological for now
-        return a.supportId - b.supportId;
+    // Sort tickets within each group for proper conversation flow
+    Object.keys(this.groupedTickets).forEach(supportIdStr => {
+      const supportId = parseInt(supportIdStr);
+      const conversation = this.groupedTickets[supportId];
+      
+      // Sort by: original message first (with meaningful title), then chronological order
+      conversation.sort((a, b) => {
+        // Identify original user message (has title, not admin reply)
+        const aIsOriginal = a.titlu && a.titlu !== '' && a.titlu !== 'Admin Reply';
+        const bIsOriginal = b.titlu && b.titlu !== '' && b.titlu !== 'Admin Reply';
+        
+        if (aIsOriginal && !bIsOriginal) return -1;
+        if (!aIsOriginal && bIsOriginal) return 1;
+        
+        // For replies, maintain insertion order (we don't have timestamps)
+        return 0;
       });
+      
+      console.log(`🗂️ Admin Conversation ${supportId}:`, conversation.map(t => ({
+        userId: t.userId,
+        titlu: t.titlu,
+        isAdmin: this.isAdminMessage(t),
+        isOriginal: t.titlu && t.titlu !== '' && t.titlu !== 'Admin Reply'
+      })));
     });
   }
 
@@ -113,21 +142,44 @@ export class AdminSupportComponent implements OnInit {
     this.supportTickets.forEach(ticket => {
       if (!seenSupportIds.has(ticket.supportId)) {
         seenSupportIds.add(ticket.supportId);
-        uniqueTickets.push(ticket);
+        // Find the original ticket (with meaningful title)
+        const originalTicket = this.groupedTickets[ticket.supportId]?.find(t => 
+          t.titlu && t.titlu !== '' && t.titlu !== 'Admin Reply'
+        ) || ticket;
+        uniqueTickets.push(originalTicket);
       }
     });
     
-    return uniqueTickets;
+    return uniqueTickets.sort((a, b) => b.supportId - a.supportId);
   }
 
   getTicketConversation(supportId: number): SupportTicket[] {
     return this.groupedTickets[supportId] || [];
   }
 
-  isFromAdmin(ticket: SupportTicket): boolean {
-    // You might need to add admin user ID check here
-    // For now, checking if title contains 'Admin Reply'
-    return ticket.titlu === 'Admin Reply' || ticket.titlu.includes('Admin');
+  // FIXED: Better logic for identifying admin vs user messages
+  isAdminMessage(ticket: SupportTicket): boolean {
+    // Admin messages have:
+    // 1. Title is "Admin Reply" OR
+    // 2. User ID is the current admin user OR
+    // 3. Empty title (typical for admin replies)
+    
+    const isAdminReply = ticket.titlu === 'Admin Reply';
+    const isFromCurrentAdmin = ticket.userId === this.currentAdminId;
+    const hasNoTitle = !ticket.titlu || ticket.titlu === '';
+    const isOriginalTicket = ticket.titlu && ticket.titlu !== '' && ticket.titlu !== 'Admin Reply';
+    
+    // If it's the original ticket with a meaningful title, it's from the user
+    if (isOriginalTicket) {
+      return false;
+    }
+    
+    // Otherwise, check if it's an admin reply
+    return isAdminReply || (isFromCurrentAdmin && hasNoTitle);
+  }
+
+  isUserMessage(ticket: SupportTicket): boolean {
+    return !this.isAdminMessage(ticket);
   }
 
   replyToTicket(supportId: number) {
@@ -139,6 +191,8 @@ export class AdminSupportComponent implements OnInit {
 
     const reply = form.get('reply')?.value;
     this.replyingToTicket = supportId;
+
+    console.log(`📤 Admin replying to ticket ${supportId}:`, reply);
 
     this.adminService.adminReplyToTicket(supportId, reply)
       .pipe(finalize(() => this.replyingToTicket = null))
@@ -152,9 +206,9 @@ export class AdminSupportComponent implements OnInit {
             supportId,
             titlu: 'Admin Reply',
             comentariu: reply,
-            userId: 0 // Admin user ID - you might want to get this from token
+            userId: this.currentAdminId
           }).subscribe({
-            next: () => console.log('Reply email sent'),
+            next: () => console.log('📧 Reply email sent'),
             error: (error) => console.error('Failed to send reply email:', error)
           });
           
@@ -176,7 +230,7 @@ export class AdminSupportComponent implements OnInit {
 
   getTicketPriority(ticket: SupportTicket): 'low' | 'medium' | 'high' {
     // Simple priority logic based on title keywords
-    const title = ticket.titlu.toLowerCase();
+    const title = ticket.titlu?.toLowerCase() || '';
     if (title.includes('urgent') || title.includes('critical') || title.includes('bug')) {
       return 'high';
     } else if (title.includes('problem') || title.includes('issue') || title.includes('error')) {
