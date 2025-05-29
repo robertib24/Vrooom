@@ -701,3 +701,272 @@ html, body {
     transition-duration: 0.01ms !important;
   }
 }
+
+// Add these styles to your global styles.scss file or create a new snackbar.scss file
+
+// Success Snackbar
+.success-snackbar {
+  --mdc-snackbar-container-color: #4caf50 !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+  --mat-snack-bar-button-color: #ffffff !important;
+  
+  .mat-mdc-snack-bar-container {
+    background-color: #4caf50 !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(76, 175, 80, 0.4) !important;
+    
+    .mdc-snackbar__surface {
+      background-color: #4caf50 !important;
+    }
+    
+    .mat-mdc-snack-bar-label {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-snack-bar-action {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+}
+
+// Error Snackbar
+.error-snackbar {
+  --mdc-snackbar-container-color: #f44336 !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+  --mat-snack-bar-button-color: #ffffff !important;
+  
+  .mat-mdc-snack-bar-container {
+    background-color: #f44336 !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(244, 67, 54, 0.4) !important;
+    
+    .mdc-snackbar__surface {
+      background-color: #f44336 !important;
+    }
+    
+    .mat-mdc-snack-bar-label {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-snack-bar-action {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+}
+
+// Info Snackbar
+.info-snackbar {
+  --mdc-snackbar-container-color: #2196f3 !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+  --mat-snack-bar-button-color: #ffffff !important;
+  
+  .mat-mdc-snack-bar-container {
+    background-color: #2196f3 !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.4) !important;
+    
+    .mdc-snackbar__surface {
+      background-color: #2196f3 !important;
+    }
+    
+    .mat-mdc-snack-bar-label {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-snack-bar-action {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+}
+
+// Warning Snackbar
+.warning-snackbar {
+  --mdc-snackbar-container-color: #ff9800 !important;
+  --mdc-snackbar-supporting-text-color: #ffffff !important;
+  --mat-snack-bar-button-color: #ffffff !important;
+  
+  .mat-mdc-snack-bar-container {
+    background-color: #ff9800 !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(255, 152, 0, 0.4) !important;
+    
+    .mdc-snackbar__surface {
+      background-color: #ff9800 !important;
+    }
+    
+    .mat-mdc-snack-bar-label {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-snack-bar-action {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+}
+
+// General snackbar improvements
+.mat-mdc-snack-bar-container {
+  min-width: 344px !important;
+  max-width: 568px !important;
+  margin: 8px !important;
+  
+  // Add smooth animation
+  animation: snackbar-enter 300ms cubic-bezier(0.0, 0.0, 0.2, 1) !important;
+  
+  // Improve font styling
+  .mat-mdc-snack-bar-label {
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+  
+  // Better button styling
+  .mat-mdc-snack-bar-action {
+    border-radius: 4px !important;
+    padding: 4px 8px !important;
+    margin-left: 8px !important;
+    text-transform: uppercase !important;
+    font-size: 12px !important;
+    letter-spacing: 0.5px !important;
+    
+    .mdc-button__label {
+      font-weight: 600 !important;
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes snackbar-enter {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .mat-mdc-snack-bar-container {
+    min-width: 280px !important;
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px !important;
+    
+    .mat-mdc-snack-bar-label {
+      font-size: 13px !important;
+    }
+    
+    .mat-mdc-snack-bar-action {
+      font-size: 11px !important;
+      padding: 3px 6px !important;
+    }
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .success-snackbar {
+    --mdc-snackbar-container-color: #2e7d32 !important;
+    
+    .mat-mdc-snack-bar-container {
+      background-color: #2e7d32 !important;
+      
+      .mdc-snackbar__surface {
+        background-color: #2e7d32 !important;
+      }
+    }
+  }
+  
+  .error-snackbar {
+    --mdc-snackbar-container-color: #c62828 !important;
+    
+    .mat-mdc-snack-bar-container {
+      background-color: #c62828 !important;
+      
+      .mdc-snackbar__surface {
+        background-color: #c62828 !important;
+      }
+    }
+  }
+  
+  .warning-snackbar {
+    --mdc-snackbar-container-color: #ef6c00 !important;
+    
+    .mat-mdc-snack-bar-container {
+      background-color: #ef6c00 !important;
+      
+      .mdc-snackbar__surface {
+        background-color: #ef6c00 !important;
+      }
+    }
+  }
+  
+  .info-snackbar {
+    --mdc-snackbar-container-color: #1565c0 !important;
+    
+    .mat-mdc-snack-bar-container {
+      background-color: #1565c0 !important;
+      
+      .mdc-snackbar__surface {
+        background-color: #1565c0 !important;
+      }
+    }
+  }
+}
+
+// High contrast mode
+@media (prefers-contrast: high) {
+  .success-snackbar,
+  .error-snackbar,
+  .warning-snackbar,
+  .info-snackbar {
+    .mat-mdc-snack-bar-container {
+      border: 2px solid #ffffff !important;
+      
+      .mat-mdc-snack-bar-label {
+        font-weight: 700 !important;
+      }
+      
+      .mat-mdc-snack-bar-action {
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        font-weight: 700 !important;
+      }
+    }
+  }
+}
+
+// RTL support
+[dir="rtl"] {
+  .mat-mdc-snack-bar-container {
+    .mat-mdc-snack-bar-action {
+      margin-left: 0 !important;
+      margin-right: 8px !important;
+    }
+  }
+}

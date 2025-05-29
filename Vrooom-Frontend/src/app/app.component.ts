@@ -1,4 +1,4 @@
-import { Component, inject, Signal, OnInit } from '@angular/core';
+import { Component, inject, Signal, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,7 +11,8 @@ import { AuthService } from './services/auth.service';
 import { AdminService } from './services/admin.service';
 import { TokenService } from './services/token.service';
 import { CommonModule } from '@angular/common';
-import { filter } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -28,61 +29,117 @@ import { filter } from 'rxjs/operators';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'Vrooom';
-
+  
+  private destroy$ = new Subject<void>();
   private authService = inject(AuthService);
   private tokenService = inject(TokenService);
   private adminService = inject(AdminService);
   private router = inject(Router);
 
-  public readonly isAuthenticated: Signal<any | undefined> = toSignal(
+  public readonly isAuthenticated: Signal<boolean> = toSignal(
     this.authService.isAuthenticated,
-    { initialValue: false },
+    { initialValue: false }
   );
 
   currentUser: any = null;
   currentRoute = '';
+  loadingUser = false;
 
   ngOnInit() {
-    this.loadUserData();
-    
     // Track route changes
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
     ).subscribe((event: NavigationEnd) => {
       this.currentRoute = event.url;
     });
+
+    // Watch authentication state changes
+    this.authService.isAuthenticated
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isAuth => {
+        if (isAuth) {
+          this.loadUserData();
+        } else {
+          this.currentUser = null;
+        }
+      });
+
+    // Initial load if already authenticated
+    if (this.isAuthenticated()) {
+      this.loadUserData();
+    }
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadUserData() {
-    if (this.isAuthenticated()) {
+    if (this.loadingUser) return; // Prevent multiple simultaneous calls
+    
+    try {
       const username = this.tokenService.getUsername();
-      if (username) {
-        this.authService.getUserProfile(username).subscribe({
+      if (!username) {
+        console.warn('No username found in token');
+        return;
+      }
+
+      this.loadingUser = true;
+      
+      this.authService.getUserProfile(username)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
           next: (user) => {
             this.currentUser = user;
+            this.loadingUser = false;
+            console.log('✅ User data loaded:', user);
           },
           error: (error) => {
-            console.error('Error loading user data:', error);
+            console.error('❌ Error loading user data:', error);
+            this.loadingUser = false;
+            // Don't logout on profile load error, just set minimal user info
+            this.currentUser = {
+              username: username,
+              nume: '',
+              prenume: '',
+              puncteFidelitate: 0,
+              linkPozaProfil: ''
+            };
           }
         });
-      }
+    } catch (error) {
+      console.error('Error in loadUserData:', error);
+      this.loadingUser = false;
     }
   }
 
   isAdmin(): boolean {
-  return this.adminService.isAdmin();
+    try {
+      return this.adminService.isAdmin();
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
   }
   
   navigateToAdminSupport() {
-  this.router.navigate(['/admin-support']);
+    this.router.navigate(['/admin-support']);
   }
 
   signout() {
-    this.authService.logout();
-    this.currentUser = null;
-    this.router.navigate(['/login']);
+    try {
+      this.authService.logout();
+      this.currentUser = null;
+    } catch (error) {
+      console.error('Error during signout:', error);
+      // Force cleanup even if there's an error
+      this.currentUser = null;
+      this.router.navigate(['/login']);
+    }
   }
 
   navigateToProfile() {
@@ -103,5 +160,20 @@ export class AppComponent implements OnInit {
   
   isActiveRoute(route: string): boolean {
     return this.currentRoute === route || this.currentRoute.startsWith(route + '/');
+  }
+
+  // Safe getters for template
+  getCurrentUserName(): string {
+    if (!this.currentUser) return '';
+    return `${this.currentUser.prenume || ''} ${this.currentUser.nume || ''}`.trim() || 
+           this.currentUser.username || 'User';
+  }
+
+  getCurrentUserAvatar(): string {
+    return this.currentUser?.linkPozaProfil || 'assets/default-avatar.png';
+  }
+
+  getCurrentUserPoints(): number {
+    return this.currentUser?.puncteFidelitate || 0;
   }
 }

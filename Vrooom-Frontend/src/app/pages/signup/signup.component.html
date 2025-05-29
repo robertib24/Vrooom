@@ -1,158 +1,262 @@
-<div class="landing-container">
-  <div class="overlay">
-    <h2>Create Your Account</h2>
-    
-    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
-      <div class="form">
-        <div class="form-row">
-          <input
-            id="firstName"
-            type="text"
-            class="form-control"
-            formControlName="firstName"
-            placeholder="First name"
-          />
-          @if (f['firstName'].touched && f['firstName'].errors?.['required']) {
-            <div class="error-message">First name is required</div>
-          }
+<div class="signup-container">
+  <!-- Animated Background -->
+  <div class="animated-background">
+    <div class="floating-car car-1">🚗</div>
+    <div class="floating-car car-2">🚙</div>
+    <div class="floating-car car-3">🚘</div>
+    <div class="floating-car car-4">🏎️</div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="signup-content">
+    <!-- Left Side - Branding -->
+    <div class="branding-section">
+      <div class="branding-content">
+        <div class="logo-section">
+          <div class="logo-icon">
+            <mat-icon>directions_car</mat-icon>
+          </div>
+          <h1 class="brand-title">Vrooom</h1>
+        </div>
+        
+        <div class="welcome-text">
+          <h2>Join the Community</h2>
+          <p>Connect with car enthusiasts, rent amazing vehicles, and share your own rides with others.</p>
         </div>
 
-        <div class="form-row">
-          <input
-            id="lastName"
-            type="text"
-            class="form-control"
-            formControlName="lastName"
-            placeholder="Last name"
-          />
-          @if (f['lastName'].touched && f['lastName'].errors?.['required']) {
-            <div class="error-message">Last name is required</div>
-          }
-        </div>
-
-        <div class="form-row">
-          <input
-            id="username"
-            type="text"
-            class="form-control"
-            formControlName="username"
-            placeholder="Username"
-          />
-          @if (f['username'].touched && f['username'].errors?.['required']) {
-            <div class="error-message">Username is required</div>
-          }
-          @if (f['username'].touched && f['username'].errors?.['minlength']) {
-            <div class="error-message">Username must be at least 4 characters</div>
-          }
-        </div>
-
-        <div class="form-row">
-          <input
-            id="email"
-            type="email"
-            class="form-control"
-            formControlName="email"
-            placeholder="Email"
-          />
-          @if (f['email'].touched && f['email'].errors?.['required']) {
-            <div class="error-message">Email is required</div>
-          }
-          @if (f['email'].touched && f['email'].errors?.['emailInvalid']) {
-            <div class="error-message">Please enter a valid email</div>
-          }
-        </div>
-
-        <div class="form-row">
-          <input
-            id="phone"
-            type="tel"
-            class="form-control"
-            formControlName="phone"
-            placeholder="Phone number"
-          />
-          @if (f['phone'].touched && f['phone'].errors?.['pattern']) {
-            <div class="error-message">Please enter a valid phone number (10 digits)</div>
-          }
-        </div>
-
-        <div class="form-row">
-          <input
-            id="password"
-            type="password"
-            class="form-control"
-            formControlName="password"
-            placeholder="Password"
-          />
-          @if (f['password'].touched && f['password'].errors?.['required']) {
-            <div class="error-message">Password is required</div>
-          }
-          @if (f['password'].touched && f['password'].errors?.['parolaInvalida']) {
-            <div class="error-message">
-              Password must contain at least 8 characters, including an uppercase letter, 
-              a lowercase letter, a number, and a special character
-            </div>
-          }
-        </div>
-
-        <div class="form-row">
-          <input
-            id="confirmPassword"
-            type="password"
-            class="form-control"
-            formControlName="confirmPassword"
-            placeholder="Confirm password"
-          />
-          @if (f['confirmPassword'].touched && f['confirmPassword'].errors?.['required']) {
-            <div class="error-message">Please confirm your password</div>
-          }
-          @if (signupForm.errors?.['mismatch'] && f['confirmPassword'].touched) {
-            <div class="error-message">Passwords do not match</div>
-          }
-        </div>
-
-        <div class="form-row">
-          <input
-            id="birthDate"
-            type="date"
-            class="form-control"
-            formControlName="birthDate"
-            placeholder="Birth date"
-          />
-          @if (f['birthDate'].touched && f['birthDate'].errors?.['required']) {
-            <div class="error-message">Birth date is required</div>
-          }
-          @if (f['birthDate'].touched && f['birthDate'].errors?.['minor']) {
-            <div class="error-message">You must be at least 18 years old</div>
-          }
-        </div>
-
-        <div class="form-row file-input">
-          <label for="profilePicture" class="file-label">Profile Picture</label>
-          <input
-            id="profilePicture"
-            type="file"
-            class="form-control"
-            accept="image/png, image/jpeg, image/jpg"
-            (change)="onFileSelected($event)"
-          />
-          @if (f['profilePicture'].touched && f['profilePicture'].errors?.['extensieIncorecta']) {
-            <div class="error-message">Only JPG, JPEG, and PNG files are allowed</div>
-          }
+        <div class="features-list">
+          <div class="feature-item">
+            <mat-icon>verified</mat-icon>
+            <span>Verified vehicle owners</span>
+          </div>
+          <div class="feature-item">
+            <mat-icon>security</mat-icon>
+            <span>Secure transactions</span>
+          </div>
+          <div class="feature-item">
+            <mat-icon>support_agent</mat-icon>
+            <span>24/7 customer support</span>
+          </div>
+          <div class="feature-item">
+            <mat-icon>star</mat-icon>
+            <span>Rating & review system</span>
+          </div>
         </div>
       </div>
+    </div>
 
-      @if (errorMessage) {
-        <div class="server-error">{{ errorMessage }}</div>
-      }
+    <!-- Right Side - Form -->
+    <div class="form-section">
+      <div class="form-container">
+        <div class="form-header">
+          <h2>Create Your Account</h2>
+          <p>Start your journey with Vrooom today</p>
+        </div>
 
-      <button type="submit" mat-button class="custom-submit-button" [disabled]="loading">
-        {{ loading ? 'Creating Account...' : 'Sign Up' }}
-      </button>
-    </form>
+        <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="signup-form">
+          <!-- Personal Information -->
+          <div class="form-group">
+            <h3 class="group-title">
+              <mat-icon>person</mat-icon>
+              Personal Information
+            </h3>
+            
+            <div class="input-row">
+              <div class="input-container">
+                <mat-form-field appearance="outline" class="custom-field">
+                  <mat-label>First Name</mat-label>
+                  <input matInput formControlName="firstName" placeholder="John">
+                  <mat-icon matSuffix>person_outline</mat-icon>
+                  @if (f['firstName'].touched && f['firstName'].errors?.['required']) {
+                    <mat-error>First name is required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
 
-    <div class="login-link">
-      <p>Already have an account?</p>
-      <a routerLink="/login">Log in</a>
+              <div class="input-container">
+                <mat-form-field appearance="outline" class="custom-field">
+                  <mat-label>Last Name</mat-label>
+                  <input matInput formControlName="lastName" placeholder="Doe">
+                  <mat-icon matSuffix>person_outline</mat-icon>
+                  @if (f['lastName'].touched && f['lastName'].errors?.['required']) {
+                    <mat-error>Last name is required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="input-container">
+              <mat-form-field appearance="outline" class="custom-field">
+                <mat-label>Date of Birth</mat-label>
+                <input matInput type="date" formControlName="birthDate">
+                <mat-icon matSuffix>cake</mat-icon>
+                @if (f['birthDate'].touched && f['birthDate'].errors?.['required']) {
+                  <mat-error>Birth date is required</mat-error>
+                }
+                @if (f['birthDate'].touched && f['birthDate'].errors?.['minor']) {
+                  <mat-error>You must be at least 18 years old</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Account Details -->
+          <div class="form-group">
+            <h3 class="group-title">
+              <mat-icon>account_circle</mat-icon>
+              Account Details
+            </h3>
+
+            <div class="input-container">
+              <mat-form-field appearance="outline" class="custom-field">
+                <mat-label>Username</mat-label>
+                <input matInput formControlName="username" placeholder="johndoe">
+                <mat-icon matSuffix>alternate_email</mat-icon>
+                @if (f['username'].touched && f['username'].errors?.['required']) {
+                  <mat-error>Username is required</mat-error>
+                }
+                @if (f['username'].touched && f['username'].errors?.['minlength']) {
+                  <mat-error>Username must be at least 4 characters</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="input-container">
+              <mat-form-field appearance="outline" class="custom-field">
+                <mat-label>Email Address</mat-label>
+                <input matInput type="email" formControlName="email" placeholder="john@example.com">
+                <mat-icon matSuffix>email</mat-icon>
+                @if (f['email'].touched && f['email'].errors?.['required']) {
+                  <mat-error>Email is required</mat-error>
+                }
+                @if (f['email'].touched && f['email'].errors?.['emailInvalid']) {
+                  <mat-error>Please enter a valid email address</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="input-container">
+              <mat-form-field appearance="outline" class="custom-field">
+                <mat-label>Phone Number</mat-label>
+                <input matInput type="tel" formControlName="phone" placeholder="0123456789">
+                <mat-icon matSuffix>phone</mat-icon>
+                @if (f['phone'].touched && f['phone'].errors?.['pattern']) {
+                  <mat-error>Please enter a valid phone number (10 digits)</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Security -->
+          <div class="form-group">
+            <h3 class="group-title">
+              <mat-icon>lock</mat-icon>
+              Security
+            </h3>
+
+            <div class="input-container">
+              <mat-form-field appearance="outline" class="custom-field">
+                <mat-label>Password</mat-label>
+                <input matInput type="password" formControlName="password" placeholder="Enter a strong password">
+                <mat-icon matSuffix>lock_outline</mat-icon>
+                @if (f['password'].touched && f['password'].errors?.['required']) {
+                  <mat-error>Password is required</mat-error>
+                }
+                @if (f['password'].touched && f['password'].errors?.['parolaInvalida']) {
+                  <mat-error>
+                    Password must contain at least 8 characters with uppercase, lowercase, number, and special character
+                  </mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+            <div class="input-container">
+              <mat-form-field appearance="outline" class="custom-field">
+                <mat-label>Confirm Password</mat-label>
+                <input matInput type="password" formControlName="confirmPassword" placeholder="Confirm your password">
+                <mat-icon matSuffix>lock_outline</mat-icon>
+                @if (f['confirmPassword'].touched && f['confirmPassword'].errors?.['required']) {
+                  <mat-error>Please confirm your password</mat-error>
+                }
+                @if (signupForm.errors?.['mismatch'] && f['confirmPassword'].touched) {
+                  <mat-error>Passwords do not match</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Profile Picture -->
+          <div class="form-group">
+            <h3 class="group-title">
+              <mat-icon>photo_camera</mat-icon>
+              Profile Picture
+            </h3>
+
+            <div class="file-upload-container">
+              <div class="upload-area" (click)="fileInput.click()">
+                <mat-icon class="upload-icon">add_photo_alternate</mat-icon>
+                <div class="upload-text">
+                  <span class="primary-text">Click to upload profile picture</span>
+                  <span class="secondary-text">JPG, PNG or GIF (max. 5MB)</span>
+                </div>
+              </div>
+              
+              <input #fileInput type="file" 
+                     accept="image/png, image/jpeg, image/jpg"
+                     (change)="onFileSelected($event)"
+                     style="display: none;">
+              
+              @if (selectedFile) {
+                <div class="file-selected">
+                  <mat-icon color="primary">check_circle</mat-icon>
+                  <span>{{ selectedFile.name }}</span>
+                </div>
+              }
+
+              @if (f['profilePicture'].touched && f['profilePicture'].errors?.['extensieIncorecta']) {
+                <div class="file-error">
+                  <mat-icon color="warn">error</mat-icon>
+                  <span>Only JPG, JPEG, and PNG files are allowed</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Error Display -->
+          @if (errorMessage) {
+            <div class="error-banner">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ errorMessage }}</span>
+            </div>
+          }
+
+          <!-- Submit Button -->
+          <div class="submit-section">
+            @if (loading) {
+              <button mat-raised-button class="submit-btn" disabled>
+                <mat-spinner diameter="24"></mat-spinner>
+                Creating Account...
+              </button>
+            } @else {
+              <button mat-raised-button class="submit-btn" type="submit" [disabled]="signupForm.invalid">
+                <mat-icon>person_add</mat-icon>
+                Create Account
+              </button>
+            }
+          </div>
+        </form>
+
+        <!-- Login Link -->
+        <div class="login-section">
+          <div class="divider">
+            <span>Already have an account?</span>
+          </div>
+          <button mat-button class="login-link" routerLink="/login">
+            <mat-icon>login</mat-icon>
+            Sign In Instead
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
