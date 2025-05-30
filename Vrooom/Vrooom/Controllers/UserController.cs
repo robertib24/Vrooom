@@ -18,7 +18,7 @@ namespace Vrooom.Controllers
     {
         private readonly IUserService _userService;
         private readonly IEmailSender _emailSender;
-        private readonly UserManager<User> _userManager; // Adăugat pentru debugging
+        private readonly UserManager<User> _userManager;
 
         public UserController(IUserService userService, IEmailSender emailSender, UserManager<User> userManager)
         {
@@ -51,8 +51,6 @@ namespace Vrooom.Controllers
 
                 Console.WriteLine($"📝 Registering user: {user.username}");
                 Console.WriteLine($"📁 Profile picture: {user.pozaProfil.FileName} ({user.pozaProfil.Length} bytes)");
-
-                Console.WriteLine($"🔄 Starting registration for user: {user.username}");
 
                 var result = await _userService.RegisterAsync(user);
                 if (result.Succeeded)
@@ -105,7 +103,6 @@ namespace Vrooom.Controllers
                     return BadRequest(new { error = "Username and token are required" });
                 }
 
-                // Găsește utilizatorul
                 var user = await _userManager.FindByNameAsync(username);
                 if (user == null)
                 {
@@ -115,21 +112,18 @@ namespace Vrooom.Controllers
 
                 Console.WriteLine($"👤 User found: {user.UserName}, Current EmailConfirmed: {user.EmailConfirmed}");
 
-                // Verifică dacă email-ul este deja confirmat
                 if (user.EmailConfirmed)
                 {
                     Console.WriteLine($"✅ Email already confirmed for user: {username}");
                     return Ok(new { message = "Email already confirmed", alreadyConfirmed = true });
                 }
 
-                // Confirmă email-ul cu token-ul
                 var result = await _userManager.ConfirmEmailAsync(user, token);
 
                 if (result.Succeeded)
                 {
                     Console.WriteLine($"✅ Email confirmed successfully for user: {username}");
 
-                    // Verifică din nou statusul pentru confirmare
                     var updatedUser = await _userManager.FindByNameAsync(username);
                     Console.WriteLine($"📋 Updated EmailConfirmed status: {updatedUser.EmailConfirmed}");
 
@@ -169,7 +163,6 @@ namespace Vrooom.Controllers
             {
                 Console.WriteLine($"🔄 Login attempt for user: {user.username}");
 
-                // Verifică statusul email-ului înainte de login
                 var dbUser = await _userManager.FindByNameAsync(user.username);
                 if (dbUser != null)
                 {
@@ -198,6 +191,130 @@ namespace Vrooom.Controllers
             }
         }
 
+        // ===== NEW ENHANCED ENDPOINTS =====
+
+        [HttpPut("updateProfile/{username}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile(string username, [FromBody] UserUpdateProfileDTO profileData)
+        {
+            try
+            {
+                Console.WriteLine($"🔄 Updating profile for user: {username}");
+
+                var user = await _userManager.FindByNameAsync(username);
+                if (user == null)
+                {
+                    return NotFound(new { error = "User not found" });
+                }
+
+                // Update user properties
+                user.nume = profileData.nume ?? user.nume;
+                user.prenume = profileData.prenume ?? user.prenume;
+                user.PhoneNumber = profileData.nrTelefon ?? user.PhoneNumber;
+
+                if (profileData.dataNasterii.HasValue)
+                {
+                    user.dataNasterii = profileData.dataNasterii.Value;
+                }
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    Console.WriteLine($"✅ Profile updated successfully for user: {username}");
+                    return Ok(new { message = "Profile updated successfully" });
+                }
+                else
+                {
+                    var errors = result.Errors.Select(e => e.Description);
+                    Console.WriteLine($"❌ Profile update failed for {username}: {string.Join(", ", errors)}");
+                    return BadRequest(new { error = "Profile update failed", details = errors });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Exception updating profile for {username}: {ex.Message}");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpPost("changePassword")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] UserChangePassDTO changePasswordData)
+        {
+            try
+            {
+                Console.WriteLine($"🔄 Changing password for user: {changePasswordData.username}");
+
+                var result = await _userService.ChangePasswordAsync(changePasswordData);
+
+                if (result.Succeeded)
+                {
+                    Console.WriteLine($"✅ Password changed successfully for user: {changePasswordData.username}");
+                    return Ok(new { message = "Password changed successfully" });
+                }
+                else
+                {
+                    var errors = result.Errors.Select(e => e.Description);
+                    Console.WriteLine($"❌ Password change failed for {changePasswordData.username}: {string.Join(", ", errors)}");
+                    return BadRequest(new { error = "Password change failed", details = errors });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Exception changing password for {changePasswordData.username}: {ex.Message}");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpPost("updateProfilePicture/{username}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfilePicture(string username, [FromForm] IFormFile profilePicture)
+        {
+            try
+            {
+                Console.WriteLine($"🔄 Updating profile picture for user: {username}");
+
+                if (profilePicture == null || profilePicture.Length == 0)
+                {
+                    return BadRequest(new { error = "Profile picture is required" });
+                }
+
+                var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png" };
+                if (!allowedTypes.Contains(profilePicture.ContentType.ToLower()))
+                {
+                    return BadRequest(new { error = "Only JPEG and PNG images are allowed" });
+                }
+
+                if (profilePicture.Length > 5 * 1024 * 1024) // 5MB
+                {
+                    return BadRequest(new { error = "Image size must be less than 5MB" });
+                }
+
+                var success = await _userService.UpdateProfilePicture(username, profilePicture);
+
+                if (success)
+                {
+                    Console.WriteLine($"✅ Profile picture updated successfully for user: {username}");
+                    return Ok(new
+                    {
+                        message = "Profile picture updated successfully",
+                        url = $"https://vrooom1224.s3.eu-central-1.amazonaws.com/{username}_pfp.png"
+                    });
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Profile picture update failed for user: {username}");
+                    return BadRequest(new { error = "Failed to update profile picture. Image may be inappropriate." });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Exception updating profile picture for {username}: {ex.Message}");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
         [HttpPost("getUserDetails")]
         [AllowAnonymous]
         public async Task<IActionResult> getUserDetails(string username)
@@ -215,6 +332,7 @@ namespace Vrooom.Controllers
 
         [HttpPost("uploadPhoto")]
         [AllowAnonymous]
+        [Obsolete("This endpoint is deprecated. Use updateProfilePicture instead.")]
         public async Task<IActionResult> uploadPhoto([FromForm] RegisterDTO user)
         {
             try
@@ -294,17 +412,48 @@ namespace Vrooom.Controllers
         }
 
         [HttpPost("uploadDocument")]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> uploadDocument(string username, string document, IFormFile file)
         {
             try
             {
+                Console.WriteLine($"🔄 Uploading document {document} for user: {username}");
+
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(new { error = "Document file is required" });
+                }
+
+                var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "application/pdf" };
+                if (!allowedTypes.Contains(file.ContentType.ToLower()))
+                {
+                    return BadRequest(new { error = "Only JPEG, PNG and PDF files are allowed" });
+                }
+
+                if (file.Length > 10 * 1024 * 1024) // 10MB
+                {
+                    return BadRequest(new { error = "File size must be less than 10MB" });
+                }
+
+                if (document != "permis" && document != "carteIdentitate")
+                {
+                    return BadRequest(new { error = "Invalid document type. Must be 'permis' or 'carteIdentitate'" });
+                }
+
                 await _userService.uploadDocument(username, document, file);
-                return Ok();
+
+                Console.WriteLine($"✅ Document {document} uploaded successfully for user: {username}");
+                return Ok(new
+                {
+                    message = "Document uploaded successfully",
+                    documentType = document,
+                    url = $"https://vrooom1224.s3.eu-central-1.amazonaws.com/{username}_{document}.png"
+                });
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                Console.WriteLine($"❌ Error uploading document {document} for {username}: {e.Message}");
+                return BadRequest(new { error = e.Message });
             }
         }
 
@@ -323,7 +472,88 @@ namespace Vrooom.Controllers
             }
         }
 
-        // DEBUGGING ENDPOINTS
+        [HttpGet("getDocumentStatus/{username}")]
+        [Authorize]
+        public async Task<IActionResult> GetDocumentStatus(string username)
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(username);
+                if (user == null)
+                {
+                    return NotFound(new { error = "User not found" });
+                }
+
+                var documentStatus = new
+                {
+                    permis = new
+                    {
+                        uploaded = user.permis != "N/A",
+                        verified = user.permis != "N/A", // Assuming uploaded = verified for now
+                        url = user.permis != "N/A" ? user.permis : null
+                    },
+                    carteIdentitate = new
+                    {
+                        uploaded = user.carteIdentitate != "N/A",
+                        verified = user.carteIdentitate != "N/A", // Assuming uploaded = verified for now
+                        url = user.carteIdentitate != "N/A" ? user.carteIdentitate : null
+                    }
+                };
+
+                return Ok(documentStatus);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error getting document status for {username}: {ex.Message}");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        [HttpDelete("deleteDocument/{username}/{documentType}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteDocument(string username, string documentType)
+        {
+            try
+            {
+                Console.WriteLine($"🔄 Deleting document {documentType} for user: {username}");
+
+                var user = await _userManager.FindByNameAsync(username);
+                if (user == null)
+                {
+                    return NotFound(new { error = "User not found" });
+                }
+
+                if (documentType != "permis" && documentType != "carteIdentitate")
+                {
+                    return BadRequest(new { error = "Invalid document type" });
+                }
+
+                // Reset document status in database
+                if (documentType == "permis")
+                {
+                    user.permis = "N/A";
+                }
+                else if (documentType == "carteIdentitate")
+                {
+                    user.carteIdentitate = "N/A";
+                }
+
+                await _userManager.UpdateAsync(user);
+
+                // Note: In a production environment, you might also want to delete from S3
+                // This would require injecting IS3Service and calling DeleteFileAsync
+
+                Console.WriteLine($"✅ Document {documentType} deleted successfully for user: {username}");
+                return Ok(new { message = "Document deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error deleting document {documentType} for {username}: {ex.Message}");
+                return StatusCode(500, new { error = "Internal server error", details = ex.Message });
+            }
+        }
+
+        // DEBUGGING ENDPOINTS (Remove in production)
         [HttpGet("debug-user-status/{username}")]
         [AllowAnonymous]
         public async Task<IActionResult> DebugUserStatus(string username)
@@ -346,7 +576,10 @@ namespace Vrooom.Controllers
                     lockoutEnabled = user.LockoutEnabled,
                     lockoutEnd = user.LockoutEnd,
                     accessFailedCount = user.AccessFailedCount,
-                    id = user.Id
+                    id = user.Id,
+                    permis = user.permis,
+                    carteIdentitate = user.carteIdentitate,
+                    pozaProfil = user.pozaProfil
                 });
             }
             catch (Exception ex)
@@ -387,7 +620,6 @@ namespace Vrooom.Controllers
             }
         }
 
-        // ENDPOINT DE TEST PENTRU EMAIL
         [HttpPost("test-send-email")]
         [AllowAnonymous]
         public async Task<IActionResult> TestSendEmail([FromBody] string emailAddress)

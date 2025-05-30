@@ -1,271 +1,503 @@
 <div class="profile-container">
-    @if (loading) {
-      <div class="loading-container">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Loading your profile...</p>
-      </div>
-    } @else if (userProfile) {
-      <div class="profile-content">
-        <!-- Profile Header -->
-        <mat-card class="profile-header-card">
-          <div class="profile-header">
-            <div class="avatar-section">
-              <img 
-                [src]="userProfile.linkPozaProfil || 'assets/default-avatar.png'" 
-                [alt]="userProfile.username"
-                class="profile-avatar">
-              <button mat-mini-fab color="accent" class="change-avatar-btn">
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading your profile...</p>
+    </div>
+  } @else if (userProfile) {
+    <div class="profile-content">
+      <!-- Enhanced Profile Header -->
+      <mat-card class="profile-header-card">
+        <div class="profile-header">
+          <div class="avatar-section">
+            <img 
+              [src]="profilePicturePreview || userProfile.linkPozaProfil || 'assets/default-avatar.png'" 
+              [alt]="userProfile.username"
+              class="profile-avatar">
+            
+            <!-- Profile Picture Upload Overlay -->
+            <div class="avatar-upload-overlay">
+              <input 
+                type="file" 
+                #avatarFile 
+                (change)="onProfilePictureSelected($event)"
+                accept="image/*" 
+                style="display: none;">
+              <button 
+                mat-mini-fab 
+                color="accent" 
+                class="change-avatar-btn"
+                (click)="avatarFile.click()"
+                matTooltip="Change Profile Picture">
                 <mat-icon>camera_alt</mat-icon>
               </button>
+              
+              @if (profilePictureFile && !uploadingProfilePicture) {
+                <button 
+                  mat-mini-fab 
+                  color="primary" 
+                  class="upload-avatar-btn"
+                  (click)="uploadProfilePicture()"
+                  matTooltip="Upload New Picture">
+                  <mat-icon>upload</mat-icon>
+                </button>
+              }
+              
+              @if (uploadingProfilePicture) {
+                <div class="upload-progress">
+                  <mat-spinner diameter="30"></mat-spinner>
+                </div>
+              }
             </div>
+          </div>
+
+          <div class="profile-info">
+            <h1>{{ userProfile.nume }} {{ userProfile.prenume }}</h1>
+            <p class="username">{{ '@' + userProfile.username }}</p>
+            <p class="email">{{ userProfile.email }}</p>
             
-            <div class="profile-info">
-              <h1>{{ userProfile.nume }} {{ userProfile.prenume }}</h1>
-              <p class="username">{{ '@' + userProfile.username }}</p>
-              <div class="stats">
-                <div class="stat-item">
-                  <mat-icon>stars</mat-icon>
-                  <span>{{ userProfile.puncteFidelitate || 0 }} Loyalty Points</span>
-                </div>
-                <div class="stat-item">
-                  <mat-icon>directions_car</mat-icon>
-                  <span>{{ userProfile.nrPostari || 0 }} Listed Vehicles</span>
-                </div>
+            <div class="stats">
+              <div class="stat-item">
+                <mat-icon>stars</mat-icon>
+                <span>{{ userProfile.puncteFidelitate || 0 }} Loyalty Points</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>directions_car</mat-icon>
+                <span>{{ userProfile.nrPostari || 0 }} Listed Vehicles</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>verified_user</mat-icon>
+                <span class="verification-status" 
+                      [class.verified]="userProfile.permis && userProfile.carteIdentitate">
+                  {{ (userProfile.permis && userProfile.carteIdentitate) ? 'Verified User' : 'Pending Verification' }}
+                </span>
               </div>
             </div>
           </div>
-        </mat-card>
-  
-        <!-- Profile Tabs -->
-        <mat-card class="profile-tabs-card">
-          <mat-tab-group animationDuration="300ms">
-            <!-- Personal Information Tab -->
-            <mat-tab label="Personal Information">
-              <div class="tab-content">
-                <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
-                  <div class="form-grid">
-                    <mat-form-field appearance="outline">
-                      <mat-label>First Name</mat-label>
-                      <input matInput formControlName="prenume">
-                      <mat-icon matSuffix>person</mat-icon>
-                      @if (profileFormControls['prenume'].errors?.['required'] && profileFormControls['prenume'].touched) {
-                        <mat-error>First name is required</mat-error>
-                      }
-                    </mat-form-field>
-  
-                    <mat-form-field appearance="outline">
-                      <mat-label>Last Name</mat-label>
-                      <input matInput formControlName="nume">
-                      <mat-icon matSuffix>person</mat-icon>
-                      @if (profileFormControls['nume'].errors?.['required'] && profileFormControls['nume'].touched) {
-                        <mat-error>Last name is required</mat-error>
-                      }
-                    </mat-form-field>
-  
-                    <mat-form-field appearance="outline">
-                      <mat-label>Email</mat-label>
-                      <input matInput type="email" formControlName="email">
-                      <mat-icon matSuffix>email</mat-icon>
-                      @if (profileFormControls['email'].errors?.['required'] && profileFormControls['email'].touched) {
-                        <mat-error>Email is required</mat-error>
-                      }
-                      @if (profileFormControls['email'].errors?.['email'] && profileFormControls['email'].touched) {
-                        <mat-error>Please enter a valid email</mat-error>
-                      }
-                    </mat-form-field>
-  
-                    <mat-form-field appearance="outline">
-                      <mat-label>Phone Number</mat-label>
-                      <input matInput formControlName="nrTelefon">
-                      <mat-icon matSuffix>phone</mat-icon>
-                      @if (profileFormControls['nrTelefon'].errors?.['required'] && profileFormControls['nrTelefon'].touched) {
-                        <mat-error>Phone number is required</mat-error>
-                      }
-                    </mat-form-field>
-  
-                    <mat-form-field appearance="outline">
-                      <mat-label>Date of Birth</mat-label>
-                      <input matInput type="date" formControlName="dataNasterii">
-                      <mat-icon matSuffix>cake</mat-icon>
-                    </mat-form-field>
-                  </div>
-  
-                  <div class="form-actions">
-                    @if (updating) {
-                      <button 
-                        mat-raised-button 
-                        color="primary" 
-                        type="submit"
-                        disabled>
-                        <mat-spinner diameter="20"></mat-spinner>
-                        Updating...
-                      </button>
-                    } @else {
-                      <button 
-                        mat-raised-button 
-                        color="primary" 
-                        type="submit"
-                        [disabled]="profileForm.invalid">
-                        <mat-icon>save</mat-icon>
-                        Update Profile
-                      </button>
+        </div>
+      </mat-card>
+
+      <!-- Enhanced Profile Tabs -->
+      <mat-card class="profile-tabs-card">
+        <mat-tab-group animationDuration="300ms">
+          
+          <!-- Personal Information Tab -->
+          <mat-tab label="Personal Information">
+            <div class="tab-content">
+              <form [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+                <div class="form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>First Name</mat-label>
+                    <input matInput formControlName="prenume">
+                    <mat-icon matSuffix>person</mat-icon>
+                    @if (profileFormControls['prenume'].errors?.['required'] && profileFormControls['prenume'].touched) {
+                      <mat-error>First name is required</mat-error>
                     }
-                  </div>
-                </form>
-              </div>
-            </mat-tab>
-  
-            <!-- Security Tab -->
-            <mat-tab label="Security">
-              <div class="tab-content">
-                <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
-                  <div class="form-grid">
-                    <mat-form-field appearance="outline">
-                      <mat-label>Current Password</mat-label>
-                      <input matInput type="password" formControlName="currentPassword">
-                      <mat-icon matSuffix>lock</mat-icon>
-                      @if (passwordFormControls['currentPassword'].errors?.['required'] && passwordFormControls['currentPassword'].touched) {
-                        <mat-error>Current password is required</mat-error>
-                      }
-                    </mat-form-field>
-  
-                    <mat-form-field appearance="outline">
-                      <mat-label>New Password</mat-label>
-                      <input matInput type="password" formControlName="newPassword">
-                      <mat-icon matSuffix>lock_open</mat-icon>
-                      @if (passwordFormControls['newPassword'].errors?.['required'] && passwordFormControls['newPassword'].touched) {
-                        <mat-error>New password is required</mat-error>
-                      }
-                      @if (passwordFormControls['newPassword'].errors?.['minlength'] && passwordFormControls['newPassword'].touched) {
-                        <mat-error>Password must be at least 8 characters</mat-error>
-                      }
-                    </mat-form-field>
-  
-                    <mat-form-field appearance="outline">
-                      <mat-label>Confirm New Password</mat-label>
-                      <input matInput type="password" formControlName="confirmPassword">
-                      <mat-icon matSuffix>lock_open</mat-icon>
-                      @if (passwordFormControls['confirmPassword'].errors?.['required'] && passwordFormControls['confirmPassword'].touched) {
-                        <mat-error>Please confirm your new password</mat-error>
-                      }
-                      @if (passwordForm.errors?.['mismatch'] && passwordFormControls['confirmPassword'].touched) {
-                        <mat-error>Passwords do not match</mat-error>
-                      }
-                    </mat-form-field>
-                  </div>
-  
-                  <div class="form-actions">
-                    @if (changingPassword) {
-                      <button 
-                        mat-raised-button 
-                        color="primary" 
-                        type="submit"
-                        disabled>
-                        <mat-spinner diameter="20"></mat-spinner>
-                        Changing...
-                      </button>
-                    } @else {
-                      <button 
-                        mat-raised-button 
-                        color="primary" 
-                        type="submit"
-                        [disabled]="passwordForm.invalid">
-                        <mat-icon>security</mat-icon>
-                        Change Password
-                      </button>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Last Name</mat-label>
+                    <input matInput formControlName="nume">
+                    <mat-icon matSuffix>person</mat-icon>
+                    @if (profileFormControls['nume'].errors?.['required'] && profileFormControls['nume'].touched) {
+                      <mat-error>Last name is required</mat-error>
                     }
-                  </div>
-                </form>
-              </div>
-            </mat-tab>
-  
-            <!-- Documents Tab -->
-            <mat-tab label="Documents">
-              <div class="tab-content">
-                <div class="documents-section">
-                  <h3>Upload Required Documents</h3>
-                  <p class="documents-description">
-                    Upload your documents to unlock additional features and become a verified user.
-                  </p>
-  
-                  <div class="documents-grid">
-                    <!-- Driver's License -->
-                    <mat-card class="document-card">
-                      <mat-card-header>
-                        <mat-icon mat-card-avatar>drive_eta</mat-icon>
-                        <mat-card-title>Driver's License</mat-card-title>
-                        <mat-card-subtitle>Required to rent vehicles</mat-card-subtitle>
-                      </mat-card-header>
-                      <mat-card-content>
-                        <div class="document-status">
-                          @if (userProfile.permis) {
-                            <div class="status-verified">
-                              <mat-icon>verified</mat-icon>
-                              <span>Verified</span>
-                            </div>
-                          } @else {
-                            <div class="status-pending">
-                              <mat-icon>pending</mat-icon>
-                              <span>Not uploaded</span>
-                            </div>
-                          }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Email Address</mat-label>
+                    <input matInput type="email" formControlName="email" readonly>
+                    <mat-icon matSuffix>email</mat-icon>
+                    <mat-hint>Email cannot be changed for security reasons</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Phone Number</mat-label>
+                    <input matInput formControlName="nrTelefon">
+                    <mat-icon matSuffix>phone</mat-icon>
+                    @if (profileFormControls['nrTelefon'].errors?.['required'] && profileFormControls['nrTelefon'].touched) {
+                      <mat-error>Phone number is required</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Date of Birth</mat-label>
+                    <input matInput type="date" formControlName="dataNasterii">
+                    <mat-icon matSuffix>cake</mat-icon>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-actions">
+                  @if (updating) {
+                    <button 
+                      mat-raised-button 
+                      color="primary" 
+                      type="submit"
+                      disabled>
+                      <mat-spinner diameter="20"></mat-spinner>
+                      Updating...
+                    </button>
+                  } @else {
+                    <button 
+                      mat-raised-button 
+                      color="primary" 
+                      type="submit"
+                      [disabled]="profileForm.invalid">
+                      <mat-icon>save</mat-icon>
+                      Update Profile
+                    </button>
+                  }
+                </div>
+              </form>
+            </div>
+          </mat-tab>
+
+          <!-- Security Tab -->
+          <mat-tab label="Security">
+            <div class="tab-content">
+              <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+                <div class="form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Current Password</mat-label>
+                    <input matInput type="password" formControlName="currentPassword">
+                    <mat-icon matSuffix>lock</mat-icon>
+                    @if (passwordFormControls['currentPassword'].errors?.['required'] && passwordFormControls['currentPassword'].touched) {
+                      <mat-error>Current password is required</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>New Password</mat-label>
+                    <input matInput type="password" formControlName="newPassword">
+                    <mat-icon matSuffix>lock_open</mat-icon>
+                    @if (passwordFormControls['newPassword'].errors?.['required'] && passwordFormControls['newPassword'].touched) {
+                      <mat-error>New password is required</mat-error>
+                    }
+                    @if (passwordFormControls['newPassword'].errors?.['minlength'] && passwordFormControls['newPassword'].touched) {
+                      <mat-error>Password must be at least 8 characters</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Confirm New Password</mat-label>
+                    <input matInput type="password" formControlName="confirmPassword">
+                    <mat-icon matSuffix>lock_open</mat-icon>
+                    @if (passwordFormControls['confirmPassword'].errors?.['required'] && passwordFormControls['confirmPassword'].touched) {
+                      <mat-error>Please confirm your new password</mat-error>
+                    }
+                    @if (passwordForm.errors?.['mismatch'] && passwordFormControls['confirmPassword'].touched) {
+                      <mat-error>Passwords do not match</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+
+                <div class="form-actions">
+                  @if (changingPassword) {
+                    <button 
+                      mat-raised-button 
+                      color="primary" 
+                      type="submit"
+                      disabled>
+                      <mat-spinner diameter="20"></mat-spinner>
+                      Changing...
+                    </button>
+                  } @else {
+                    <button 
+                      mat-raised-button 
+                      color="primary" 
+                      type="submit"
+                      [disabled]="passwordForm.invalid">
+                      <mat-icon>security</mat-icon>
+                      Change Password
+                    </button>
+                  }
+                </div>
+              </form>
+            </div>
+          </mat-tab>
+
+          <!-- Enhanced Documents Tab -->
+          <mat-tab label="Documents & Verification">
+            <div class="tab-content">
+              <div class="documents-section">
+                <h3>Upload Required Documents</h3>
+                <p class="documents-description">
+                  Upload your documents to unlock additional features and become a verified user.
+                  All documents are securely stored and encrypted.
+                </p>
+
+                <div class="documents-grid">
+                  <!-- Driver's License -->
+                  <mat-card class="document-card">
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar [style.background]="getDocumentStatusColor('permis')">
+                        {{ getDocumentIcon('permis') }}
+                      </mat-icon>
+                      <mat-card-title>Driver's License</mat-card-title>
+                      <mat-card-subtitle>Required to rent vehicles</mat-card-subtitle>
+                    </mat-card-header>
+                    
+                    <mat-card-content>
+                      <div class="document-status">
+                        <mat-chip 
+                          [color]="getDocumentStatusColor('permis')"
+                          [disabled]="!documentStates.permis.uploaded">
+                          <mat-icon>{{ documentStates.permis.verified ? 'verified' : documentStates.permis.uploaded ? 'pending' : 'upload_file' }}</mat-icon>
+                          {{ getDocumentStatus('permis') }}
+                        </mat-chip>
+                      </div>
+
+                      @if (documentStates.permis.uploading) {
+                        <div class="upload-progress-container">
+                          <mat-progress-bar 
+                            mode="determinate" 
+                            [value]="uploadProgress['permis']">
+                          </mat-progress-bar>
+                          <span class="progress-text">{{ uploadProgress['permis'] }}%</span>
                         </div>
-                      </mat-card-content>
-                      <mat-card-actions>
-                        <input 
-                          type="file" 
-                          #permisFile 
-                          (change)="uploadDocument('permis', $event)"
-                          accept="image/*" 
-                          style="display: none;">
-                        <button mat-button color="primary" (click)="permisFile.click()">
-                          <mat-icon>upload_file</mat-icon>
-                          {{ userProfile.permis ? 'Replace' : 'Upload' }}
+                      }
+
+                      @if (documentStates.permis.uploadDate) {
+                        <p class="upload-date">
+                          <mat-icon>schedule</mat-icon>
+                          Uploaded: {{ documentStates.permis.uploadDate | date:'short' }}
+                        </p>
+                      }
+                    </mat-card-content>
+                    
+                    <mat-card-actions>
+                      <input 
+                        type="file" 
+                        #permisFile 
+                        (change)="uploadDocument('permis', $event)"
+                        accept="image/*,.pdf" 
+                        style="display: none;">
+                      
+                      <button 
+                        mat-button 
+                        color="primary" 
+                        (click)="permisFile.click()"
+                        [disabled]="documentStates.permis.uploading">
+                        <mat-icon>{{ documentStates.permis.uploaded ? 'refresh' : 'upload_file' }}</mat-icon>
+                        {{ documentStates.permis.uploaded ? 'Replace' : 'Upload' }}
+                      </button>
+
+                      @if (documentStates.permis.uploaded) {
+                        <button 
+                          mat-button 
+                          (click)="viewDocument('permis')"
+                          matTooltip="View Document">
+                          <mat-icon>visibility</mat-icon>
+                          View
                         </button>
-                      </mat-card-actions>
-                    </mat-card>
-  
-                    <!-- ID Card -->
-                    <mat-card class="document-card">
-                      <mat-card-header>
-                        <mat-icon mat-card-avatar>badge</mat-icon>
-                        <mat-card-title>ID Card</mat-card-title>
-                        <mat-card-subtitle>Required to list vehicles</mat-card-subtitle>
-                      </mat-card-header>
-                      <mat-card-content>
-                        <div class="document-status">
-                          @if (userProfile.carteIdentitate) {
-                            <div class="status-verified">
-                              <mat-icon>verified</mat-icon>
-                              <span>Verified</span>
-                            </div>
-                          } @else {
-                            <div class="status-pending">
-                              <mat-icon>pending</mat-icon>
-                              <span>Not uploaded</span>
-                            </div>
-                          }
+                        <button 
+                          mat-button 
+                          color="warn"
+                          (click)="deleteDocument('permis')"
+                          matTooltip="Delete Document">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      }
+                    </mat-card-actions>
+                  </mat-card>
+
+                  <!-- ID Card -->
+                  <mat-card class="document-card">
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar [style.background]="getDocumentStatusColor('carteIdentitate')">
+                        {{ getDocumentIcon('carteIdentitate') }}
+                      </mat-icon>
+                      <mat-card-title>ID Card / Passport</mat-card-title>
+                      <mat-card-subtitle>Required to list vehicles</mat-card-subtitle>
+                    </mat-card-header>
+                    
+                    <mat-card-content>
+                      <div class="document-status">
+                        <mat-chip 
+                          [color]="getDocumentStatusColor('carteIdentitate')"
+                          [disabled]="!documentStates.carteIdentitate.uploaded">
+                          <mat-icon>{{ documentStates.carteIdentitate.verified ? 'verified' : documentStates.carteIdentitate.uploaded ? 'pending' : 'upload_file' }}</mat-icon>
+                          {{ getDocumentStatus('carteIdentitate') }}
+                        </mat-chip>
+                      </div>
+
+                      @if (documentStates.carteIdentitate.uploading) {
+                        <div class="upload-progress-container">
+                          <mat-progress-bar 
+                            mode="determinate" 
+                            [value]="uploadProgress['carteIdentitate']">
+                          </mat-progress-bar>
+                          <span class="progress-text">{{ uploadProgress['carteIdentitate'] }}%</span>
                         </div>
-                      </mat-card-content>
-                      <mat-card-actions>
-                        <input 
-                          type="file" 
-                          #idFile 
-                          (change)="uploadDocument('carteIdentitate', $event)"
-                          accept="image/*" 
-                          style="display: none;">
-                        <button mat-button color="primary" (click)="idFile.click()">
-                          <mat-icon>upload_file</mat-icon>
-                          {{ userProfile.carteIdentitate ? 'Replace' : 'Upload' }}
+                      }
+
+                      @if (documentStates.carteIdentitate.uploadDate) {
+                        <p class="upload-date">
+                          <mat-icon>schedule</mat-icon>
+                          Uploaded: {{ documentStates.carteIdentitate.uploadDate | date:'short' }}
+                        </p>
+                      }
+                    </mat-card-content>
+                    
+                    <mat-card-actions>
+                      <input 
+                        type="file" 
+                        #idFile 
+                        (change)="uploadDocument('carteIdentitate', $event)"
+                        accept="image/*,.pdf" 
+                        style="display: none;">
+                      
+                      <button 
+                        mat-button 
+                        color="primary" 
+                        (click)="idFile.click()"
+                        [disabled]="documentStates.carteIdentitate.uploading">
+                        <mat-icon>{{ documentStates.carteIdentitate.uploaded ? 'refresh' : 'upload_file' }}</mat-icon>
+                        {{ documentStates.carteIdentitate.uploaded ? 'Replace' : 'Upload' }}
+                      </button>
+
+                      @if (documentStates.carteIdentitate.uploaded) {
+                        <button 
+                          mat-button 
+                          (click)="viewDocument('carteIdentitate')"
+                          matTooltip="View Document">
+                          <mat-icon>visibility</mat-icon>
+                          View
                         </button>
-                      </mat-card-actions>
-                    </mat-card>
-                  </div>
+                        <button 
+                          mat-button 
+                          color="warn"
+                          (click)="deleteDocument('carteIdentitate')"
+                          matTooltip="Delete Document">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      }
+                    </mat-card-actions>
+                  </mat-card>
+                </div>
+
+                <!-- Verification Status Info -->
+                <div class="verification-info">
+                  <mat-card>
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar>info</mat-icon>
+                      <mat-card-title>Verification Status</mat-card-title>
+                      <mat-card-subtitle>Complete your verification to unlock all features</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <div class="verification-steps">
+                        <div class="step" [class.completed]="documentStates.permis.verified">
+                          <mat-icon>{{ documentStates.permis.verified ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+                          <span>Driver's License Verified</span>
+                        </div>
+                        <div class="step" [class.completed]="documentStates.carteIdentitate.verified">
+                          <mat-icon>{{ documentStates.carteIdentitate.verified ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+                          <span>ID Document Verified</span>
+                        </div>
+                        <div class="step" [class.completed]="documentStates.permis.verified && documentStates.carteIdentitate.verified">
+                          <mat-icon>{{ (documentStates.permis.verified && documentStates.carteIdentitate.verified) ? 'verified_user' : 'radio_button_unchecked' }}</mat-icon>
+                          <span>Full Verification Complete</span>
+                        </div>
+                      </div>
+                      
+                      @if (documentStates.permis.verified && documentStates.carteIdentitate.verified) {
+                        <div class="verification-complete">
+                          <mat-icon>celebration</mat-icon>
+                          <p>Congratulations! Your account is fully verified. You can now rent and list vehicles.</p>
+                        </div>
+                      } @else {
+                        <div class="verification-pending">
+                          <mat-icon>hourglass_empty</mat-icon>
+                          <p>Upload and verify your documents to unlock all platform features including vehicle rental and listing.</p>
+                        </div>
+                      }
+                    </mat-card-content>
+                  </mat-card>
                 </div>
               </div>
-            </mat-tab>
-          </mat-tab-group>
-        </mat-card>
-      </div>
-    }
-  </div>
+            </div>
+          </mat-tab>
+
+          <!-- Account Settings Tab -->
+          <mat-tab label="Account Settings">
+            <div class="tab-content">
+              <div class="settings-section">
+                <h3>Account Preferences</h3>
+                
+                <div class="settings-grid">
+                  <mat-card class="setting-card">
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar>notifications</mat-icon>
+                      <mat-card-title>Notifications</mat-card-title>
+                      <mat-card-subtitle>Manage your notification preferences</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>Email notifications for bookings, messages, and updates.</p>
+                    </mat-card-content>
+                    <mat-card-actions>
+                      <button mat-button color="primary">
+                        <mat-icon>settings</mat-icon>
+                        Configure
+                      </button>
+                    </mat-card-actions>
+                  </mat-card>
+
+                  <mat-card class="setting-card">
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar>security</mat-icon>
+                      <mat-card-title>Privacy & Security</mat-card-title>
+                      <mat-card-subtitle>Control your privacy settings</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>Manage who can see your profile and contact you.</p>
+                    </mat-card-content>
+                    <mat-card-actions>
+                      <button mat-button color="primary">
+                        <mat-icon>shield</mat-icon>
+                        Manage
+                      </button>
+                    </mat-card-actions>
+                  </mat-card>
+
+                  <mat-card class="setting-card">
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar>download</mat-icon>
+                      <mat-card-title>Data Export</mat-card-title>
+                      <mat-card-subtitle>Download your account data</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>Request a copy of your personal data and activity.</p>
+                    </mat-card-content>
+                    <mat-card-actions>
+                      <button mat-button color="primary">
+                        <mat-icon>file_download</mat-icon>
+                        Request Data
+                      </button>
+                    </mat-card-actions>
+                  </mat-card>
+
+                  <mat-card class="setting-card danger">
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar>delete_forever</mat-icon>
+                      <mat-card-title>Delete Account</mat-card-title>
+                      <mat-card-subtitle>Permanently delete your account</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>This action cannot be undone. All your data will be permanently deleted.</p>
+                    </mat-card-content>
+                    <mat-card-actions>
+                      <button mat-button color="warn">
+                        <mat-icon>warning</mat-icon>
+                        Delete Account
+                      </button>
+                    </mat-card-actions>
+                  </mat-card>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </mat-card>
+    </div>
+  }
+}
