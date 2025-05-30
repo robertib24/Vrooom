@@ -1,7 +1,7 @@
 <div class="profile-container">
   @if (loading) {
     <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
+      <mat-spinner diameter="60"></mat-spinner>
       <p>Loading your profile...</p>
     </div>
   } @else if (userProfile) {
@@ -54,7 +54,11 @@
           <div class="profile-info">
             <h1>{{ userProfile.nume }} {{ userProfile.prenume }}</h1>
             <p class="username">{{ '@' + userProfile.username }}</p>
-            <p class="email">{{ userProfile.email }}</p>
+            <!-- Fix pentru afișarea email-ului -->
+            <p class="email">
+              <mat-icon>email</mat-icon>
+              {{ userProfile.email || 'Email not available' }}
+            </p>
             
             <div class="stats">
               <div class="stat-item">
@@ -216,53 +220,30 @@
             </div>
           </mat-tab>
 
-          <!-- Enhanced Documents Tab -->
-          <mat-tab label="Documents & Verification">
+          <!-- Documents Tab -->
+          <mat-tab label="Documents">
             <div class="tab-content">
               <div class="documents-section">
-                <h3>Upload Required Documents</h3>
+                <h3>Document Verification</h3>
                 <p class="documents-description">
                   Upload your documents to unlock additional features and become a verified user.
-                  All documents are securely stored and encrypted.
                 </p>
 
                 <div class="documents-grid">
-                  <!-- Driver's License -->
                   <mat-card class="document-card">
                     <mat-card-header>
-                      <mat-icon mat-card-avatar [style.background]="getDocumentStatusColor('permis')">
-                        {{ getDocumentIcon('permis') }}
-                      </mat-icon>
+                      <mat-icon mat-card-avatar>drive_eta</mat-icon>
                       <mat-card-title>Driver's License</mat-card-title>
                       <mat-card-subtitle>Required to rent vehicles</mat-card-subtitle>
                     </mat-card-header>
                     
                     <mat-card-content>
                       <div class="document-status">
-                        <mat-chip 
-                          [color]="getDocumentStatusColor('permis')"
-                          [disabled]="!documentStates.permis.uploaded">
-                          <mat-icon>{{ documentStates.permis.verified ? 'verified' : documentStates.permis.uploaded ? 'pending' : 'upload_file' }}</mat-icon>
-                          {{ getDocumentStatus('permis') }}
+                        <mat-chip [color]="userProfile.permis ? 'primary' : 'accent'">
+                          <mat-icon>{{ userProfile.permis ? 'verified' : 'upload_file' }}</mat-icon>
+                          {{ userProfile.permis ? 'Uploaded' : 'Not Uploaded' }}
                         </mat-chip>
                       </div>
-
-                      @if (documentStates.permis.uploading) {
-                        <div class="upload-progress-container">
-                          <mat-progress-bar 
-                            mode="determinate" 
-                            [value]="uploadProgress['permis']">
-                          </mat-progress-bar>
-                          <span class="progress-text">{{ uploadProgress['permis'] }}%</span>
-                        </div>
-                      }
-
-                      @if (documentStates.permis.uploadDate) {
-                        <p class="upload-date">
-                          <mat-icon>schedule</mat-icon>
-                          Uploaded: {{ documentStates.permis.uploadDate | date:'short' }}
-                        </p>
-                      }
                     </mat-card-content>
                     
                     <mat-card-actions>
@@ -276,67 +257,36 @@
                       <button 
                         mat-button 
                         color="primary" 
-                        (click)="permisFile.click()"
-                        [disabled]="documentStates.permis.uploading">
-                        <mat-icon>{{ documentStates.permis.uploaded ? 'refresh' : 'upload_file' }}</mat-icon>
-                        {{ documentStates.permis.uploaded ? 'Replace' : 'Upload' }}
+                        (click)="permisFile.click()">
+                        <mat-icon>upload_file</mat-icon>
+                        {{ userProfile.permis ? 'Replace' : 'Upload' }}
                       </button>
 
-                      @if (documentStates.permis.uploaded) {
+                      @if (userProfile.permis) {
                         <button 
                           mat-button 
-                          (click)="viewDocument('permis')"
-                          matTooltip="View Document">
+                          (click)="viewDocument('permis')">
                           <mat-icon>visibility</mat-icon>
                           View
-                        </button>
-                        <button 
-                          mat-button 
-                          color="warn"
-                          (click)="deleteDocument('permis')"
-                          matTooltip="Delete Document">
-                          <mat-icon>delete</mat-icon>
                         </button>
                       }
                     </mat-card-actions>
                   </mat-card>
 
-                  <!-- ID Card -->
                   <mat-card class="document-card">
                     <mat-card-header>
-                      <mat-icon mat-card-avatar [style.background]="getDocumentStatusColor('carteIdentitate')">
-                        {{ getDocumentIcon('carteIdentitate') }}
-                      </mat-icon>
-                      <mat-card-title>ID Card / Passport</mat-card-title>
+                      <mat-icon mat-card-avatar>badge</mat-icon>
+                      <mat-card-title>ID Card</mat-card-title>
                       <mat-card-subtitle>Required to list vehicles</mat-card-subtitle>
                     </mat-card-header>
                     
                     <mat-card-content>
                       <div class="document-status">
-                        <mat-chip 
-                          [color]="getDocumentStatusColor('carteIdentitate')"
-                          [disabled]="!documentStates.carteIdentitate.uploaded">
-                          <mat-icon>{{ documentStates.carteIdentitate.verified ? 'verified' : documentStates.carteIdentitate.uploaded ? 'pending' : 'upload_file' }}</mat-icon>
-                          {{ getDocumentStatus('carteIdentitate') }}
+                        <mat-chip [color]="userProfile.carteIdentitate ? 'primary' : 'accent'">
+                          <mat-icon>{{ userProfile.carteIdentitate ? 'verified' : 'upload_file' }}</mat-icon>
+                          {{ userProfile.carteIdentitate ? 'Uploaded' : 'Not Uploaded' }}
                         </mat-chip>
                       </div>
-
-                      @if (documentStates.carteIdentitate.uploading) {
-                        <div class="upload-progress-container">
-                          <mat-progress-bar 
-                            mode="determinate" 
-                            [value]="uploadProgress['carteIdentitate']">
-                          </mat-progress-bar>
-                          <span class="progress-text">{{ uploadProgress['carteIdentitate'] }}%</span>
-                        </div>
-                      }
-
-                      @if (documentStates.carteIdentitate.uploadDate) {
-                        <p class="upload-date">
-                          <mat-icon>schedule</mat-icon>
-                          Uploaded: {{ documentStates.carteIdentitate.uploadDate | date:'short' }}
-                        </p>
-                      }
                     </mat-card-content>
                     
                     <mat-card-actions>
@@ -350,89 +300,41 @@
                       <button 
                         mat-button 
                         color="primary" 
-                        (click)="idFile.click()"
-                        [disabled]="documentStates.carteIdentitate.uploading">
-                        <mat-icon>{{ documentStates.carteIdentitate.uploaded ? 'refresh' : 'upload_file' }}</mat-icon>
-                        {{ documentStates.carteIdentitate.uploaded ? 'Replace' : 'Upload' }}
+                        (click)="idFile.click()">
+                        <mat-icon>upload_file</mat-icon>
+                        {{ userProfile.carteIdentitate ? 'Replace' : 'Upload' }}
                       </button>
 
-                      @if (documentStates.carteIdentitate.uploaded) {
+                      @if (userProfile.carteIdentitate) {
                         <button 
                           mat-button 
-                          (click)="viewDocument('carteIdentitate')"
-                          matTooltip="View Document">
+                          (click)="viewDocument('carteIdentitate')">
                           <mat-icon>visibility</mat-icon>
                           View
                         </button>
-                        <button 
-                          mat-button 
-                          color="warn"
-                          (click)="deleteDocument('carteIdentitate')"
-                          matTooltip="Delete Document">
-                          <mat-icon>delete</mat-icon>
-                        </button>
                       }
                     </mat-card-actions>
-                  </mat-card>
-                </div>
-
-                <!-- Verification Status Info -->
-                <div class="verification-info">
-                  <mat-card>
-                    <mat-card-header>
-                      <mat-icon mat-card-avatar>info</mat-icon>
-                      <mat-card-title>Verification Status</mat-card-title>
-                      <mat-card-subtitle>Complete your verification to unlock all features</mat-card-subtitle>
-                    </mat-card-header>
-                    <mat-card-content>
-                      <div class="verification-steps">
-                        <div class="step" [class.completed]="documentStates.permis.verified">
-                          <mat-icon>{{ documentStates.permis.verified ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
-                          <span>Driver's License Verified</span>
-                        </div>
-                        <div class="step" [class.completed]="documentStates.carteIdentitate.verified">
-                          <mat-icon>{{ documentStates.carteIdentitate.verified ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
-                          <span>ID Document Verified</span>
-                        </div>
-                        <div class="step" [class.completed]="documentStates.permis.verified && documentStates.carteIdentitate.verified">
-                          <mat-icon>{{ (documentStates.permis.verified && documentStates.carteIdentitate.verified) ? 'verified_user' : 'radio_button_unchecked' }}</mat-icon>
-                          <span>Full Verification Complete</span>
-                        </div>
-                      </div>
-                      
-                      @if (documentStates.permis.verified && documentStates.carteIdentitate.verified) {
-                        <div class="verification-complete">
-                          <mat-icon>celebration</mat-icon>
-                          <p>Congratulations! Your account is fully verified. You can now rent and list vehicles.</p>
-                        </div>
-                      } @else {
-                        <div class="verification-pending">
-                          <mat-icon>hourglass_empty</mat-icon>
-                          <p>Upload and verify your documents to unlock all platform features including vehicle rental and listing.</p>
-                        </div>
-                      }
-                    </mat-card-content>
                   </mat-card>
                 </div>
               </div>
             </div>
           </mat-tab>
 
-          <!-- Account Settings Tab -->
-          <mat-tab label="Account Settings">
+          <!-- Settings Tab -->
+          <mat-tab label="Settings">
             <div class="tab-content">
               <div class="settings-section">
-                <h3>Account Preferences</h3>
+                <h3>Account Settings</h3>
                 
                 <div class="settings-grid">
                   <mat-card class="setting-card">
                     <mat-card-header>
                       <mat-icon mat-card-avatar>notifications</mat-icon>
                       <mat-card-title>Notifications</mat-card-title>
-                      <mat-card-subtitle>Manage your notification preferences</mat-card-subtitle>
+                      <mat-card-subtitle>Manage notification preferences</mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
-                      <p>Email notifications for bookings, messages, and updates.</p>
+                      <p>Email notifications for bookings and updates.</p>
                     </mat-card-content>
                     <mat-card-actions>
                       <button mat-button color="primary">
@@ -445,50 +347,16 @@
                   <mat-card class="setting-card">
                     <mat-card-header>
                       <mat-icon mat-card-avatar>security</mat-icon>
-                      <mat-card-title>Privacy & Security</mat-card-title>
-                      <mat-card-subtitle>Control your privacy settings</mat-card-subtitle>
+                      <mat-card-title>Privacy</mat-card-title>
+                      <mat-card-subtitle>Control privacy settings</mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
-                      <p>Manage who can see your profile and contact you.</p>
+                      <p>Manage who can see your profile.</p>
                     </mat-card-content>
                     <mat-card-actions>
                       <button mat-button color="primary">
                         <mat-icon>shield</mat-icon>
                         Manage
-                      </button>
-                    </mat-card-actions>
-                  </mat-card>
-
-                  <mat-card class="setting-card">
-                    <mat-card-header>
-                      <mat-icon mat-card-avatar>download</mat-icon>
-                      <mat-card-title>Data Export</mat-card-title>
-                      <mat-card-subtitle>Download your account data</mat-card-subtitle>
-                    </mat-card-header>
-                    <mat-card-content>
-                      <p>Request a copy of your personal data and activity.</p>
-                    </mat-card-content>
-                    <mat-card-actions>
-                      <button mat-button color="primary">
-                        <mat-icon>file_download</mat-icon>
-                        Request Data
-                      </button>
-                    </mat-card-actions>
-                  </mat-card>
-
-                  <mat-card class="setting-card danger">
-                    <mat-card-header>
-                      <mat-icon mat-card-avatar>delete_forever</mat-icon>
-                      <mat-card-title>Delete Account</mat-card-title>
-                      <mat-card-subtitle>Permanently delete your account</mat-card-subtitle>
-                    </mat-card-header>
-                    <mat-card-content>
-                      <p>This action cannot be undone. All your data will be permanently deleted.</p>
-                    </mat-card-content>
-                    <mat-card-actions>
-                      <button mat-button color="warn">
-                        <mat-icon>warning</mat-icon>
-                        Delete Account
                       </button>
                     </mat-card-actions>
                   </mat-card>
@@ -500,4 +368,3 @@
       </mat-card>
     </div>
   }
-}

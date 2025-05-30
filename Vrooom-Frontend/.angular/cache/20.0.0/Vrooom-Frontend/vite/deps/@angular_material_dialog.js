@@ -6,9 +6,7 @@ import {
   createBlockScrollStrategy,
   createGlobalPositionStrategy,
   createOverlayRef
-} from "./chunk-WZGILYFF.js";
-import "./chunk-QCETVJKM.js";
-import "./chunk-DQ7OVFPD.js";
+} from "./chunk-SI6WP7VQ.js";
 import {
   BasePortalOutlet,
   CdkPortalOutlet,
@@ -17,8 +15,15 @@ import {
   TemplatePortal
 } from "./chunk-S5DWF6WM.js";
 import {
+  CdkScrollable
+} from "./chunk-RMBIRKNP.js";
+import "./chunk-QDANDGWP.js";
+import "./chunk-QCETVJKM.js";
+import "./chunk-DQ7OVFPD.js";
+import "./chunk-EOFW2REK.js";
+import {
   _animationsDisabled
-} from "./chunk-73OD3YHA.js";
+} from "./chunk-ZZ6GHQCH.js";
 import {
   A11yModule,
   ESCAPE,
@@ -29,20 +34,15 @@ import {
   _IdGenerator,
   _getFocusedElementPierceShadowDom,
   hasModifierKey
-} from "./chunk-E56VDVKB.js";
+} from "./chunk-F3P6TQRD.js";
 import "./chunk-EFXQAEHX.js";
-import {
-  CdkScrollable
-} from "./chunk-WHZ35U3M.js";
-import "./chunk-EOFW2REK.js";
-import "./chunk-QDANDGWP.js";
-import {
-  Directionality
-} from "./chunk-OKNFKRGW.js";
 import {
   Platform,
   coerceNumberProperty
 } from "./chunk-3AVYBVCW.js";
+import {
+  Directionality
+} from "./chunk-OKNFKRGW.js";
 import "./chunk-LQCLD3XB.js";
 import "./chunk-PSX7AJZG.js";
 import {

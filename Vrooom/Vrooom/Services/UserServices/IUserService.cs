@@ -35,6 +35,13 @@ namespace Vrooom.Services.UserServices
         Task ConfirmEmail(string username, string token);
 
         /// <summary>
+        /// Schimbă parola utilizatorului
+        /// </summary>
+        /// <param name="changePasswordData">Datele pentru schimbarea parolei</param>
+        /// <returns>Rezultatul schimbării parolei</returns>
+        Task<IdentityResult> ChangePasswordAsync(UserChangePassDTO changePasswordData);
+
+        /// <summary>
         /// Uploadează poza de profil pentru un utilizator nou (deprecated - folosește RegisterAsync)
         /// </summary>
         /// <param name="newUser">Datele utilizatorului</param>
@@ -89,5 +96,31 @@ namespace Vrooom.Services.UserServices
         /// <param name="id">ID-ul utilizatorului</param>
         /// <returns>Datele utilizatorului</returns>
         Task<UserDTO> getUserById(int id);
+
+        /// <summary>
+        /// Verifică și actualizează rolurile utilizatorului în funcție de documentele încărcate
+        /// </summary>
+        /// <param name="username">Username-ul utilizatorului</param>
+        Task checkRoleUpdates(string username);
+
+        /// <summary>
+        /// Trimite email de eșec pentru înregistrare
+        /// </summary>
+        /// <param name="newUser">Datele utilizatorului</param>
+        /// <param name="reason">Motivul eșecului</param>
+        Task failureEmail(RegisterDTO newUser, string reason);
+
+        /// <summary>
+        /// Generează token JWT pentru utilizator
+        /// </summary>
+        /// <param name="user">Utilizatorul</param>
+        /// <param name="roles">Rolurile utilizatorului</param>
+        /// <returns>Token-ul JWT</returns>
+        string TokenHandler(User user, IList<string> roles);
+
+        /// <summary>
+        /// Deloghează utilizatorul
+        /// </summary>
+        Task LogoutAsync();
     }
 }

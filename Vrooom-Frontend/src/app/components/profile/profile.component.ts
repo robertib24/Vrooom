@@ -18,6 +18,19 @@ import { DocumentService } from '../../services/document.service';
 import { ApiService } from '../../services/api.service';
 import { finalize } from 'rxjs/operators';
 
+interface DocumentState {
+  uploaded: boolean;
+  uploading: boolean;
+  verified: boolean;
+  url: string;
+  uploadDate: Date | null;
+}
+
+interface DocumentStates {
+  permis: DocumentState;
+  carteIdentitate: DocumentState;
+}
+
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -48,25 +61,23 @@ export class ProfileComponent implements OnInit {
   uploadingDocument = false;
   uploadProgress: { [key: string]: number } = {};
 
-  // Document upload states
-  documentStates = {
+  documentStates: DocumentStates = {
     permis: {
       uploaded: false,
       uploading: false,
       verified: false,
       url: '',
-      uploadDate: null
+      uploadDate: null  // Inițializat cu null
     },
     carteIdentitate: {
       uploaded: false,
       uploading: false,
       verified: false,
       url: '',
-      uploadDate: null
+      uploadDate: null  // Inițializat cu null
     }
   };
 
-  // Profile picture upload
   profilePictureFile: File | null = null;
   profilePicturePreview: string | null = null;
   uploadingProfilePicture = false;
@@ -106,82 +117,230 @@ export class ProfileComponent implements OnInit {
   }
 
   loadUserProfile() {
-    const username = this.tokenService.getUsername();
-    if (!username) {
-      this.showError('User not authenticated');
-      return;
-    }
-
-    // Load both profile details and user details for email
-    this.authService.getUserDetails(username)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: (details) => {
-          this.userProfile = details;
-          this.populateForm();
-          this.updateDocumentStates();
-          console.log('📋 User profile loaded:', details);
-        },
-        error: (error) => {
-          console.error('Error loading profile:', error);
-          this.showError('Failed to load profile');
-        }
-      });
+  const username = this.tokenService.getUsername();
+  if (!username) {
+    this.showError('User not authenticated');
+    this.loading = false;
+    return;
   }
+
+  console.log('🔄 Loading profile for user:', username);
+
+  // Încearcă mai întâi getUserDetails pentru informații complete
+  this.authService.getUserDetails(username)
+    .pipe(finalize(() => this.loading = false))
+    .subscribe({
+      next: (details) => {
+        console.log('✅ User details loaded successfully:', details);
+        this.userProfile = {
+          ...details,
+          // Asigură-te că toate câmpurile necesare sunt prezente
+          email: details.email || details.Email || '',
+          linkPozaProfil: details.linkPozaProfil || details.pozaProfil || '',
+          nrTelefon: details.nrTelefon || details.phoneNumber || '',
+          puncteFidelitate: details.puncteFidelitate || 0,
+          nrPostari: details.nrPostari || 0
+        };
+        
+        this.populateForm();
+        this.updateDocumentStates();
+        
+        console.log('📊 Final profile data:', this.userProfile);
+      },
+      error: (error) => {
+        console.warn('⚠️ getUserDetails failed, trying getUserProfile:', error);
+        
+        // Fallback la getUserProfile
+        this.authService.getUserProfile(username).subscribe({
+          next: (profile) => {
+            console.log('✅ Basic profile loaded:', profile);
+            this.userProfile = {
+              ...profile,
+              email: profile.email || profile.Email || '',
+              linkPozaProfil: profile.linkPozaProfil || profile.pozaProfil || '',
+              nrTelefon: profile.nrTelefon || profile.phoneNumber || '',
+              // Câmpuri care s-ar putea să lipsească din basic profile
+              permis: false,
+              carteIdentitate: false,
+              puncteFidelitate: profile.puncteFidelitate || 0,
+              nrPostari: profile.nrPostari || 0
+            };
+            
+            this.populateForm();
+            this.updateDocumentStates();
+            
+            console.log('📊 Final fallback profile data:', this.userProfile);
+          },
+          error: (profileError) => {
+            console.error('❌ Both profile loading methods failed:', profileError);
+            this.showError('Failed to load profile. Please refresh the page.');
+          }
+        });
+      }
+    });
+}
+
+loadDocumentStatus() {
+  const username = this.tokenService.getUsername();
+  if (!username) return;
+
+  // Load document status from backend
+  this.apiService.get(`User/getDocumentStatus/${username}`)
+    .subscribe({
+      next: (status: any) => {
+        console.log('📄 Document status loaded:', status);
+        this.documentStates.permis = {
+          ...this.documentStates.permis,
+          uploaded: status.permis?.uploaded || false,
+          verified: status.permis?.verified || false,
+          url: status.permis?.url || ''
+        };
+        this.documentStates.carteIdentitate = {
+          ...this.documentStates.carteIdentitate,
+          uploaded: status.carteIdentitate?.uploaded || false,
+          verified: status.carteIdentitate?.verified || false,
+          url: status.carteIdentitate?.url || ''
+        };
+      },
+      error: (error) => {
+        console.warn('⚠️ Could not load document status:', error);
+        // Fallback to profile data
+        this.updateDocumentStates();
+      }
+    });
+}
 
   populateForm() {
-    if (this.userProfile) {
-      this.profileForm.patchValue({
-        nume: this.userProfile.nume,
-        prenume: this.userProfile.prenume,
-        email: this.userProfile.email || '',
-        nrTelefon: this.userProfile.nrTelefon,
-        dataNasterii: this.userProfile.dataNasterii ? 
-          new Date(this.userProfile.dataNasterii).toISOString().split('T')[0] : ''
-      });
+  if (!this.userProfile) {
+    console.warn('⚠️ No profile data to populate form');
+    return;
+  }
+
+  // Format date for HTML date input
+  let formattedDate = '';
+  if (this.userProfile.dataNasterii) {
+    try {
+      const date = new Date(this.userProfile.dataNasterii);
+      if (!isNaN(date.getTime())) {
+        formattedDate = date.toISOString().split('T')[0];
+      }
+    } catch (error) {
+      console.warn('⚠️ Error formatting birth date:', error);
     }
   }
+  const formData = {
+    nume: this.userProfile.nume || this.userProfile.lastName || '',
+    prenume: this.userProfile.prenume || this.userProfile.firstName || '',
+    email: this.userProfile.email || this.userProfile.Email || '',
+    nrTelefon: this.userProfile.nrTelefon || this.userProfile.phoneNumber || this.userProfile.PhoneNumber || '',
+    dataNasterii: formattedDate
+  };
+
+  console.log('📝 Populating form with data:', formData);
+  
+  this.profileForm.patchValue(formData);
+  
+  if (!formData.email) {
+    console.warn('⚠️ Email field is empty after form population');
+    console.log('🔍 Available profile properties:', Object.keys(this.userProfile));
+  }
+}
 
   updateDocumentStates() {
-    if (this.userProfile) {
-      // Update document states based on user profile
-      this.documentStates.permis.uploaded = this.userProfile.permis;
-      this.documentStates.permis.verified = this.userProfile.permis;
-      this.documentStates.carteIdentitate.uploaded = this.userProfile.carteIdentitate;
-      this.documentStates.carteIdentitate.verified = this.userProfile.carteIdentitate;
-    }
+  if (this.userProfile) {
+    this.documentStates.permis = {
+      ...this.documentStates.permis,
+      uploaded: this.userProfile.permis || false,
+      verified: this.userProfile.permis || false
+    };
+    
+    this.documentStates.carteIdentitate = {
+      ...this.documentStates.carteIdentitate,
+      uploaded: this.userProfile.carteIdentitate || false,
+      verified: this.userProfile.carteIdentitate || false
+    };
+    
+    console.log('📄 Document states updated:', this.documentStates);
   }
+}
 
   updateProfile() {
-    if (this.profileForm.invalid) {
-      this.profileForm.markAllAsTouched();
-      return;
-    }
-
-    this.updating = true;
-    const formData = this.profileForm.value;
-    const username = this.tokenService.getUsername();
-
-    if (!username) {
-      this.showError('User not authenticated');
-      this.updating = false;
-      return;
-    }
-
-    // Call backend API to update profile
-    this.apiService.put(`User/updateProfile/${username}`, formData)
-      .pipe(finalize(() => this.updating = false))
-      .subscribe({
-        next: () => {
-          this.showSuccess('Profile updated successfully!');
-          this.loadUserProfile(); // Reload to get updated data
-        },
-        error: (error) => {
-          console.error('Error updating profile:', error);
-          this.showError('Failed to update profile');
-        }
-      });
+  if (this.profileForm.invalid) {
+    this.profileForm.markAllAsTouched();
+    this.showError('Please fix the form errors before submitting');
+    return;
   }
+
+  this.updating = true;
+  const formData = this.profileForm.value;
+  const username = this.tokenService.getUsername();
+
+  if (!username) {
+    this.showError('User not authenticated');
+    this.updating = false;
+    return;
+  }
+
+  // Clean the form data - remove empty values
+  const updateData: any = {};
+  
+  if (formData.nume && formData.nume.trim()) {
+    updateData.nume = formData.nume.trim();
+  }
+  
+  if (formData.prenume && formData.prenume.trim()) {
+    updateData.prenume = formData.prenume.trim();
+  }
+  
+  if (formData.nrTelefon && formData.nrTelefon.trim()) {
+    updateData.nrTelefon = formData.nrTelefon.trim();
+  }
+  
+  if (formData.dataNasterii) {
+    updateData.dataNasterii = formData.dataNasterii;
+  }
+
+  console.log('🔄 Updating profile with data:', updateData);
+
+  this.apiService.put(`User/updateProfile/${username}`, updateData)
+    .pipe(finalize(() => this.updating = false))
+    .subscribe({
+      next: (response: any) => {
+        console.log('✅ Profile update response:', response);
+        this.showSuccess('Profile updated successfully!');
+        
+        // Update local profile data with response if available
+        if (response.user) {
+          this.userProfile = { ...this.userProfile, ...response.user };
+        } else {
+          // Reload profile to get updated data
+          this.loadUserProfile();
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error updating profile:', error);
+        
+        let errorMessage = 'Failed to update profile';
+        
+        if (error.error?.errors) {
+          // Handle validation errors
+          const errorKeys = Object.keys(error.error.errors);
+          const errorMessages = errorKeys.map(key => 
+            `${key}: ${error.error.errors[key].join(', ')}`
+          ).join('; ');
+          errorMessage = `Validation errors: ${errorMessages}`;
+        } else if (error.error?.error) {
+          errorMessage = error.error.error;
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        this.showError(errorMessage);
+      }
+    });
+}
 
   changePassword() {
     if (this.passwordForm.invalid) {
@@ -218,12 +377,10 @@ export class ProfileComponent implements OnInit {
       });
   }
 
-  // Profile Picture Upload
   onProfilePictureSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file
     const validation = this.documentService.validateFile(file, 'image');
     if (!validation.valid) {
       this.showError(validation.error || 'Invalid image file');
@@ -232,7 +389,6 @@ export class ProfileComponent implements OnInit {
 
     this.profilePictureFile = file;
 
-    // Create preview
     this.documentService.createImagePreview(file).then(preview => {
       this.profilePicturePreview = preview;
     }).catch(error => {
@@ -254,7 +410,6 @@ export class ProfileComponent implements OnInit {
 
     this.uploadingProfilePicture = true;
 
-    // Upload to backend
     const formData = new FormData();
     formData.append('profilePicture', this.profilePictureFile);
 
@@ -263,7 +418,7 @@ export class ProfileComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.showSuccess('Profile picture updated successfully!');
-          this.loadUserProfile(); // Reload to get updated profile picture URL
+          this.loadUserProfile();
           this.profilePictureFile = null;
           this.profilePicturePreview = null;
         },
@@ -274,79 +429,55 @@ export class ProfileComponent implements OnInit {
       });
   }
 
-  // Document Upload
   uploadDocument(documentType: 'permis' | 'carteIdentitate', event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
+  const file = event.target.files[0];
+  if (!file) return;
 
-    // Validate file
-    const validation = this.documentService.validateFile(file, 'document');
-    if (!validation.valid) {
-      this.showError(validation.error || 'Invalid document file');
-      return;
-    }
-
-    const username = this.tokenService.getUsername();
-    if (!username) {
-      this.showError('User not authenticated');
-      return;
-    }
-
-    // Update state
-    this.documentStates[documentType].uploading = true;
-    this.uploadProgress[documentType] = 0;
-
-    // Simulate progress for UX
-    const progressInterval = setInterval(() => {
-      if (this.uploadProgress[documentType] < 90) {
-        this.uploadProgress[documentType] += 10;
-      }
-    }, 200);
-
-    // Upload document using API service directly
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    this.apiService.postFormData(`User/uploadDocument?username=${username}&document=${documentType}`, formData)
-      .pipe(
-        finalize(() => {
-          clearInterval(progressInterval);
-          this.documentStates[documentType].uploading = false;
-          this.uploadProgress[documentType] = 100;
-          setTimeout(() => {
-            this.uploadProgress[documentType] = 0;
-          }, 2000);
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          this.documentStates[documentType].uploaded = true;
-          this.documentStates[documentType].verified = false; // Will be verified later
-          this.documentStates[documentType].uploadDate = new Date();
-          
-          this.showSuccess(`${this.getDocumentDisplayName(documentType)} uploaded successfully!`);
-          this.loadUserProfile(); // Reload to get updated status
-        },
-        error: (error) => {
-          console.error(`Error uploading ${documentType}:`, error);
-          this.showError(`Failed to upload ${this.getDocumentDisplayName(documentType)}`);
-        }
-      });
-
-    // Clear file input
-    event.target.value = '';
+  const username = this.tokenService.getUsername();
+  if (!username) {
+    this.showError('User not authenticated');
+    return;
   }
+
+  console.log(`📁 Uploading ${documentType} for user:`, username);
+
+  // Validare fișier
+  const validation = this.documentService.validateFile(file, 'document');
+  if (!validation.valid) {
+    this.showError(validation.error || 'Invalid document file');
+    return;
+  }
+
+  // Upload document
+  this.documentService.uploadUserDocument(documentType, file)
+    .subscribe({
+      next: (response) => {
+        console.log(`✅ ${documentType} uploaded successfully:`, response);
+        this.showSuccess(`${this.getDocumentDisplayName(documentType)} uploaded successfully!`);
+        
+        // Actualizează starea locală
+        this.documentStates[documentType].uploaded = true;
+        this.documentStates[documentType].verified = false;
+        
+        // Reîncarcă profilul pentru date actualizate
+        this.loadUserProfile();
+      },
+      error: (error) => {
+        console.error(`❌ Error uploading ${documentType}:`, error);
+        this.showError(`Failed to upload ${this.getDocumentDisplayName(documentType)}`);
+      }
+    });
+
+  event.target.value = '';
+}
 
   getDocumentDisplayName(documentType: string): string {
-    switch (documentType) {
-      case 'permis':
-        return "Driver's License";
-      case 'carteIdentitate':
-        return 'ID Card';
-      default:
-        return 'Document';
-    }
-  }
+  const names: { [key: string]: string } = {
+    'permis': "Driver's License",
+    'carteIdentitate': 'ID Card'
+  };
+  return names[documentType] || 'Document';
+}
 
   getDocumentIcon(documentType: string): string {
     switch (documentType) {
@@ -377,21 +508,23 @@ export class ProfileComponent implements OnInit {
     return '';
   }
 
-  // View uploaded document
   viewDocument(documentType: 'permis' | 'carteIdentitate') {
-    // This would open the document in a new tab or modal
-    // Implementation depends on how documents are stored/served
-    const username = this.tokenService.getUsername();
-    const documentUrl = `https://vrooom1224.s3.eu-central-1.amazonaws.com/${username}_${documentType}.png`;
-    window.open(documentUrl, '_blank');
+  const username = this.tokenService.getUsername();
+  if (!username) {
+    this.showError('User not authenticated');
+    return;
   }
 
-  // Delete document
+  const documentUrl = `https://vrooom1224.s3.eu-central-1.amazonaws.com/${username}_${documentType}.png`;
+  console.log(`👁️ Opening document: ${documentUrl}`);
+  window.open(documentUrl, '_blank');
+}
+
   deleteDocument(documentType: 'permis' | 'carteIdentitate') {
     if (confirm(`Are you sure you want to delete your ${this.getDocumentDisplayName(documentType)}?`)) {
-      // Implement delete functionality
       this.documentStates[documentType].uploaded = false;
       this.documentStates[documentType].verified = false;
+      this.documentStates[documentType].uploadDate = null;
       this.showSuccess(`${this.getDocumentDisplayName(documentType)} deleted successfully`);
     }
   }

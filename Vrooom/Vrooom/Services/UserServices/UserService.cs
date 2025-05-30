@@ -422,6 +422,45 @@ namespace Vrooom.Services.UserServices
             }
         }
 
+
+        public async Task<UserDTO> getUserDetails(string username)
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(username);
+                if (user == null)
+                {
+                    throw new NotFoundException("User not found");
+                }
+
+                Console.WriteLine($"👤 User found: {user.UserName}");
+                Console.WriteLine($"📧 User email: {user.Email}");
+                Console.WriteLine($"📱 User phone: {user.PhoneNumber}");
+
+                var userInfo = new UserDTO
+                {
+                    username = user.UserName,
+                    email = user.Email, // Asigură-te că email-ul este inclus
+                    nume = user.nume,
+                    prenume = user.prenume,
+                    nrTelefon = user.PhoneNumber,
+                    permis = user.permis != "N/A",
+                    carteIdentitate = user.carteIdentitate != "N/A",
+                    dataNasterii = user.dataNasterii,
+                    linkPozaProfil = user.pozaProfil,
+                    puncteFidelitate = user.puncteFidelitate
+                };
+
+                Console.WriteLine($"✅ Returning user details with email: {userInfo.email}");
+                return userInfo;
+            }
+            catch (Exception ex) when (!(ex is NotFoundException))
+            {
+                _logger.LogError(ex, $"❌ Exception getting user details for {username}: {ex.Message}");
+                throw;
+            }
+        }
+
         public async Task<SafeUserDTO> getUserProfile(string username)
         {
             try
@@ -434,6 +473,9 @@ namespace Vrooom.Services.UserServices
 
                 int nrPostari = await _postareRepository.NrPostareByUserID(u.Id);
 
+                Console.WriteLine($"👤 User profile: {u.UserName}");
+                Console.WriteLine($"📧 User email: {u.Email}");
+
                 return new SafeUserDTO()
                 {
                     id = u.Id,
@@ -443,44 +485,13 @@ namespace Vrooom.Services.UserServices
                     nrTelefon = u.PhoneNumber,
                     linkPozaProfil = u.pozaProfil,
                     dataNasterii = u.dataNasterii,
-                    nrPostari = nrPostari
+                    nrPostari = nrPostari,
+                    email = u.Email
                 };
             }
             catch (Exception ex) when (!(ex is NotFoundException))
             {
                 _logger.LogError(ex, $"❌ Exception getting user profile for {username}: {ex.Message}");
-                throw;
-            }
-        }
-
-        public async Task<UserDTO> getUserDetails(string username)
-        {
-            try
-            {
-                var user = await _userManager.FindByNameAsync(username);
-                if (user == null)
-                {
-                    throw new NotFoundException("User not found");
-                }
-
-                var userInfo = new UserDTO
-                {
-                    username = user.UserName,
-                    email = user.Email,
-                    nume = user.nume,
-                    prenume = user.prenume,
-                    nrTelefon = user.PhoneNumber,
-                    permis = user.permis != "N/A",
-                    carteIdentitate = user.carteIdentitate != "N/A",
-                    dataNasterii = user.dataNasterii,
-                    linkPozaProfil = user.pozaProfil,
-                    puncteFidelitate = user.puncteFidelitate
-                };
-                return userInfo;
-            }
-            catch (Exception ex) when (!(ex is NotFoundException))
-            {
-                _logger.LogError(ex, $"❌ Exception getting user details for {username}: {ex.Message}");
                 throw;
             }
         }

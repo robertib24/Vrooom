@@ -3,16 +3,20 @@ import {
   createFlexibleConnectedPositionStrategy,
   createOverlayRef,
   createRepositionScrollStrategy
-} from "./chunk-WZGILYFF.js";
-import {
-  coerceBooleanProperty
-} from "./chunk-DQ7OVFPD.js";
+} from "./chunk-SI6WP7VQ.js";
 import {
   ComponentPortal
 } from "./chunk-S5DWF6WM.js";
 import {
+  CdkScrollableModule,
+  ScrollDispatcher
+} from "./chunk-RMBIRKNP.js";
+import {
+  coerceBooleanProperty
+} from "./chunk-DQ7OVFPD.js";
+import {
   _animationsDisabled
-} from "./chunk-73OD3YHA.js";
+} from "./chunk-ZZ6GHQCH.js";
 import {
   A11yModule,
   AriaDescriber,
@@ -21,18 +25,14 @@ import {
   MatCommonModule,
   hasModifierKey,
   normalizePassiveListenerOptions
-} from "./chunk-E56VDVKB.js";
-import {
-  CdkScrollableModule,
-  ScrollDispatcher
-} from "./chunk-WHZ35U3M.js";
-import {
-  Directionality
-} from "./chunk-OKNFKRGW.js";
+} from "./chunk-F3P6TQRD.js";
 import {
   Platform,
   coerceNumberProperty
 } from "./chunk-3AVYBVCW.js";
+import {
+  Directionality
+} from "./chunk-OKNFKRGW.js";
 import {
   NgClass
 } from "./chunk-LQCLD3XB.js";
@@ -1052,4 +1052,4 @@ export {
   TooltipComponent,
   MatTooltipModule
 };
-//# sourceMappingURL=chunk-2MSQHXLJ.js.map
+//# sourceMappingURL=chunk-5M7NHBOS.js.map

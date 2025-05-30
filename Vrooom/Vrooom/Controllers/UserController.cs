@@ -191,7 +191,6 @@ namespace Vrooom.Controllers
             }
         }
 
-        // ===== NEW ENHANCED ENDPOINTS =====
 
         [HttpPut("updateProfile/{username}")]
         [Authorize]
@@ -200,17 +199,46 @@ namespace Vrooom.Controllers
             try
             {
                 Console.WriteLine($"🔄 Updating profile for user: {username}");
+                Console.WriteLine($"📝 Profile data received: {System.Text.Json.JsonSerializer.Serialize(profileData)}");
+
+                // Validate username parameter
+                if (string.IsNullOrEmpty(username))
+                {
+                    return BadRequest(new { error = "Username is required in URL" });
+                }
 
                 var user = await _userManager.FindByNameAsync(username);
                 if (user == null)
                 {
+                    Console.WriteLine($"❌ User not found: {username}");
                     return NotFound(new { error = "User not found" });
                 }
 
-                // Update user properties
-                user.nume = profileData.nume ?? user.nume;
-                user.prenume = profileData.prenume ?? user.prenume;
-                user.PhoneNumber = profileData.nrTelefon ?? user.PhoneNumber;
+                // Get current user from token to ensure they can only update their own profile
+                var currentUserName = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (currentUserName != username)
+                {
+                    Console.WriteLine($"❌ Unauthorized attempt to update profile: {currentUserName} trying to update {username}");
+                    return Forbid(new { error = "You can only update your own profile" }.ToString());
+                }
+
+                Console.WriteLine($"👤 User found: {user.UserName}, updating profile...");
+
+                // Update user properties only if they are provided
+                if (!string.IsNullOrEmpty(profileData.nume))
+                {
+                    user.nume = profileData.nume;
+                }
+
+                if (!string.IsNullOrEmpty(profileData.prenume))
+                {
+                    user.prenume = profileData.prenume;
+                }
+
+                if (!string.IsNullOrEmpty(profileData.nrTelefon))
+                {
+                    user.PhoneNumber = profileData.nrTelefon;
+                }
 
                 if (profileData.dataNasterii.HasValue)
                 {
@@ -222,7 +250,25 @@ namespace Vrooom.Controllers
                 if (result.Succeeded)
                 {
                     Console.WriteLine($"✅ Profile updated successfully for user: {username}");
-                    return Ok(new { message = "Profile updated successfully" });
+
+                    // Return updated user data
+                    var updatedUserData = new
+                    {
+                        message = "Profile updated successfully",
+                        user = new
+                        {
+                            username = user.UserName,
+                            nume = user.nume,
+                            prenume = user.prenume,
+                            email = user.Email,
+                            nrTelefon = user.PhoneNumber,
+                            dataNasterii = user.dataNasterii,
+                            linkPozaProfil = user.pozaProfil,
+                            puncteFidelitate = user.puncteFidelitate
+                        }
+                    };
+
+                    return Ok(updatedUserData);
                 }
                 else
                 {
@@ -234,6 +280,7 @@ namespace Vrooom.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Exception updating profile for {username}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return StatusCode(500, new { error = "Internal server error", details = ex.Message });
             }
         }
@@ -267,13 +314,18 @@ namespace Vrooom.Controllers
             }
         }
 
+        // FIXED: Profile Picture Upload Endpoint
         [HttpPost("updateProfilePicture/{username}")]
         [Authorize]
-        public async Task<IActionResult> UpdateProfilePicture(string username, [FromForm] IFormFile profilePicture)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateProfilePicture(string username)
         {
             try
             {
                 Console.WriteLine($"🔄 Updating profile picture for user: {username}");
+
+                // Get the file from the request
+                var profilePicture = Request.Form.Files.FirstOrDefault();
 
                 if (profilePicture == null || profilePicture.Length == 0)
                 {
@@ -411,13 +463,18 @@ namespace Vrooom.Controllers
             }
         }
 
+        // FIXED: Document Upload Endpoint  
         [HttpPost("uploadDocument")]
         [Authorize]
-        public async Task<IActionResult> uploadDocument(string username, string document, IFormFile file)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> uploadDocument(string username, string document)
         {
             try
             {
                 Console.WriteLine($"🔄 Uploading document {document} for user: {username}");
+
+                // Get the file from the request
+                var file = Request.Form.Files.FirstOrDefault();
 
                 if (file == null || file.Length == 0)
                 {
