@@ -128,6 +128,7 @@ export class AuthService {
       formData.append('prenume', userData.firstName?.trim() || ''); 
       formData.append('email', userData.email.trim());
       formData.append('nrTelefon', userData.phone?.trim() || '');
+      formData.append('carteIdentitate', 'N/A');
       
       // Format birth date for backend
       if (userData.birthDate) {
@@ -197,12 +198,37 @@ export class AuthService {
       return throwError(() => new Error('Username and token are required'));
     }
 
+    console.log('📧 Confirming email:', { username, tokenLength: token.length });
+
     return this.apiService.get(
       `User/confirmEmail?username=${encodeURIComponent(username)}&token=${encodeURIComponent(token)}`
     ).pipe(
+      tap(response => {
+        console.log('✅ Email confirmation response:', response);
+      }),
       catchError(error => {
-        console.error('Email confirmation error:', error);
-        return throwError(() => error);
+        console.error('❌ Email confirmation error:', error);
+        
+        // Enhanced error handling
+        let errorResponse = {
+          error: 'Email confirmation failed',
+          details: [],
+          invalidToken: false,
+          alreadyConfirmed: false
+        };
+
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            errorResponse.error = error.error;
+          } else if (error.error.error) {
+            errorResponse.error = error.error.error;
+            errorResponse.details = error.error.details || [];
+            errorResponse.invalidToken = error.error.invalidToken || false;
+            errorResponse.alreadyConfirmed = error.error.alreadyConfirmed || false;
+          }
+        }
+
+        return throwError(() => ({ error: errorResponse }));
       })
     );
   }
@@ -270,6 +296,26 @@ export class AuthService {
     }).pipe(
       catchError(error => {
         console.error('Reset password error:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Debug method to check user status
+  debugUserStatus(username: string): Observable<any> {
+    return this.apiService.get(`User/debug-user-status/${encodeURIComponent(username)}`).pipe(
+      catchError(error => {
+        console.error('Error getting user status:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Force confirm email (for debugging - remove in production)
+  forceConfirmEmail(username: string): Observable<any> {
+    return this.apiService.post(`User/force-confirm-email/${encodeURIComponent(username)}`, {}).pipe(
+      catchError(error => {
+        console.error('Error force confirming email:', error);
         return throwError(() => error);
       })
     );

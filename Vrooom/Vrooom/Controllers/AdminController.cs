@@ -158,6 +158,147 @@ namespace Vrooom.Controllers
             }
         }
 
+        [HttpDelete("users/{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(id.ToString());
+                if (user == null)
+                {
+                    return NotFound(new { error = "User not found" });
+                }
+
+                // Verificăm să nu șteargă contul propriu
+                var currentUserClaims = HttpContext.User;
+                var currentUserId = currentUserClaims?.FindFirst("id")?.Value;
+
+                if (currentUserId == id.ToString())
+                {
+                    return BadRequest(new { error = "You cannot delete your own account" });
+                }
+
+                // Verificăm să nu șteargă ultimul admin
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (userRoles.Contains("Admin"))
+                {
+                    var adminCount = 0;
+                    var allUsers = _userManager.Users.ToList();
+                    foreach (var u in allUsers)
+                    {
+                        var roles = await _userManager.GetRolesAsync(u);
+                        if (roles.Contains("Admin"))
+                        {
+                            adminCount++;
+                        }
+                    }
+
+                    if (adminCount <= 1)
+                    {
+                        return BadRequest(new { error = "Cannot delete the last admin user" });
+                    }
+                }
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+
+                try
+                {
+                    // Ștergem toate datele asociate userului în ordine
+
+                    // 1. Ștergem review-urile userului
+                    var userReviews = await _context.Review.Where(r => r.UserId == id).ToListAsync();
+                    if (userReviews.Any())
+                    {
+                        _context.Review.RemoveRange(userReviews);
+                    }
+
+                    // 2. Ștergem cardurile userului
+                    var userCards = await _context.Card.Where(c => c.UserId == id).ToListAsync();
+                    if (userCards.Any())
+                    {
+                        _context.Card.RemoveRange(userCards);
+                    }
+
+                    // 3. Ștergem ticket-urile de support ale userului
+                    var userSupport = await _context.Support.Where(s => s.UserId == id).ToListAsync();
+                    if (userSupport.Any())
+                    {
+                        _context.Support.RemoveRange(userSupport);
+                    }
+
+                    // 4. Ștergem închirierile userului
+                    var userBookings = await _context.Chirie.Where(c => c.UserId == id).ToListAsync();
+                    if (userBookings.Any())
+                    {
+                        _context.Chirie.RemoveRange(userBookings);
+                    }
+
+                    // 5. Pentru postările userului, le ștergem și pe ele cu toate dependențele
+                    var userPosts = await _context.Postare
+                        .Include(p => p.chirie)
+                        .Include(p => p.review)
+                        .Where(p => p.UserId == id)
+                        .ToListAsync();
+
+                    foreach (var post in userPosts)
+                    {
+                        // Ștergem review-urile pentru această postare
+                        if (post.review != null && post.review.Any())
+                        {
+                            _context.Review.RemoveRange(post.review);
+                        }
+
+                        // Ștergem închirierile pentru această postare
+                        if (post.chirie != null && post.chirie.Any())
+                        {
+                            _context.Chirie.RemoveRange(post.chirie);
+                        }
+
+                        // Ștergem postarea
+                        _context.Postare.Remove(post);
+                    }
+
+                    // 6. Salvăm modificările pentru entitățile custom
+                    await _context.SaveChangesAsync();
+
+                    // 7. Ștergem userul din Identity (acest lucru va șterge și rolurile)
+                    var result = await _userManager.DeleteAsync(user);
+
+                    if (!result.Succeeded)
+                    {
+                        throw new Exception($"Failed to delete user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                    }
+
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        message = "User and all associated data deleted successfully",
+                        deletedUserId = id,
+                        deletedPosts = userPosts.Count,
+                        deletedBookings = userBookings.Count,
+                        deletedReviews = userReviews.Count,
+                        deletedCards = userCards.Count,
+                        deletedSupportTickets = userSupport.Count
+                    });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw new Exception($"Transaction failed: {ex.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = "Failed to delete user",
+                    message = ex.Message,
+                    details = ex.InnerException?.Message
+                });
+            }
+        }
+
         // Get All Users for Admin
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers(

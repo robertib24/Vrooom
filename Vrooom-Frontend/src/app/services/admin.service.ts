@@ -159,6 +159,10 @@ export class AdminService {
     return this.apiService.delete(`Admin/users/${userId}`);
   }
 
+  validateUserDeletion(userId: number): Observable<{canDelete: boolean, reason?: string, warnings?: string[]}> {
+    return this.apiService.get(`Admin/users/${userId}/validate-deletion`);
+  }
+
   // Support Management
   getAllSupportTickets(): Observable<SupportTicket[]> {
     return this.apiService.get<SupportTicket[]>('Admin/support-tickets');

@@ -6,6 +6,7 @@ import { LoginComponent } from './pages/login/login.component';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { SignupComponent } from './pages/signup/signup.component';
+import { EmailConfirmationComponent } from './pages/email-confirmation/email-confirmation.component';
 import { VehicleDetailsComponent } from './pages/vehicle-details/vehicle-details.component';
 import { SearchComponent } from './components/search/search.component';
 import { ProfileComponent } from './components/profile/profile.component';
@@ -34,6 +35,15 @@ export const routes: Routes = [
       animation: 'auth-page',
       title: 'Sign Up - Vrooom',
       description: 'Create your Vrooom account'
+    }
+  },
+  { 
+    path: 'confirmMail', 
+    component: EmailConfirmationComponent,
+    data: { 
+      animation: 'auth-page',
+      title: 'Confirm Email - Vrooom',
+      description: 'Confirm your email address'
     }
   },
 
@@ -197,7 +207,7 @@ export const routes: Routes = [
 export const ANIMATION_CONFIG = {
   // Route patterns and their default animations
   patterns: {
-    'auth': ['login', 'signup', 'reset-password', 'confirm-email'],
+    'auth': ['login', 'signup', 'reset-password', 'confirm-email', 'confirmMail'],
     'admin': ['admin', 'admin-support', 'admin-panel'],
     'main': ['landing', 'vehicles', 'search'],
     'profile': ['profile', 'my-vehicles', 'bookings'],
@@ -273,6 +283,12 @@ export const ROUTE_METADATA = {
     title: 'Join Vrooom - Create Your Account',
     description: 'Join thousands of users who trust Vrooom for their car rental needs. Sign up in minutes.',
     keywords: 'sign up, register, create account, join vrooom',
+    category: 'auth'
+  },
+  'confirmMail': {
+    title: 'Confirm Your Email | Vrooom',
+    description: 'Confirm your email address to activate your Vrooom account.',
+    keywords: 'email confirmation, verify email, account activation',
     category: 'auth'
   },
   'admin': {
