@@ -147,19 +147,19 @@ namespace Vrooom.Services.SupportServices
                     var originalTicket = tickets.FirstOrDefault(t =>
                         t.titlu != "Admin Reply" &&
                         !string.IsNullOrEmpty(t.titlu) &&
-                        t.userId != resolvedByUserId);
+                        t.UserId != resolvedByUserId);
 
                     if (originalTicket != null)
                     {
                         _logger.LogInformation("📧 Sending resolution email to customer (User ID: {UserId})",
-                            originalTicket.userId);
+                            originalTicket.UserId);
 
                         var resolutionEmailData = new SupportDTO
                         {
                             supportId = supportId,
                             titlu = originalTicket.titlu,
                             comentariu = "Your support ticket has been resolved. Thank you for contacting us!",
-                            userId = originalTicket.userId
+                            userId = originalTicket.UserId
                         };
 
                         await sendResolutionEmail(resolutionEmailData);

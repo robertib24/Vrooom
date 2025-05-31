@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { provideNativeDateAdapter } from '@angular/material/core';
+import { DateUtils } from '../../utils/date.utils';
 
 @Component({
   selector: 'app-rent-dialog',
@@ -68,26 +69,34 @@ export class RentDialogComponent {
   }
 
   completeBooking() {
-    if (this.datesForm.invalid || this.paymentForm.invalid) {
-      return;
-    }
-    
-    const bookingData = {
-      start: this.datesForm.get('start')?.value,
-      end: this.datesForm.get('end')?.value,
-      payment: {
-        cardNumber: this.paymentForm.get('cardNumber')?.value,
-        expiryDate: this.paymentForm.get('expiryDate')?.value,
-        cvv: this.paymentForm.get('cvv')?.value,
-        cardName: this.paymentForm.get('cardName')?.value,
-      },
-      totalPrice: this.totalPrice,
-      totalDays: this.totalDays
-    };
-    
-    this.onBookEvent.emit(bookingData);
-    this.dialogRef.close();
+  if (this.datesForm.invalid || this.paymentForm.invalid) {
+    return;
   }
+  
+  // FIX: Convert dates to proper format for backend
+  const startDate = this.datesForm.get('start')?.value;
+  const endDate = this.datesForm.get('end')?.value;
+  
+  if (!startDate || !endDate) return;
+  const fixedStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 12, 0, 0);
+  const fixedEndDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 12, 0, 0);
+  
+  const bookingData = {
+    start: fixedStartDate,
+    end: fixedEndDate,
+    payment: {
+      cardNumber: this.paymentForm.get('cardNumber')?.value,
+      expiryDate: this.paymentForm.get('expiryDate')?.value,
+      cvv: this.paymentForm.get('cvv')?.value,
+      cardName: this.paymentForm.get('cardName')?.value,
+    },
+    totalPrice: this.totalPrice,
+    totalDays: this.totalDays
+  };
+  
+  this.onBookEvent.emit(bookingData);
+  this.dialogRef.close();
+}
 
   cancel() {
     this.dialogRef.close();

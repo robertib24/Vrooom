@@ -17,6 +17,7 @@ import { TokenService } from '../../services/token.service';
 import { DocumentService } from '../../services/document.service';
 import { ApiService } from '../../services/api.service';
 import { finalize } from 'rxjs/operators';
+import { DateUtils } from '../../utils/date.utils';
 
 interface DocumentState {
   uploaded: boolean;
@@ -206,18 +207,23 @@ loadDocumentStatus() {
     return;
   }
 
-  // Format date for HTML date input
+  // FIX: Format date properly without timezone issues
   let formattedDate = '';
   if (this.userProfile.dataNasterii) {
     try {
       const date = new Date(this.userProfile.dataNasterii);
       if (!isNaN(date.getTime())) {
-        formattedDate = date.toISOString().split('T')[0];
+        // FIX: Use local date components to avoid timezone shift
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        formattedDate = `${year}-${month}-${day}`;
       }
     } catch (error) {
       console.warn('⚠️ Error formatting birth date:', error);
     }
   }
+
   const formData = {
     nume: this.userProfile.nume || this.userProfile.lastName || '',
     prenume: this.userProfile.prenume || this.userProfile.firstName || '',
@@ -273,7 +279,6 @@ loadDocumentStatus() {
     return;
   }
 
-  // Clean the form data - remove empty values
   const updateData: any = {};
   
   if (formData.nume && formData.nume.trim()) {
@@ -289,8 +294,15 @@ loadDocumentStatus() {
   }
   
   if (formData.dataNasterii) {
-    updateData.dataNasterii = formData.dataNasterii;
-  }
+  const dateInput = new Date(formData.dataNasterii);
+  const fixedDate = new Date(
+    dateInput.getFullYear(), 
+    dateInput.getMonth(), 
+    dateInput.getDate(), 
+    12, 0, 0
+  );
+  updateData.dataNasterii = fixedDate;
+}
 
   console.log('🔄 Updating profile with data:', updateData);
 

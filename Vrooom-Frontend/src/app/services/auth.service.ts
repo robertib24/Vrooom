@@ -132,12 +132,20 @@ export class AuthService {
       
       // Format birth date for backend
       if (userData.birthDate) {
-        const birthDate = new Date(userData.birthDate);
-        formData.append('dataNasterii', birthDate.toISOString());
-      } else {
-        // Default birth date if not provided
-        formData.append('dataNasterii', new Date('2000-01-01').toISOString());
-      }
+  const birthDate = new Date(userData.birthDate);
+  // Set to noon to avoid timezone issues
+  const fixedBirthDate = new Date(
+    birthDate.getFullYear(), 
+    birthDate.getMonth(), 
+    birthDate.getDate(), 
+    12, 0, 0
+  );
+  formData.append('dataNasterii', fixedBirthDate.toISOString());
+} else {
+  // Default birth date if not provided
+  const defaultDate = new Date(2000, 0, 1, 12, 0, 0);
+  formData.append('dataNasterii', defaultDate.toISOString());
+}
       
       // Add profile picture
       if (userData.profilePicture && userData.profilePicture instanceof File) {

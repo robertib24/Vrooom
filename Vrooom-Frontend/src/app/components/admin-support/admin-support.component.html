@@ -33,20 +33,133 @@
           </mat-card-content>
         </mat-card>
       </div>
-    } @else if (getUniqueTickets().length === 0) {
+    } @else if (getFilteredTickets().length === 0) {
       <div class="empty-container">
         <mat-card class="empty-card">
           <mat-card-content>
             <div class="empty-content">
               <mat-icon class="empty-icon">support_agent</mat-icon>
-              <h3>No Support Tickets</h3>
-              <p>No support tickets have been submitted yet.</p>
+              <h3>No Support Tickets Found</h3>
+              <p>
+                @if (searchTerm || selectedStatusFilter !== 'all' || selectedPriorityFilter !== 'all') {
+                  No tickets match your current filters. Try adjusting your search criteria.
+                } @else {
+                  No support tickets have been submitted yet.
+                }
+              </p>
+              @if (searchTerm || selectedStatusFilter !== 'all' || selectedPriorityFilter !== 'all') {
+                <button mat-raised-button color="primary" (click)="clearAllFilters()">
+                  <mat-icon>clear_all</mat-icon>
+                  Clear All Filters
+                </button>
+              }
             </div>
           </mat-card-content>
         </mat-card>
       </div>
     } @else {
-      <!-- Statistics Summary -->
+      <!-- Enhanced Filter and Search Section -->
+      <mat-card class="filters-card">
+        <mat-card-content>
+          <div class="filters-header">
+            <h3>
+              <mat-icon>filter_list</mat-icon>
+              Filters & Search
+            </h3>
+            <div class="filter-actions">
+              <button mat-button (click)="refreshTickets()" matTooltip="Refresh tickets">
+                <mat-icon>refresh</mat-icon>
+                Refresh
+              </button>
+              <button mat-button (click)="exportTickets()" matTooltip="Export to CSV">
+                <mat-icon>download</mat-icon>
+                Export
+              </button>
+              <button mat-button (click)="viewAnalytics()" matTooltip="View analytics">
+                <mat-icon>analytics</mat-icon>
+                Analytics
+              </button>
+            </div>
+          </div>
+
+          <div class="filters-grid">
+            <!-- Search Field -->
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search tickets</mat-label>
+              <input 
+                matInput 
+                [(ngModel)]="searchTerm" 
+                (keyup)="onSearchChange()"
+                placeholder="Search by title, content, ID, or user...">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <!-- Status Filter -->
+            <mat-form-field appearance="outline">
+              <mat-label>Status</mat-label>
+              <mat-select [(value)]="selectedStatusFilter" (selectionChange)="onStatusFilterChange()">
+                <mat-option value="all">All Status</mat-option>
+                <mat-option value="open">Open</mat-option>
+                <mat-option value="inprogress">In Progress</mat-option>
+                <mat-option value="resolved">Resolved</mat-option>
+                <mat-option value="closed">Closed</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Priority Filter -->
+            <mat-form-field appearance="outline">
+              <mat-label>Priority</mat-label>
+              <mat-select [(value)]="selectedPriorityFilter" (selectionChange)="onPriorityFilterChange()">
+                <mat-option value="all">All Priorities</mat-option>
+                <mat-option value="low">Low</mat-option>
+                <mat-option value="medium">Medium</mat-option>
+                <mat-option value="high">High</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Clear Filters Button -->
+            <button 
+              mat-raised-button 
+              color="accent" 
+              (click)="clearAllFilters()"
+              [disabled]="searchTerm === '' && selectedStatusFilter === 'all' && selectedPriorityFilter === 'all'">
+              <mat-icon>clear_all</mat-icon>
+              Clear Filters
+            </button>
+          </div>
+
+          <!-- Results Summary -->
+          <div class="results-summary">
+            <span class="results-count">
+              Showing {{ getFilteredTickets().length }} of {{ getUniqueTickets().length }} tickets
+            </span>
+            @if (searchTerm || selectedStatusFilter !== 'all' || selectedPriorityFilter !== 'all') {
+              <mat-chip-set>
+                @if (searchTerm) {
+                  <mat-chip removable (removed)="searchTerm = ''; onSearchChange()">
+                    Search: "{{ searchTerm }}"
+                    <mat-icon matChipRemove>cancel</mat-icon>
+                  </mat-chip>
+                }
+                @if (selectedStatusFilter !== 'all') {
+                  <mat-chip removable (removed)="selectedStatusFilter = 'all'; onStatusFilterChange()">
+                    Status: {{ selectedStatusFilter | titlecase }}
+                    <mat-icon matChipRemove>cancel</mat-icon>
+                  </mat-chip>
+                }
+                @if (selectedPriorityFilter !== 'all') {
+                  <mat-chip removable (removed)="selectedPriorityFilter = 'all'; onPriorityFilterChange()">
+                    Priority: {{ selectedPriorityFilter | titlecase }}
+                    <mat-icon matChipRemove>cancel</mat-icon>
+                  </mat-chip>
+                }
+              </mat-chip-set>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Enhanced Statistics Summary -->
       <div class="stats-section">
         <mat-card class="stats-card">
           <mat-card-content>
@@ -65,8 +178,17 @@
                   <mat-icon>schedule</mat-icon>
                 </div>
                 <div class="stat-content">
-                  <h3>{{ getUniqueTickets().length }}</h3>
-                  <p>Pending</p>
+                  <h3>{{ getTicketsByStatus('open').length }}</h3>
+                  <p>Open</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <mat-icon>hourglass_empty</mat-icon>
+                </div>
+                <div class="stat-content">
+                  <h3>{{ getTicketsByStatus('inprogress').length }}</h3>
+                  <p>In Progress</p>
                 </div>
               </div>
               <div class="stat-item">
@@ -74,7 +196,7 @@
                   <mat-icon>check_circle</mat-icon>
                 </div>
                 <div class="stat-content">
-                  <h3>0</h3>
+                  <h3>{{ getTicketsByStatus('resolved').length }}</h3>
                   <p>Resolved</p>
                 </div>
               </div>
@@ -83,10 +205,37 @@
         </mat-card>
       </div>
 
-      <!-- Support Tickets -->
+      <!-- Quick Actions Bar -->
+      <mat-card class="quick-actions-card">
+        <mat-card-content>
+          <div class="quick-actions">
+            <h4>Quick Actions</h4>
+            <div class="action-buttons">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                (click)="resolveAllSelected()"
+                [disabled]="getTicketsByStatus('open').length === 0">
+                <mat-icon>check_circle_outline</mat-icon>
+                Resolve All Open ({{ getTicketsByStatus('open').length }})
+              </button>
+              <button mat-raised-button (click)="exportTickets()">
+                <mat-icon>file_download</mat-icon>
+                Export Filtered Results
+              </button>
+              <button mat-raised-button (click)="viewAnalytics()">
+                <mat-icon>assessment</mat-icon>
+                View Analytics
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Enhanced Support Tickets -->
       <div class="tickets-section">
         <mat-accordion class="tickets-accordion">
-          @for (ticket of getUniqueTickets(); track ticket.supportId) {
+          @for (ticket of getFilteredTickets(); track ticket.supportId) {
             <mat-expansion-panel class="ticket-panel">
               <mat-expansion-panel-header>
                 <mat-panel-title>
@@ -96,6 +245,12 @@
                       <span class="ticket-title">{{ ticket.titlu }}</span>
                     </div>
                     <div class="ticket-meta">
+                      <mat-chip 
+                        [style.background-color]="getStatusColor(getTicketStatus(ticket))"
+                        [style.color]="'white'"
+                        class="status-chip">
+                        {{ getTicketStatus(ticket) | titlecase }}
+                      </mat-chip>
                       <mat-chip 
                         [style.background-color]="
                           getTicketPriority(ticket) === 'high' ? '#f44336' :
@@ -115,11 +270,14 @@
                       <mat-icon>chat</mat-icon>
                       {{ getTicketConversation(ticket.supportId).length }} message{{ getTicketConversation(ticket.supportId).length !== 1 ? 's' : '' }}
                     </mat-chip>
+                    @if (ticket.createdAt) {
+                      <span class="ticket-date">{{ formatDate(ticket.createdAt) }}</span>
+                    }
                   </div>
                 </mat-panel-description>
               </mat-expansion-panel-header>
 
-              <!-- Ticket Conversation -->
+              <!-- Enhanced Ticket Conversation -->
               <div class="ticket-conversation">
                 <!-- FIXED: Display all messages in conversation with proper identification -->
                 @for (conversationTicket of getTicketConversation(ticket.supportId); track conversationTicket.supportId + '-' + $index) {
@@ -139,7 +297,11 @@
                       @if (conversationTicket.titlu && conversationTicket.titlu !== 'Admin Reply' && conversationTicket.titlu !== '') {
                         <div class="message-title">{{ conversationTicket.titlu }}</div>
                       }
-                      <div class="message-id">#{{ conversationTicket.supportId }}</div>
+                      <div class="message-timestamp">
+                        @if (conversationTicket.createdAt) {
+                          {{ formatMessageTime(conversationTicket.createdAt) }}
+                        }
+                      </div>
                     </div>
                     <div class="message-content">
                       {{ conversationTicket.comentariu }}
@@ -147,53 +309,95 @@
                   </div>
                 }
 
-                <!-- Admin Reply Form -->
+                <!-- Enhanced Admin Reply Form -->
                 <div class="reply-section">
-                  <h4>Admin Reply</h4>
-                  <form [formGroup]="replyForms[ticket.supportId]" (ngSubmit)="replyToTicket(ticket.supportId)">
-                    <mat-form-field appearance="outline" class="reply-field">
-                      <mat-label>Your reply to the customer</mat-label>
-                      <textarea 
-                        matInput 
-                        formControlName="reply"
-                        rows="4"
-                        placeholder="Type your response to help the customer..."></textarea>
-                      <mat-icon matSuffix>message</mat-icon>
-                      @if (replyForms[ticket.supportId]?.get('reply')?.errors?.['required'] && replyForms[ticket.supportId]?.get('reply')?.touched) {
-                        <mat-error>Reply is required</mat-error>
-                      }
-                      @if (replyForms[ticket.supportId]?.get('reply')?.errors?.['minlength'] && replyForms[ticket.supportId]?.get('reply')?.touched) {
-                        <mat-error>Reply must be at least 10 characters</mat-error>
-                      }
-                    </mat-form-field>
-
-                    <div class="reply-actions">
-                      @if (replyingToTicket === ticket.supportId) {
-                        <button mat-raised-button disabled>
-                          <mat-spinner diameter="20"></mat-spinner>
-                          Sending Reply...
+                  <div class="reply-header">
+                    <h4>
+                      <mat-icon>reply</mat-icon>
+                      Admin Reply
+                    </h4>
+                    <div class="ticket-actions">
+                      <button 
+                        mat-icon-button 
+                        matTooltip="View ticket history"
+                        (click)="viewTicketHistory(ticket.supportId)">
+                        <mat-icon>history</mat-icon>
+                      </button>
+                      <button 
+                        mat-icon-button 
+                        matTooltip="Escalate ticket"
+                        (click)="escalateTicket(ticket.supportId)">
+                        <mat-icon>priority_high</mat-icon>
+                      </button>
+                      @if (getTicketStatus(ticket) === 'Resolved') {
+                        <button 
+                          mat-icon-button 
+                          matTooltip="Reopen ticket"
+                          (click)="reopenTicket(ticket.supportId)">
+                          <mat-icon>redo</mat-icon>
                         </button>
-                      } @else {
+                      }
+                    </div>
+                  </div>
+
+                  @if (getTicketStatus(ticket) !== 'Resolved') {
+                    <form [formGroup]="replyForms[ticket.supportId]" (ngSubmit)="replyToTicket(ticket.supportId)">
+                      <mat-form-field appearance="outline" class="reply-field">
+                        <mat-label>Your reply to the customer</mat-label>
+                        <textarea 
+                          matInput 
+                          formControlName="reply"
+                          rows="4"
+                          placeholder="Type your response to help the customer..."></textarea>
+                        <mat-icon matSuffix>message</mat-icon>
+                        @if (replyForms[ticket.supportId]?.get('reply')?.errors?.['required'] && replyForms[ticket.supportId]?.get('reply')?.touched) {
+                          <mat-error>Reply is required</mat-error>
+                        }
+                        @if (replyForms[ticket.supportId]?.get('reply')?.errors?.['minlength'] && replyForms[ticket.supportId]?.get('reply')?.touched) {
+                          <mat-error>Reply must be at least 10 characters</mat-error>
+                        }
+                      </mat-form-field>
+
+                      <div class="reply-actions">
+                        @if (replyingToTicket === ticket.supportId) {
+                          <button mat-raised-button disabled>
+                            <mat-spinner diameter="20"></mat-spinner>
+                            Sending Reply...
+                          </button>
+                        } @else {
+                          <button 
+                            mat-raised-button 
+                            color="primary" 
+                            type="submit"
+                            [disabled]="replyForms[ticket.supportId]?.invalid">
+                            <mat-icon>send</mat-icon>
+                            Send Reply
+                          </button>
+                        }
+
                         <button 
                           mat-raised-button 
-                          color="primary" 
-                          type="submit"
-                          [disabled]="replyForms[ticket.supportId]?.invalid">
-                          <mat-icon>send</mat-icon>
-                          Send Reply
+                          color="accent"
+                          type="button"
+                          (click)="markAsResolved(ticket.supportId)">
+                          <mat-icon>check_circle</mat-icon>
+                          Mark as Resolved
                         </button>
-                      }
-
+                      </div>
+                    </form>
+                  } @else {
+                    <div class="resolved-ticket-info">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>This ticket has been resolved</span>
                       <button 
                         mat-button 
-                        color="accent"
-                        type="button"
-                        (click)="markAsResolved(ticket.supportId)">
-                        <mat-icon>check_circle</mat-icon>
-                        Mark as Resolved
+                        color="primary"
+                        (click)="reopenTicket(ticket.supportId)">
+                        <mat-icon>redo</mat-icon>
+                        Reopen if needed
                       </button>
                     </div>
-                  </form>
+                  }
                 </div>
               </div>
             </mat-expansion-panel>
@@ -203,103 +407,3 @@
     }
   </div>
 </div>
-
-<style>
-.ticket-meta-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.message-count {
-  font-size: 0.8rem;
-  height: 24px;
-}
-
-.message-id {
-  font-size: 0.7rem;
-  color: #999;
-  margin-left: auto;
-}
-
-.message-title {
-  font-style: italic;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.message-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-
-  .message-sender {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    color: #333;
-
-    mat-icon {
-      font-size: 1.2rem;
-      width: 1.2rem;
-      height: 1.2rem;
-    }
-  }
-}
-
-.message-content {
-  line-height: 1.6;
-  color: #555;
-  white-space: pre-wrap;
-}
-
-.message {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-.user-message {
-  background: #f8f9fa;
-  border-left: 4px solid #667eea;
-}
-
-.admin-message {
-  background: #e3f2fd;
-  border-left: 4px solid #2196f3;
-}
-
-.reply-section {
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 2px dashed #dee2e6;
-
-  h4 {
-    color: #333;
-    margin-bottom: 1rem;
-    font-weight: 600;
-  }
-
-  .reply-field {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-
-  .reply-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-start;
-
-    button {
-      border-radius: 20px;
-      font-weight: 500;
-
-      mat-spinner {
-        margin-right: 8px;
-      }
-    }
-  }
-}
-</style>

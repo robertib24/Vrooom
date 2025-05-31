@@ -197,20 +197,38 @@ export class VehiclesService {
   }
 
   bookVehicle(vehicleId: number, bookingData: { start: Date, end: Date }): Observable<any> {
-    const userId = this.tokenService.getUserId();
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
-
-    const booking: Booking = {
-      userId: parseInt(userId),
-      postareId: vehicleId,
-      dataStart: bookingData.start,
-      dataStop: bookingData.end
-    };
-
-    return this.apiService.post('Chirie', booking);
+  const userId = this.tokenService.getUserId();
+  if (!userId) {
+    throw new Error('User not authenticated');
   }
+
+  // FIX: Create proper dates for backend
+  const startDate = new Date(bookingData.start);
+  const endDate = new Date(bookingData.end);
+  
+  const fixedStartDate = new Date(
+    startDate.getFullYear(), 
+    startDate.getMonth(), 
+    startDate.getDate(), 
+    12, 0, 0
+  );
+  
+  const fixedEndDate = new Date(
+    endDate.getFullYear(), 
+    endDate.getMonth(), 
+    endDate.getDate(), 
+    12, 0, 0
+  );
+
+  const booking: Booking = {
+    userId: parseInt(userId),
+    postareId: vehicleId,
+    dataStart: fixedStartDate,
+    dataStop: fixedEndDate
+  };
+
+  return this.apiService.post('Chirie', booking);
+}
 
   getUserBookings(): Observable<Booking[]> {
     const userId = this.tokenService.getUserId();
