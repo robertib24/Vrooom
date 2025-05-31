@@ -161,6 +161,51 @@ namespace Vrooom.Repos.SupportRepos
             }
         }
 
+        public async Task ResolveTicket(int supportId, int resolvedByUserId)
+        {
+            try
+            {
+                _logger.LogInformation("🔧 Repository: Resolving all tickets with Support ID {SupportId} by User {UserId}",
+                    supportId, resolvedByUserId);
+
+                // Find all tickets with this supportId
+                var tickets = await _dbcontext.Support
+                    .Where(s => s.SupportId == supportId)
+                    .ToListAsync();
+
+                if (!tickets.Any())
+                {
+                    _logger.LogWarning("⚠️ Repository: No tickets found with Support ID {SupportId}", supportId);
+                    throw new Exception($"No support tickets found with ID {supportId}");
+                }
+
+                _logger.LogInformation("📋 Repository: Found {Count} tickets to resolve for Support ID {SupportId}",
+                    tickets.Count, supportId);
+
+                // Update all tickets with this supportId
+                foreach (var ticket in tickets)
+                {
+                    _logger.LogInformation("🔄 Repository: Updating ticket dummyId {DummyId} (SupportId: {SupportId})",
+                        ticket.dummyId, ticket.SupportId);
+
+                    ticket.Status = "Resolved";
+                    ticket.ResolvedAt = DateTime.Now;
+                    ticket.ResolvedByUserId = resolvedByUserId;
+                }
+
+                // Save changes to database
+                await _dbcontext.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Repository: Successfully resolved {Count} tickets for Support ID {SupportId}",
+                    tickets.Count, supportId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Repository: Error resolving tickets for Support ID {SupportId}", supportId);
+                throw new Exception($"Database error while resolving support tickets: {ex.Message}", ex);
+            }
+        }
+
         public async Task<User> UserByID(int userId)
         {
             try

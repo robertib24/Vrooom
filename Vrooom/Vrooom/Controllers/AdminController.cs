@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vrooom.Data;
+using Vrooom.Exceptions;
 using Vrooom.Models;
 using Vrooom.Models.DTOs;
 using Vrooom.Services.PostareServices;
@@ -337,48 +338,52 @@ namespace Vrooom.Controllers
         {
             try
             {
-                Console.WriteLine($"🔧 Resolving ticket {supportId}");
+                Console.WriteLine($"🔧 AdminController: Resolving ticket {supportId}");
 
                 // Get current admin user ID
-                var currentUserId = User.FindFirst("id")?.Value;
-                if (string.IsNullOrEmpty(currentUserId))
+                var currentUserIdClaim = User.FindFirst("id")?.Value;
+                if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out int adminUserId))
                 {
+                    Console.WriteLine("❌ Admin user ID not found in token");
                     return Unauthorized("Admin user ID not found");
                 }
 
-                // Update all tickets with this supportId to resolved status
-                var tickets = await _context.Support
-                    .Where(s => s.SupportId == supportId)
-                    .ToListAsync();
+                Console.WriteLine($"👤 Admin user ID: {adminUserId}");
 
-                if (!tickets.Any())
-                {
-                    return NotFound($"No tickets found with Support ID {supportId}");
-                }
+                // Use SupportService to resolve the ticket (includes email sending)
+                await _supportService.ResolveTicket(supportId, adminUserId);
 
-                foreach (var ticket in tickets)
-                {
-                    ticket.Status = "Resolved";
-                    ticket.ResolvedAt = DateTime.Now;
-                    ticket.ResolvedByUserId = int.Parse(currentUserId);
-                }
-
-                await _context.SaveChangesAsync();
-
-                Console.WriteLine($"✅ Ticket {supportId} resolved successfully");
+                Console.WriteLine($"✅ Ticket {supportId} resolved successfully via SupportService");
 
                 return Ok(new
                 {
                     message = "Ticket resolved successfully",
                     supportId = supportId,
                     resolvedAt = DateTime.Now,
-                    resolvedBy = currentUserId
+                    resolvedBy = adminUserId,
+                    emailSent = true
+                });
+            }
+            catch (NotFoundException ex)
+            {
+                Console.WriteLine($"❌ Ticket not found: {ex.Message}");
+                return NotFound(new
+                {
+                    error = "Ticket not found",
+                    details = ex.Message,
+                    supportId = supportId
                 });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Error resolving ticket {supportId}: {ex.Message}");
-                return StatusCode(500, new { error = ex.Message });
+                Console.WriteLine($"📋 Error details: {ex.StackTrace}");
+                return StatusCode(500, new
+                {
+                    error = "Failed to resolve ticket",
+                    details = ex.Message,
+                    supportId = supportId
+                });
             }
         }
 

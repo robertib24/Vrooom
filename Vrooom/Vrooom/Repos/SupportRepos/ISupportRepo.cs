@@ -9,5 +9,12 @@ namespace Vrooom.Repos.SupportRepo
         Task<IEnumerable<Support>> getSupportBySupportID(int supportID);
         Task<User> UserByID(int userID);
         Task<int> getMaxID();
+
+        /// <summary>
+        /// Resolve all tickets with the specified support ID
+        /// </summary>
+        /// <param name="supportId">The support ID to resolve</param>
+        /// <param name="resolvedByUserId">The admin user ID who resolved the ticket</param>
+        Task ResolveTicket(int supportId, int resolvedByUserId);
     }
 }

@@ -12,5 +12,17 @@ namespace Vrooom.Services.SupportServices
         Task ReplySupport(SupportDTO supportDTO);
         Task replyEmail(SupportDTO support);
 
+        /// <summary>
+        /// Resolve a support ticket and send notification email to customer
+        /// </summary>
+        /// <param name="supportId">The support ID to resolve</param>
+        /// <param name="resolvedByUserId">The admin user ID who resolved the ticket</param>
+        Task ResolveTicket(int supportId, int resolvedByUserId);
+
+        /// <summary>
+        /// Send resolution email to customer
+        /// </summary>
+        /// <param name="support">Support ticket data for email</param>
+        Task sendResolutionEmail(SupportDTO support);
     }
 }
