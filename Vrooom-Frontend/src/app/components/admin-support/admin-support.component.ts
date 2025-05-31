@@ -169,7 +169,6 @@ export class AdminSupportComponent implements OnInit {
     const hasNoTitle = !ticket.titlu || ticket.titlu === '';
     const isOriginalTicket = ticket.titlu && ticket.titlu !== '' && ticket.titlu !== 'Admin Reply';
     
-    // If it's the original ticket with a meaningful title, it's from the user
     if (isOriginalTicket) {
       return false;
     }
@@ -194,7 +193,6 @@ export class AdminSupportComponent implements OnInit {
 
   console.log(`📤 Admin replying to ticket ${supportId}:`, reply);
 
-  // 🔥 FIX: Use the correct API endpoint that sends emails
   this.adminService.adminReplyToTicket(supportId, reply)
     .pipe(finalize(() => this.replyingToTicket = null))
     .subscribe({
@@ -203,7 +201,6 @@ export class AdminSupportComponent implements OnInit {
         this.showSuccess('Reply sent successfully! Email notification sent to user.');
         form.reset();
         
-        // 🔥 FIX: Send email notification separately if the API doesn't handle it
         this.supportService.sendSupportReplyEmail({
           supportId,
           titlu: 'Admin Reply',
@@ -214,7 +211,6 @@ export class AdminSupportComponent implements OnInit {
           error: (error) => console.error('📧 Failed to send reply email:', error)
         });
         
-        // Reload tickets to show the new reply
         this.loadAllSupportTickets();
       },
       error: (error) => {

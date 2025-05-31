@@ -184,7 +184,7 @@ namespace Vrooom.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Card");
+                    b.ToTable("Card", (string)null);
                 });
 
             modelBuilder.Entity("Vrooom.Models.Chirie", b =>
@@ -213,7 +213,7 @@ namespace Vrooom.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Chirie");
+                    b.ToTable("Chirie", (string)null);
                 });
 
             modelBuilder.Entity("Vrooom.Models.Postare", b =>
@@ -289,7 +289,7 @@ namespace Vrooom.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Postare");
+                    b.ToTable("Postare", (string)null);
                 });
 
             modelBuilder.Entity("Vrooom.Models.Review", b =>
@@ -326,7 +326,7 @@ namespace Vrooom.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Review");
+                    b.ToTable("Review", (string)null);
                 });
 
             modelBuilder.Entity("Vrooom.Models.Support", b =>
@@ -370,7 +370,7 @@ namespace Vrooom.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Support");
+                    b.ToTable("Support", (string)null);
                 });
 
             modelBuilder.Entity("Vrooom.Models.User", b =>

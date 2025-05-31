@@ -26,7 +26,29 @@ namespace Vrooom.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Support>();
+            modelBuilder.Entity<Support>(entity =>
+            {
+                entity.HasKey(s => s.dummyId);
+
+                entity.Property(s => s.Status)
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Open");
+
+                entity.Property(s => s.CreatedAt)
+                    .HasDefaultValueSql("GETDATE()");
+ 
+                entity.HasOne(s => s.User)
+                    .WithMany()
+                    .HasForeignKey(s => s.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(s => s.ResolvedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .IsRequired(false);
+            });
+
             modelBuilder.Entity<Chirie>()
                 .HasKey(c => c.ChirieId);
 
