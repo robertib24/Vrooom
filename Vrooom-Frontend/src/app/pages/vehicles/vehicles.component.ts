@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,10 +15,9 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { VehiclesService, Vehicle } from '../../services/vehicles.service';
 import { RentDialogComponent } from '../../components/rent-dialog/rent-dialog.component';
-import { finalize, takeUntil } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { TokenService } from '../../services/token.service';
-import { Subject, interval } from 'rxjs';
 
 @Component({
   selector: 'app-vehicles',
@@ -41,8 +40,7 @@ import { Subject, interval } from 'rxjs';
   templateUrl: './vehicles.component.html',
   styleUrl: './vehicles.component.scss',
 })
-export class VehiclesComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class VehiclesComponent implements OnInit {
   private vehiclesService = inject(VehiclesService);
   private tokenService = inject(TokenService);
   private fb = inject(FormBuilder);
@@ -59,14 +57,6 @@ export class VehiclesComponent implements OnInit, OnDestroy {
   pageSize = 9;
   pageIndex = 0;
   totalVehicles = 0;
-
-  // Cache status
-  cacheInfo = {
-    loaded: false,
-    age: 0,
-    count: 0,
-    lastRefresh: ''
-  };
 
   // Filters
   filterForm: FormGroup;
@@ -97,7 +87,7 @@ export class VehiclesComponent implements OnInit, OnDestroy {
       maxPrice: [1000],
       minYear: [1980],
       maxYear: [new Date().getFullYear()],
-      maxMileage: [200000],
+      maxMileage: [400000],
       sortBy: ['price_asc']
     });
   }
@@ -105,85 +95,32 @@ export class VehiclesComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadVehicles();
     this.setupFilterSubscription();
-    this.setupCacheStatusTracking();
-    this.setupPeriodicRefresh();
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  loadVehicles(forceRefresh: boolean = false) {
+  loadVehicles() {
     this.loading = true;
     this.error = false;
     
-    console.log(`🔄 Loading vehicles (force refresh: ${forceRefresh})`);
-    
-    this.vehiclesService.getVehicles(forceRefresh)
-      .pipe(
-        finalize(() => this.loading = false),
-        takeUntil(this.destroy$)
-      )
+    this.vehiclesService.getVehicles()
+      .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (data) => {
-          console.log(`✅ Loaded ${data.length} vehicles`);
           this.allVehicles = data;
           this.applyFilters();
           this.updatePriceRange();
-          this.updateCacheInfo();
         },
         error: (err) => {
-          console.error('❌ Error loading vehicles:', err);
+          console.error('Error loading vehicles:', err);
           this.error = true;
           this.vehiclesService.showErrorMessage('Failed to load vehicles');
         }
       });
   }
 
-  refreshVehicles() {
-    console.log('🔄 Manually refreshing vehicles...');
-    this.loadVehicles(true);
-  }
-
-  private setupCacheStatusTracking() {
-    // Subscribe to vehicles stream to track cache changes
-    this.vehiclesService.vehicles$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.updateCacheInfo();
-      });
-  }
-
-  private setupPeriodicRefresh() {
-    // Check cache status every 30 seconds and auto-refresh if needed
-    interval(30000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        const status = this.vehiclesService.getCacheStatus();
-        if (status.expired && this.allVehicles.length > 0) {
-          console.log('🔄 Cache expired, auto-refreshing...');
-          this.loadVehicles(true);
-        }
-      });
-  }
-
-  private updateCacheInfo() {
-    const status = this.vehiclesService.getCacheStatus();
-    this.cacheInfo = {
-      loaded: status.loaded,
-      age: Math.floor(status.age / 1000), // Convert to seconds
-      count: status.count,
-      lastRefresh: new Date(Date.now() - status.age).toLocaleTimeString()
-    };
-  }
-
   setupFilterSubscription() {
-    this.filterForm.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.applyFilters();
-      });
+    this.filterForm.valueChanges.subscribe(() => {
+      this.applyFilters();
+    });
   }
 
   applyFilters() {
@@ -232,8 +169,6 @@ export class VehiclesComponent implements OnInit, OnDestroy {
     this.totalVehicles = filtered.length;
     this.pageIndex = 0;
     this.updatePaginatedVehicles();
-
-    console.log(`🔍 Applied filters: ${this.allVehicles.length} → ${filtered.length} vehicles`);
   }
 
   sortVehicles(vehicles: Vehicle[], sortBy: string) {
@@ -308,16 +243,13 @@ export class VehiclesComponent implements OnInit, OnDestroy {
       data: { vehicle }
     });
 
-    dialogRef.componentInstance.onBookEvent
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((slot: any) => {
-        this.bookVehicle(vehicle, slot);
-      });
+    dialogRef.componentInstance.onBookEvent.subscribe((slot: any) => {
+      this.bookVehicle(vehicle, slot);
+    });
   }
 
   bookVehicle(vehicle: Vehicle, slot: any) {
     this.vehiclesService.bookVehicle(vehicle.id, slot)
-      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.vehiclesService.showSuccessMessage('Vehicle booked successfully!');
@@ -330,19 +262,17 @@ export class VehiclesComponent implements OnInit, OnDestroy {
             dataStop: slot.end
           };
           
-          this.vehiclesService.sendBookingConfirmation(booking)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: () => {
-                console.log('📧 Confirmation email sent');
-              },
-              error: (error) => {
-                console.error('❌ Failed to send confirmation email:', error);
-              }
-            });
+          this.vehiclesService.sendBookingConfirmation(booking).subscribe({
+            next: () => {
+              console.log('Confirmation email sent');
+            },
+            error: (error) => {
+              console.error('Failed to send confirmation email:', error);
+            }
+          });
         },
         error: (err) => {
-          console.error('❌ Error booking vehicle:', err);
+          console.error('Error booking vehicle:', err);
           this.vehiclesService.showErrorMessage('Failed to book vehicle. Please try again.');
         }
       });
@@ -358,54 +288,10 @@ export class VehiclesComponent implements OnInit, OnDestroy {
 
   viewVehicleDetails(vehicle: Vehicle) {
     this.router.navigate(['/vehicle', vehicle.id]);
-  }
+}
 
   canUserBook(vehicle: Vehicle): boolean {
     const currentUserId = this.tokenService.getUserId();
     return !!(currentUserId && parseInt(currentUserId) !== vehicle.userId);
-  }
-
-  // Debug and utility methods
-  debugCacheStatus() {
-    const status = this.vehiclesService.getCacheStatus();
-    console.log('🔍 Cache Status:', status);
-    console.log('🔍 Component Vehicles Count:', this.allVehicles.length);
-    console.log('🔍 Displayed Vehicles Count:', this.displayedVehicles.length);
-    
-    this.vehiclesService.showSuccessMessage(
-      `Cache: ${status.count} vehicles, Age: ${Math.floor(status.age / 1000)}s, Loaded: ${status.loaded}`
-    );
-  }
-
-  forceRefreshWithFeedback() {
-    console.log('🔄 Force refresh requested by user');
-    this.vehiclesService.showSuccessMessage('Refreshing vehicles...');
-    this.refreshVehicles();
-  }
-
-  // Check if we need to show cache status (for debugging)
-  shouldShowCacheInfo(): boolean {
-    return window.location.hostname === 'localhost'; // Only show in development
-  }
-
-  getCacheStatusText(): string {
-    if (!this.cacheInfo.loaded) {
-      return 'Cache not loaded';
-    }
-    
-    const ageMinutes = Math.floor(this.cacheInfo.age / 60);
-    if (ageMinutes < 1) {
-      return `${this.cacheInfo.count} vehicles (just now)`;
-    } else if (ageMinutes === 1) {
-      return `${this.cacheInfo.count} vehicles (1 min ago)`;
-    } else {
-      return `${this.cacheInfo.count} vehicles (${ageMinutes} mins ago)`;
-    }
-  }
-
-  getCacheStatusColor(): string {
-    if (!this.cacheInfo.loaded) return 'warn';
-    if (this.cacheInfo.age > 300) return 'warn'; // 5+ minutes old
-    return 'primary';
   }
 }
