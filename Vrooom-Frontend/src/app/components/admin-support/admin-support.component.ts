@@ -183,50 +183,99 @@ export class AdminSupportComponent implements OnInit {
   }
 
   replyToTicket(supportId: number) {
-    const form = this.replyForms[supportId];
-    if (!form || form.invalid) {
-      this.showError('Please enter a valid reply (minimum 10 characters)');
-      return;
-    }
-
-    const reply = form.get('reply')?.value;
-    this.replyingToTicket = supportId;
-
-    console.log(`📤 Admin replying to ticket ${supportId}:`, reply);
-
-    this.adminService.adminReplyToTicket(supportId, reply)
-      .pipe(finalize(() => this.replyingToTicket = null))
-      .subscribe({
-        next: () => {
-          this.showSuccess('Reply sent successfully!');
-          form.reset();
-          
-          // Send reply email notification
-          this.supportService.sendSupportReplyEmail({
-            supportId,
-            titlu: 'Admin Reply',
-            comentariu: reply,
-            userId: this.currentAdminId
-          }).subscribe({
-            next: () => console.log('📧 Reply email sent'),
-            error: (error) => console.error('Failed to send reply email:', error)
-          });
-          
-          // Reload tickets to show the new reply
-          this.loadAllSupportTickets();
-        },
-        error: (error) => {
-          console.error('Error sending reply:', error);
-          this.showError('Failed to send reply. Please try again.');
-        }
-      });
+  const form = this.replyForms[supportId];
+  if (!form || form.invalid) {
+    this.showError('Please enter a valid reply (minimum 10 characters)');
+    return;
   }
+
+  const reply = form.get('reply')?.value;
+  this.replyingToTicket = supportId;
+
+  console.log(`📤 Admin replying to ticket ${supportId}:`, reply);
+
+  // 🔥 FIX: Use the correct API endpoint that sends emails
+  this.adminService.adminReplyToTicket(supportId, reply)
+    .pipe(finalize(() => this.replyingToTicket = null))
+    .subscribe({
+      next: (response) => {
+        console.log('✅ Reply sent successfully:', response);
+        this.showSuccess('Reply sent successfully! Email notification sent to user.');
+        form.reset();
+        
+        // 🔥 FIX: Send email notification separately if the API doesn't handle it
+        this.supportService.sendSupportReplyEmail({
+          supportId,
+          titlu: 'Admin Reply',
+          comentariu: reply,
+          userId: this.currentAdminId
+        }).subscribe({
+          next: () => console.log('📧 Reply email sent'),
+          error: (error) => console.error('📧 Failed to send reply email:', error)
+        });
+        
+        // Reload tickets to show the new reply
+        this.loadAllSupportTickets();
+      },
+      error: (error) => {
+        console.error('Error sending reply:', error);
+        this.showError('Failed to send reply. Please try again.');
+      }
+    });
+}
 
   markAsResolved(supportId: number) {
-    // Implementation for marking ticket as resolved
-    // This would require additional backend endpoint
-    this.showSuccess(`Ticket ${supportId} marked as resolved`);
+  console.log(`🔧 Marking ticket ${supportId} as resolved`);
+  
+  // Show confirmation dialog
+  const confirmResolve = confirm(`Are you sure you want to mark ticket #${supportId} as resolved? This action cannot be undone.`);
+  
+  if (!confirmResolve) {
+    return;
   }
+
+  this.adminService.resolveTicket(supportId).subscribe({
+    next: (response) => {
+      console.log('✅ Ticket resolved successfully:', response);
+      this.showSuccess(`Ticket #${supportId} has been marked as resolved.`);
+      
+      // Reload tickets to update the UI
+      this.loadAllSupportTickets();
+    },
+    error: (error) => {
+      console.error('❌ Error resolving ticket:', error);
+      this.showError('Failed to resolve ticket. Please try again.');
+    }
+  });
+}
+
+  getTicketStatus(ticket: any): string {
+  if (ticket.status) {
+    return ticket.status;
+  }
+  
+  const conversation = this.getTicketConversation(ticket.supportId);
+  
+  const hasAdminReply = conversation.some(t => this.isAdminMessage(t));
+  
+  if (hasAdminReply) {
+    return 'In Progress';
+  }
+  
+  return 'Open';
+}
+
+  getStatusColor(status: string): string {
+  switch (status?.toLowerCase()) {
+    case 'open': return '#ff9800'; // Orange
+    case 'inprogress': 
+    case 'in progress': return '#2196f3'; // Blue
+    case 'resolved': return '#4caf50'; // Green
+    case 'closed': return '#9e9e9e'; // Grey
+    default: return '#ff9800'; // Default orange
+  }
+}
+
 
   getTicketPriority(ticket: SupportTicket): 'low' | 'medium' | 'high' {
     // Simple priority logic based on title keywords
@@ -251,6 +300,41 @@ export class AdminSupportComponent implements OnInit {
       panelClass: ['success-snackbar']
     });
   }
+
+  private calculateStats() {
+  const uniqueTickets = this.getUniqueTickets();
+  const totalTickets = uniqueTickets.length;
+  
+  let openTickets = 0;
+  let resolvedTickets = 0;
+  let inProgressTickets = 0;
+  
+  uniqueTickets.forEach(ticket => {
+    const status = this.getTicketStatus(ticket);
+    switch (status.toLowerCase()) {
+      case 'open':
+        openTickets++;
+        break;
+      case 'resolved':
+      case 'closed':
+        resolvedTickets++;
+        break;
+      case 'inprogress':
+      case 'in progress':
+        inProgressTickets++;
+        break;
+      default:
+        openTickets++; // Default to open
+    }
+  });
+  
+  return {
+    total: totalTickets,
+    open: openTickets,
+    inProgress: inProgressTickets,
+    resolved: resolvedTickets
+  };
+}
 
   private showError(message: string) {
     this.snackBar.open(message, 'Close', {

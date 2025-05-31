@@ -169,20 +169,63 @@ export class AdminService {
   }
 
   adminReplyToTicket(supportId: number, reply: string): Observable<any> {
-    const userId = this.tokenService.getUserId();
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
-
-    const replyData = {
-      supportId,
-      titlu: 'Admin Reply',
-      comentariu: reply,
-      userId: parseInt(userId)
-    };
-
-    return this.apiService.post(`Admin/support-tickets/${supportId}/reply`, replyData);
+  const userId = this.tokenService.getUserId();
+  if (!userId) {
+    throw new Error('User not authenticated');
   }
+
+  const replyData = {
+    supportId,
+    titlu: 'Admin Reply',
+    comentariu: reply,
+    userId: parseInt(userId)
+  };
+
+  console.log('📤 Sending admin reply:', replyData);
+
+  return this.apiService.post(`Admin/support-tickets/${supportId}/reply`, replyData);
+}
+
+  resolveTicket(supportId: number): Observable<any> {
+  console.log(`🔧 Resolving ticket ${supportId}`);
+  return this.apiService.post(`Admin/support-tickets/${supportId}/resolve`, {});
+}
+
+  getTicketStatus(supportId: number): Observable<any> {
+  return this.apiService.get(`Admin/support-tickets/${supportId}/status`);
+}
+
+  reopenTicket(supportId: number): Observable<any> {
+  return this.apiService.post(`Admin/support-tickets/${supportId}/reopen`, {});
+}
+
+  closeTicket(supportId: number, reason?: string): Observable<any> {
+  const data = reason ? { reason } : {};
+  return this.apiService.post(`Admin/support-tickets/${supportId}/close`, data);
+}
+
+  getAllSupportTicketsWithFilter(status?: string): Observable<SupportTicket[]> {
+  let endpoint = 'Admin/support-tickets';
+  if (status && status !== 'all') {
+    endpoint += `?status=${status}`;
+  }
+  return this.apiService.get<SupportTicket[]>(endpoint);
+}
+  
+  bulkResolveTickets(supportIds: number[]): Observable<any> {
+  return this.apiService.post('Admin/support-tickets/bulk-resolve', { supportIds });
+}
+
+  getSupportStatistics(): Observable<{
+  total: number;
+  open: number;
+  inProgress: number;
+  resolved: number;
+  avgResponseTime: number;
+  avgResolutionTime: number;
+}> {
+  return this.apiService.get('Admin/support-tickets/statistics');
+}
 
   // Booking Management
   getAllBookings(

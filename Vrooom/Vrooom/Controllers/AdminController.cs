@@ -299,6 +299,123 @@ namespace Vrooom.Controllers
             }
         }
 
+        [HttpPost("support-tickets/{supportId}/reply")]
+        public async Task<IActionResult> AdminReplyToTicket(int supportId, [FromBody] SupportDTO replyData)
+        {
+            try
+            {
+                Console.WriteLine($"📧 Admin replying to ticket {supportId}: {replyData.comentariu}");
+
+                replyData.supportId = supportId;
+                await _supportService.ReplySupport(replyData);
+
+                try
+                {
+                    await _supportService.adminEmail(replyData);
+                    Console.WriteLine($"✅ Admin reply email sent for ticket {supportId}");
+                }
+                catch (Exception emailEx)
+                {
+                    Console.WriteLine($"⚠️ Reply saved but email failed: {emailEx.Message}");
+                }
+
+                return Ok(new
+                {
+                    message = "Reply sent successfully",
+                    emailSent = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error in admin reply: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("support-tickets/{supportId}/resolve")]
+        public async Task<IActionResult> ResolveTicket(int supportId)
+        {
+            try
+            {
+                Console.WriteLine($"🔧 Resolving ticket {supportId}");
+
+                // Get current admin user ID
+                var currentUserId = User.FindFirst("id")?.Value;
+                if (string.IsNullOrEmpty(currentUserId))
+                {
+                    return Unauthorized("Admin user ID not found");
+                }
+
+                // Update all tickets with this supportId to resolved status
+                var tickets = await _context.Support
+                    .Where(s => s.SupportId == supportId)
+                    .ToListAsync();
+
+                if (!tickets.Any())
+                {
+                    return NotFound($"No tickets found with Support ID {supportId}");
+                }
+
+                foreach (var ticket in tickets)
+                {
+                    ticket.Status = "Resolved";
+                    ticket.ResolvedAt = DateTime.Now;
+                    ticket.ResolvedByUserId = int.Parse(currentUserId);
+                }
+
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"✅ Ticket {supportId} resolved successfully");
+
+                return Ok(new
+                {
+                    message = "Ticket resolved successfully",
+                    supportId = supportId,
+                    resolvedAt = DateTime.Now,
+                    resolvedBy = currentUserId
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error resolving ticket {supportId}: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("support-tickets/{supportId}/status")]
+        public async Task<IActionResult> GetTicketStatus(int supportId)
+        {
+            try
+            {
+                var tickets = await _context.Support
+                    .Include(s => s.ResolvedByUser)
+                    .Where(s => s.SupportId == supportId)
+                    .ToListAsync();
+
+                if (!tickets.Any())
+                {
+                    return NotFound($"No tickets found with Support ID {supportId}");
+                }
+
+                var mainTicket = tickets.OrderBy(t => t.CreatedAt).First();
+
+                return Ok(new
+                {
+                    supportId = supportId,
+                    status = mainTicket.Status,
+                    createdAt = mainTicket.CreatedAt,
+                    resolvedAt = mainTicket.ResolvedAt,
+                    resolvedBy = mainTicket.ResolvedByUser?.UserName,
+                    messageCount = tickets.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error getting ticket status {supportId}: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
         // Get All Users for Admin
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers(
@@ -459,22 +576,6 @@ namespace Vrooom.Controllers
             {
                 var tickets = await _supportService.getAllSupports();
                 return Ok(tickets);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
-        }
-
-        // Admin Reply to Support Ticket
-        [HttpPost("support-tickets/{supportId}/reply")]
-        public async Task<IActionResult> AdminReplyToTicket(int supportId, [FromBody] SupportDTO replyData)
-        {
-            try
-            {
-                replyData.supportId = supportId;
-                await _supportService.ReplySupport(replyData);
-                return Ok(new { message = "Reply sent successfully" });
             }
             catch (Exception ex)
             {

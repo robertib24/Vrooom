@@ -34,7 +34,9 @@ namespace Vrooom.Services.SupportServices
                     SupportId = await _supportRepository.getMaxID() + 1,
                     UserId = supportDTO.userId,
                     titlu = supportDTO.titlu,
-                    comentariu = supportDTO.comentariu
+                    comentariu = supportDTO.comentariu,
+                    Status = "Open",
+                    CreatedAt = DateTime.Now 
                 };
 
                 _logger.LogInformation("📝 Assigned Support ID {SupportId} to new ticket", support.SupportId);
@@ -56,16 +58,15 @@ namespace Vrooom.Services.SupportServices
             {
                 _logger.LogInformation("💬 Adding reply to Support {SupportId} from User {UserId}",
                     supportDTO.supportId, supportDTO.userId);
-                _logger.LogInformation("Reply title: '{Title}', Content: '{Content}'",
-                    supportDTO.titlu,
-                    supportDTO.comentariu.Length > 100 ? supportDTO.comentariu.Substring(0, 100) + "..." : supportDTO.comentariu);
 
                 var support = new Support
                 {
                     SupportId = supportDTO.supportId,
                     UserId = supportDTO.userId,
                     titlu = supportDTO.titlu,
-                    comentariu = supportDTO.comentariu
+                    comentariu = supportDTO.comentariu,
+                    Status = "InProgress", 
+                    CreatedAt = DateTime.Now
                 };
 
                 await _supportRepository.addSupport(support);
@@ -86,28 +87,24 @@ namespace Vrooom.Services.SupportServices
             {
                 _logger.LogInformation("📋 Retrieving all support tickets");
 
-                IEnumerable<SupportDTO> rez;
                 var s = await _supportRepository.listSupport();
 
                 _logger.LogInformation("🗂️ Found {Count} support records in database", s.Count());
 
-                rez = s.Select(sup => new SupportDTO
+                var rez = s.Select(sup => new SupportDTO
                 {
                     supportId = sup.SupportId,
                     userId = sup.UserId,
                     titlu = sup.titlu,
-                    comentariu = sup.comentariu
+                    comentariu = sup.comentariu,
+                    Status = sup.Status ?? "Open",
+                    CreatedAt = sup.CreatedAt,
+                    ResolvedAt = sup.ResolvedAt,
+                    ResolvedByUserId = sup.ResolvedByUserId
                 });
 
                 var resultList = rez.ToList();
                 _logger.LogInformation("📊 Returning {Count} support tickets", resultList.Count);
-
-                // Log sample of tickets for debugging
-                foreach (var ticket in resultList.Take(5))
-                {
-                    _logger.LogInformation("Sample ticket {SupportId}: '{Title}' from User {UserId}",
-                        ticket.supportId, ticket.titlu, ticket.userId);
-                }
 
                 return resultList;
             }
@@ -117,6 +114,25 @@ namespace Vrooom.Services.SupportServices
                 throw;
             }
         }
+
+        /* public async Task ResolveTicket(int supportId, int resolvedByUserId)
+        {
+            try
+            {
+                _logger.LogInformation("🔧 Resolving Support ID {SupportId} by User {UserId}",
+                    supportId, resolvedByUserId);
+
+                await _supportRepository.ResolveTicket(supportId, resolvedByUserId);
+
+                _logger.LogInformation("✅ Support ID {SupportId} resolved successfully", supportId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error resolving Support ID {SupportId}", supportId);
+                throw;
+            }
+        }
+        */
 
         public async Task<IEnumerable<SupportDTO>> getSupportByUserId(int userId)
         {
