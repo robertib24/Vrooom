@@ -486,6 +486,8 @@ namespace Vrooom.Services.UserServices
 
                 Console.WriteLine($"👤 User profile: {u.UserName}");
                 Console.WriteLine($"📧 User email: {u.Email}");
+                Console.WriteLine($"🎯 Loyalty Points: {u.puncteFidelitate}");
+                Console.WriteLine($"🚗 Vehicle Count: {nrPostari}");
 
                 return new SafeUserDTO()
                 {
@@ -497,7 +499,8 @@ namespace Vrooom.Services.UserServices
                     linkPozaProfil = u.pozaProfil,
                     dataNasterii = u.dataNasterii,
                     nrPostari = nrPostari,
-                    email = u.Email
+                    email = u.Email,
+                    puncteFidelitate = u.puncteFidelitate
                 };
             }
             catch (Exception ex) when (!(ex is NotFoundException))

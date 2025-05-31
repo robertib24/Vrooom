@@ -12,7 +12,7 @@
 
         public string linkPozaProfil { get; set; }
         public DateTime dataNasterii { get; set; }
-
+        public int puncteFidelitate { get; set; }
         public int nrPostari { get; set; }
     }
 }

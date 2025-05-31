@@ -166,7 +166,6 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         console.warn('⚠️ getUserDetails failed:', error);
-        // Fallback logic...
       }
     });
 }

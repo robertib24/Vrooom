@@ -22,27 +22,22 @@ namespace Vrooom.Services.PostareServices
 
         public async Task<int> AddPostare(PostareDTO postareDTO)
         {
-            int idx;
-            try
-            {
-                idx = await _postareRepository.CountPostare() + 1;
-            }
-            catch
-            {
-                idx = 1;
-            }
             string aux;
             double lat, longitudine;
             try
             {
-                Console.WriteLine(postareDTO.culoare);
+                Console.WriteLine($"🎨 Checking color: {postareDTO.culoare}");
                 aux = await _googleService.check(postareDTO.culoare);
+
+                Console.WriteLine($"📍 Getting coordinates for: {postareDTO.locatie}");
                 (lat, longitudine) = await _googleService.GetCoordinatesAsync(postareDTO.locatie);
             }
             catch (Exception e)
             {
+                Console.WriteLine($"❌ Error in Google services: {e.Message}");
                 throw new Exception(e.Message);
             }
+
             var postare = new Postare()
             {
                 UserId = postareDTO.userId,
@@ -62,16 +57,24 @@ namespace Vrooom.Services.PostareServices
                 latitudine = lat,
                 longitudine = longitudine,
                 adresa_formala = await _googleService.getLocationFromCoordinates(lat, longitudine)
-
             };
+
+            Console.WriteLine($"💾 Saving vehicle to database...");
             await _postareRepository.addPostare(postare);
 
+            int generatedId = postare.PostareId;
+            Console.WriteLine($"🆔 Generated vehicle ID: {generatedId}");
+
+            Console.WriteLine($"📸 Uploading {postareDTO.imagini.Count} images to S3...");
             for (int i = 0; i < postareDTO.imagini.Count; i++)
             {
-                var fileName = $"post{idx}/{postareDTO.imagini[i].FileName}";
+                var fileName = $"post{generatedId}/{i + 1}.jpg";
                 await _s3Service.UploadFileAsync(fileName, postareDTO.imagini[i]);
+                Console.WriteLine($"✅ Uploaded image {i + 1}: {fileName}");
             }
-            return idx;
+
+            Console.WriteLine($"🎉 Vehicle created successfully with ID: {generatedId}");
+            return generatedId;
         }
 
         public async Task DeletePostare(int id)
