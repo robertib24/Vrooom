@@ -10,6 +10,26 @@
     </div>
   </div>
 
+  <!-- Cache Status (Development Only) -->
+  @if (shouldShowCacheInfo()) {
+    <div class="cache-status-section">
+      <mat-card class="cache-status-card">
+        <mat-card-content>
+          <div class="cache-status-content">
+            <mat-icon [color]="getCacheStatusColor()">cached</mat-icon>
+            <span class="cache-text">{{ getCacheStatusText() }}</span>
+            <button mat-icon-button (click)="debugCacheStatus()" matTooltip="Debug Cache">
+              <mat-icon>bug_report</mat-icon>
+            </button>
+            <button mat-icon-button (click)="forceRefreshWithFeedback()" matTooltip="Force Refresh">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+
   <!-- Filters Section -->
   <div class="filters-section">
     <mat-card class="filters-card">
@@ -26,6 +46,10 @@
           <button mat-button color="accent" (click)="clearFilters()">
             <mat-icon>clear</mat-icon>
             Clear All
+          </button>
+          <button mat-button color="primary" (click)="refreshVehicles()" matTooltip="Refresh vehicles">
+            <mat-icon>refresh</mat-icon>
+            Refresh
           </button>
         </div>
       </div>
@@ -128,6 +152,11 @@
           for "{{ filterForm.get('searchTerm')?.value }}"
         </span>
       }
+      @if (!loading && allVehicles.length > 0) {
+        <span class="data-info">
+          • {{ allVehicles.length }} total vehicles loaded
+        </span>
+      }
     </div>
   </div>
 
@@ -149,10 +178,16 @@
             <div>
               <h3>Oops! Something went wrong</h3>
               <p>We couldn't load the vehicles. Please try again.</p>
-              <button mat-raised-button color="primary" (click)="loadVehicles()">
-                <mat-icon>refresh</mat-icon>
-                Retry
-              </button>
+              <div class="error-actions">
+                <button mat-raised-button color="primary" (click)="loadVehicles()">
+                  <mat-icon>refresh</mat-icon>
+                  Retry
+                </button>
+                <button mat-button (click)="refreshVehicles()">
+                  <mat-icon>cached</mat-icon>
+                  Force Refresh
+                </button>
+              </div>
             </div>
           </div>
         </mat-card-content>
@@ -161,18 +196,26 @@
   }
 
   <!-- Empty State -->
-  @else if (totalVehicles === 0) {
+  @else if (totalVehicles === 0 && !loading) {
     <div class="empty-container">
       <mat-card class="empty-card">
         <mat-card-content>
           <div class="empty-content">
             <mat-icon class="empty-icon">search_off</mat-icon>
             <h3>No vehicles found</h3>
-            <p>Try adjusting your search criteria or clearing the filters.</p>
-            <button mat-raised-button color="accent" (click)="clearFilters()">
-              <mat-icon>clear</mat-icon>
-              Clear Filters
-            </button>
+            @if (allVehicles.length === 0) {
+              <p>No vehicles are currently available. Please check back later.</p>
+              <button mat-raised-button color="primary" (click)="refreshVehicles()">
+                <mat-icon>refresh</mat-icon>
+                Refresh Vehicles
+              </button>
+            } @else {
+              <p>Try adjusting your search criteria or clearing the filters.</p>
+              <button mat-raised-button color="accent" (click)="clearFilters()">
+                <mat-icon>clear</mat-icon>
+                Clear Filters
+              </button>
+            }
           </div>
         </mat-card-content>
       </mat-card>

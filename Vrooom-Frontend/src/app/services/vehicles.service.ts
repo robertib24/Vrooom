@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, forkJoin, of } from 'rxjs';
+import { Observable, BehaviorSubject, forkJoin, of, tap } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -46,8 +46,14 @@ export interface Review {
   providedIn: 'root',
 })
 export class VehiclesService {
+  // Cache management with BehaviorSubject
   private vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
   public vehicles$ = this.vehiclesSubject.asObservable();
+  
+  // Cache state tracking
+  private vehiclesCacheLoaded = false;
+  private lastCacheRefresh = 0;
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   private readonly S3_BUCKET_URL = 'https://vrooom1224.s3.amazonaws.com';
   private readonly PLACEHOLDER_IMAGE = `${this.S3_BUCKET_URL}/placeholder.png`;
@@ -58,6 +64,41 @@ export class VehiclesService {
     private tokenService: TokenService
   ) {}
 
+  /**
+   * Get all vehicles with smart caching
+   */
+  getVehicles(forceRefresh: boolean = false): Observable<Vehicle[]> {
+    const now = Date.now();
+    const cacheExpired = (now - this.lastCacheRefresh) > this.CACHE_DURATION;
+    
+    // Return cached data if available and not expired, unless force refresh
+    if (!forceRefresh && this.vehiclesCacheLoaded && !cacheExpired) {
+      console.log('🔄 Returning cached vehicles data');
+      return this.vehicles$;
+    }
+
+    console.log('🌐 Fetching vehicles from API...');
+    return this.apiService.get<Vehicle[]>('Postare').pipe(
+      tap(vehicles => {
+        console.log(`✅ Loaded ${vehicles.length} vehicles from API`);
+        this.vehiclesSubject.next(vehicles);
+        this.vehiclesCacheLoaded = true;
+        this.lastCacheRefresh = now;
+      })
+    );
+  }
+
+  /**
+   * Force refresh vehicles data
+   */
+  refreshVehicles(): Observable<Vehicle[]> {
+    console.log('🔄 Force refreshing vehicles data...');
+    return this.getVehicles(true);
+  }
+
+  /**
+   * Add vehicle and immediately refresh cache
+   */
   addVehicle(vehicleData: any, images: File[]): Observable<number> {
     const formData = new FormData();
     
@@ -84,9 +125,171 @@ export class VehiclesService {
       formData.append('imagini', image, fileName);
     });
 
-    return this.apiService.postFormData<number>('Postare', formData);
+    return this.apiService.postFormData<number>('Postare', formData).pipe(
+      tap(vehicleId => {
+        console.log(`✅ Vehicle created with ID: ${vehicleId}`);
+        // Immediately refresh vehicles cache
+        this.refreshVehiclesCache();
+      })
+    );
   }
 
+  /**
+   * Delete vehicle and refresh cache
+   */
+  deleteVehicle(id: number): Observable<any> {
+    return this.apiService.delete(`Postare/${id}`).pipe(
+      tap(() => {
+        console.log(`🗑️ Vehicle ${id} deleted, refreshing cache...`);
+        this.refreshVehiclesCache();
+      })
+    );
+  }
+
+  /**
+   * Update vehicle and refresh cache
+   */
+  updateVehicle(id: number, vehicleData: any): Observable<any> {
+    return this.apiService.put(`Postare/${id}`, vehicleData).pipe(
+      tap(() => {
+        console.log(`✏️ Vehicle ${id} updated, refreshing cache...`);
+        this.refreshVehiclesCache();
+      })
+    );
+  }
+
+  /**
+   * Internal method to refresh cache after mutations
+   */
+  private refreshVehiclesCache(): void {
+    setTimeout(() => {
+      this.getVehicles(true).subscribe({
+        next: () => console.log('🔄 Vehicle cache refreshed successfully'),
+        error: (error) => console.error('❌ Failed to refresh vehicle cache:', error)
+      });
+    }, 1000); // Small delay to ensure backend has processed the change
+  }
+
+  /**
+   * Get cached vehicles (synchronous access to current cache)
+   */
+  getCachedVehicles(): Vehicle[] {
+    return this.vehiclesSubject.value;
+  }
+
+  /**
+   * Clear cache
+   */
+  clearCache(): void {
+    console.log('🧹 Clearing vehicles cache');
+    this.vehiclesCacheLoaded = false;
+    this.lastCacheRefresh = 0;
+    this.vehiclesSubject.next([]);
+  }
+
+  /**
+   * Get vehicle by ID with cache fallback
+   */
+  getVehicleById(id: number): Observable<Vehicle> {
+    // First try to find in cache
+    const cachedVehicle = this.getCachedVehicles().find(v => v.id === id);
+    if (cachedVehicle) {
+      console.log(`🎯 Found vehicle ${id} in cache`);
+      return of(cachedVehicle);
+    }
+
+    // If not in cache, fetch from API
+    console.log(`🌐 Fetching vehicle ${id} from API`);
+    return this.apiService.get<Vehicle>(`Postare/carid/${id}`);
+  }
+
+  /**
+   * Get vehicles by user ID
+   */
+  getVehiclesByUserId(userId: number): Observable<Vehicle[]> {
+    return this.apiService.get<Vehicle[]>(`Postare/userId?userId=${userId}`);
+  }
+
+  /**
+   * Get current user's vehicles
+   */
+  getUserVehicles(): Observable<Vehicle[]> {
+    const userId = this.tokenService.getUserId();
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+    return this.getVehiclesByUserId(parseInt(userId));
+  }
+
+  // Search and filter methods (updated to use cached data when possible)
+  getVehiclesByPrice(minPrice: number, maxPrice: number): Observable<Vehicle[]> {
+    // Try to filter from cache first
+    const cached = this.getCachedVehicles();
+    if (cached.length > 0) {
+      const filtered = cached.filter(v => v.pret >= minPrice && v.pret <= maxPrice);
+      return of(filtered);
+    }
+    
+    return this.apiService.get<Vehicle[]>(`Postare/pret/${minPrice}/${maxPrice}`);
+  }
+
+  getVehiclesByKm(minKm: number, maxKm: number): Observable<Vehicle[]> {
+    const cached = this.getCachedVehicles();
+    if (cached.length > 0) {
+      const filtered = cached.filter(v => v.kilometraj >= minKm && v.kilometraj <= maxKm);
+      return of(filtered);
+    }
+    
+    return this.apiService.get<Vehicle[]>(`Postare/km/${minKm}/${maxKm}`);
+  }
+
+  getVehiclesByYear(minYear: number, maxYear: number): Observable<Vehicle[]> {
+    const cached = this.getCachedVehicles();
+    if (cached.length > 0) {
+      const filtered = cached.filter(v => v.anFabricatie >= minYear && v.anFabricatie <= maxYear);
+      return of(filtered);
+    }
+    
+    return this.apiService.get<Vehicle[]>(`Postare/an/${minYear}/${maxYear}`);
+  }
+
+  getVehiclesByMake(make: string): Observable<Vehicle[]> {
+    const cached = this.getCachedVehicles();
+    if (cached.length > 0) {
+      const filtered = cached.filter(v => 
+        v.firma.toLowerCase().includes(make.toLowerCase())
+      );
+      return of(filtered);
+    }
+    
+    return this.apiService.get<Vehicle[]>(`Postare/firma/${make}`);
+  }
+
+  getVehiclesByModel(model: string): Observable<Vehicle[]> {
+    const cached = this.getCachedVehicles();
+    if (cached.length > 0) {
+      const filtered = cached.filter(v => 
+        v.model.toLowerCase().includes(model.toLowerCase())
+      );
+      return of(filtered);
+    }
+    
+    return this.apiService.get<Vehicle[]>(`Postare/model/${model}`);
+  }
+
+  getVehiclesByTitle(title: string): Observable<Vehicle[]> {
+    const cached = this.getCachedVehicles();
+    if (cached.length > 0) {
+      const filtered = cached.filter(v => 
+        v.titlu.toLowerCase().includes(title.toLowerCase())
+      );
+      return of(filtered);
+    }
+    
+    return this.apiService.get<Vehicle[]>(`Postare/titlu/${title}`);
+  }
+
+  // Image handling methods
   getVehicleImageUrl(vehicleId: number, imageIndex: number = 1): string {
     return `${this.S3_BUCKET_URL}/post${vehicleId}/${imageIndex}.jpg`;
   }
@@ -99,95 +302,11 @@ export class VehiclesService {
     return images;
   }
 
-  getVehicleImagesWithFallback(vehicleId: number, maxImages: number = 10): string[] {
-    const images: string[] = [];
-    const extensions = ['jpg', 'jpeg', 'png', 'webp'];
-    
-    for (let i = 1; i <= maxImages; i++) {
-      const imageUrl = `${this.S3_BUCKET_URL}/post${vehicleId}/${i}.jpg`;
-      images.push(imageUrl);
-    }
-    
-    return images;
-  }
-
-  async checkImageExists(url: string): Promise<boolean> {
-    try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }
-
   getPlaceholderImageUrl(): string {
     return this.PLACEHOLDER_IMAGE;
   }
 
-  private getFileExtension(filename: string): string {
-    return filename.split('.').pop()?.toLowerCase() || 'jpg';
-  }
-
-  private formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  getVehicles(): Observable<Vehicle[]> {
-    return this.apiService.get<Vehicle[]>('Postare');
-  }
-
-  getVehicleById(id: number): Observable<Vehicle> {
-    return this.apiService.get<Vehicle>(`Postare/carid/${id}`);
-  }
-
-  getVehiclesByUserId(userId: number): Observable<Vehicle[]> {
-    return this.apiService.get<Vehicle[]>(`Postare/userId?userId=${userId}`);
-  }
-
-  getUserVehicles(): Observable<Vehicle[]> {
-    const userId = this.tokenService.getUserId();
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
-    return this.getVehiclesByUserId(parseInt(userId));
-  }
-
-  deleteVehicle(id: number): Observable<any> {
-    return this.apiService.delete(`Postare/${id}`);
-  }
-
-  updateVehicle(id: number, vehicleData: any): Observable<any> {
-    return this.apiService.put(`Postare/${id}`, vehicleData);
-  }
-
-  getVehiclesByPrice(minPrice: number, maxPrice: number): Observable<Vehicle[]> {
-    return this.apiService.get<Vehicle[]>(`Postare/pret/${minPrice}/${maxPrice}`);
-  }
-
-  getVehiclesByKm(minKm: number, maxKm: number): Observable<Vehicle[]> {
-    return this.apiService.get<Vehicle[]>(`Postare/km/${minKm}/${maxKm}`);
-  }
-
-  getVehiclesByYear(minYear: number, maxYear: number): Observable<Vehicle[]> {
-    return this.apiService.get<Vehicle[]>(`Postare/an/${minYear}/${maxYear}`);
-  }
-
-  getVehiclesByMake(make: string): Observable<Vehicle[]> {
-    return this.apiService.get<Vehicle[]>(`Postare/firma/${make}`);
-  }
-
-  getVehiclesByModel(model: string): Observable<Vehicle[]> {
-    return this.apiService.get<Vehicle[]>(`Postare/model/${model}`);
-  }
-
-  getVehiclesByTitle(title: string): Observable<Vehicle[]> {
-    return this.apiService.get<Vehicle[]>(`Postare/titlu/${title}`);
-  }
-
+  // AI and enhancement methods
   searchVehiclesWithAI(query: string): Observable<Vehicle[]> {
     return this.apiService.post<Vehicle[]>('OpenAI/getCars', { prompt: query });
   }
@@ -196,39 +315,39 @@ export class VehiclesService {
     return this.apiService.post<{prompt: string}>('OpenAI/getdescription', { prompt: description });
   }
 
+  // Booking methods
   bookVehicle(vehicleId: number, bookingData: { start: Date, end: Date }): Observable<any> {
-  const userId = this.tokenService.getUserId();
-  if (!userId) {
-    throw new Error('User not authenticated');
+    const userId = this.tokenService.getUserId();
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    const startDate = new Date(bookingData.start);
+    const endDate = new Date(bookingData.end);
+    
+    const fixedStartDate = new Date(
+      startDate.getFullYear(), 
+      startDate.getMonth(), 
+      startDate.getDate(), 
+      12, 0, 0
+    );
+    
+    const fixedEndDate = new Date(
+      endDate.getFullYear(), 
+      endDate.getMonth(), 
+      endDate.getDate(), 
+      12, 0, 0
+    );
+
+    const booking: Booking = {
+      userId: parseInt(userId),
+      postareId: vehicleId,
+      dataStart: fixedStartDate,
+      dataStop: fixedEndDate
+    };
+
+    return this.apiService.post('Chirie', booking);
   }
-
-  // FIX: Create proper dates for backend
-  const startDate = new Date(bookingData.start);
-  const endDate = new Date(bookingData.end);
-  
-  const fixedStartDate = new Date(
-    startDate.getFullYear(), 
-    startDate.getMonth(), 
-    startDate.getDate(), 
-    12, 0, 0
-  );
-  
-  const fixedEndDate = new Date(
-    endDate.getFullYear(), 
-    endDate.getMonth(), 
-    endDate.getDate(), 
-    12, 0, 0
-  );
-
-  const booking: Booking = {
-    userId: parseInt(userId),
-    postareId: vehicleId,
-    dataStart: fixedStartDate,
-    dataStop: fixedEndDate
-  };
-
-  return this.apiService.post('Chirie', booking);
-}
 
   getUserBookings(): Observable<Booking[]> {
     const userId = this.tokenService.getUserId();
@@ -250,8 +369,8 @@ export class VehiclesService {
     return this.apiService.post('Chirie/rentConfirmationEmail', booking);
   }
 
+  // Statistics and analytics
   getVehicleViews(vehicleId: number): Observable<number> {
-    // momentan e random
     return of(Math.floor(Math.random() * 90) + 10);
   }
 
@@ -310,6 +429,7 @@ export class VehiclesService {
     return this.apiService.get<Review[]>('Review/GetReviewsByRatingHighToLow');
   }
 
+  // Utility methods
   showBookingSuccess() {
     this.snackBar.openFromComponent(SnackbarComponent, {
       verticalPosition: 'top',
@@ -331,16 +451,8 @@ export class VehiclesService {
     });
   }
 
-  refreshVehicles() {
-    this.getVehicles().subscribe({
-      next: (vehicles) => {
-        this.vehiclesSubject.next(vehicles);
-      },
-      error: (error) => {
-        console.error('Error refreshing vehicles:', error);
-        this.showErrorMessage('Failed to refresh vehicles');
-      }
-    });
+  private getFileExtension(filename: string): string {
+    return filename.split('.').pop()?.toLowerCase() || 'jpg';
   }
 
   debugVehicleImages(vehicleId: number, imageCount: number = 5) {
@@ -351,5 +463,26 @@ export class VehiclesService {
     }
     console.log(`Placeholder: ${this.PLACEHOLDER_IMAGE}`);
     console.log('================================');
+  }
+
+  /**
+   * Cache status methods
+   */
+  isCacheLoaded(): boolean {
+    return this.vehiclesCacheLoaded;
+  }
+
+  getCacheAge(): number {
+    return Date.now() - this.lastCacheRefresh;
+  }
+
+  getCacheStatus(): {loaded: boolean, age: number, expired: boolean, count: number} {
+    const age = this.getCacheAge();
+    return {
+      loaded: this.vehiclesCacheLoaded,
+      age: age,
+      expired: age > this.CACHE_DURATION,
+      count: this.getCachedVehicles().length
+    };
   }
 }
