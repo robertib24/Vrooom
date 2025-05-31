@@ -309,6 +309,8 @@ namespace Vrooom.Services.UserServices
                     throw new NotFoundException("User not found");
                 }
 
+                await _s3Service.UploadFileAsync(username + "_" + document + ".png", file);
+
                 if (document == "permis")
                 {
                     user.permis = _s3Service.GetFileUrl(username + "_permis.png");
@@ -322,10 +324,16 @@ namespace Vrooom.Services.UserServices
                     throw new WrongDetailsException("Document type does not exist");
                 }
 
-                await _userManager.UpdateAsync(user);
-                await _s3Service.UploadFileAsync(username + "_" + document + ".png", file);
+                var result = await _userManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                {
+                    var errors = result.Errors.Select(e => e.Description);
+                    throw new Exception($"Failed to update user: {string.Join(", ", errors)}");
+                }
 
-                _logger.LogInformation($"✅ Document {document} uploaded for user: {username}");
+                _logger.LogInformation($"✅ Document {document} uploaded and DB updated for user: {username}");
+
+                await checkRoleUpdates(username);
             }
             catch (Exception ex) when (!(ex is NotFoundException || ex is WrongDetailsException))
             {
@@ -436,22 +444,25 @@ namespace Vrooom.Services.UserServices
                 Console.WriteLine($"👤 User found: {user.UserName}");
                 Console.WriteLine($"📧 User email: {user.Email}");
                 Console.WriteLine($"📱 User phone: {user.PhoneNumber}");
+                Console.WriteLine($"📄 User permis: {user.permis}");
+                Console.WriteLine($"📄 User carteIdentitate: {user.carteIdentitate}");
 
                 var userInfo = new UserDTO
                 {
                     username = user.UserName,
-                    email = user.Email, // Asigură-te că email-ul este inclus
+                    email = user.Email,
                     nume = user.nume,
                     prenume = user.prenume,
                     nrTelefon = user.PhoneNumber,
-                    permis = user.permis != "N/A",
-                    carteIdentitate = user.carteIdentitate != "N/A",
+        
+                    permis = !string.IsNullOrEmpty(user.permis) && user.permis != "N/A",
+                    carteIdentitate = !string.IsNullOrEmpty(user.carteIdentitate) && user.carteIdentitate != "N/A",
                     dataNasterii = user.dataNasterii,
                     linkPozaProfil = user.pozaProfil,
                     puncteFidelitate = user.puncteFidelitate
                 };
 
-                Console.WriteLine($"✅ Returning user details with email: {userInfo.email}");
+                Console.WriteLine($"✅ Returning user details - permis: {userInfo.permis}, carteIdentitate: {userInfo.carteIdentitate}");
                 return userInfo;
             }
             catch (Exception ex) when (!(ex is NotFoundException))

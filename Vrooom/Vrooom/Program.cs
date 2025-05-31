@@ -203,7 +203,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    // Log configuration information in development
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
     logger.LogInformation("🚀 Application starting in Development mode");
     logger.LogInformation($"📧 SendGrid API Key configured: {!string.IsNullOrEmpty(builder.Configuration.GetSection("SendGridSettings").GetValue<string>("SendGridKey"))}");
@@ -211,7 +210,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthentication(); // Important: Authentication must come before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

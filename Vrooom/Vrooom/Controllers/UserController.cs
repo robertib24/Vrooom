@@ -367,18 +367,28 @@ namespace Vrooom.Controllers
             }
         }
 
-        [HttpPost("getUserDetails")]
+        [HttpGet("getUserDetails")]
         [AllowAnonymous]
-        public async Task<IActionResult> getUserDetails(string username)
+        public async Task<IActionResult> getUserDetails(string username) // username ca query parameter
         {
             try
             {
+                if (string.IsNullOrEmpty(username))
+                {
+                    return BadRequest(new { error = "Username is required" });
+                }
+
                 var result = await _userService.getUserDetails(username);
                 return Ok(result);
             }
             catch (NotFoundException e)
             {
                 return NotFound(e.Message);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"❌ Error in getUserDetails: {e.Message}");
+                return StatusCode(500, new { error = "Internal server error", details = e.Message });
             }
         }
 
@@ -463,7 +473,6 @@ namespace Vrooom.Controllers
             }
         }
 
-        // FIXED: Document Upload Endpoint  
         [HttpPost("uploadDocument")]
         [Authorize]
         [Consumes("multipart/form-data")]
@@ -473,7 +482,6 @@ namespace Vrooom.Controllers
             {
                 Console.WriteLine($"🔄 Uploading document {document} for user: {username}");
 
-                // Get the file from the request
                 var file = Request.Form.Files.FirstOrDefault();
 
                 if (file == null || file.Length == 0)
@@ -500,12 +508,18 @@ namespace Vrooom.Controllers
                 await _userService.uploadDocument(username, document, file);
 
                 Console.WriteLine($"✅ Document {document} uploaded successfully for user: {username}");
-                return Ok(new
+
+                var user = await _userManager.FindByNameAsync(username);
+                var documentStatus = new
                 {
                     message = "Document uploaded successfully",
                     documentType = document,
-                    url = $"https://vrooom1224.s3.eu-central-1.amazonaws.com/{username}_{document}.png"
-                });
+                    url = $"https://vrooom1224.s3.eu-central-1.amazonaws.com/{username}_{document}.png",
+                    uploaded = true,
+                    verified = true
+                };
+
+                return Ok(documentStatus);
             }
             catch (Exception e)
             {

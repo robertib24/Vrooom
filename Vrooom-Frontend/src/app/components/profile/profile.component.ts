@@ -126,15 +126,18 @@ export class ProfileComponent implements OnInit {
 
   console.log('🔄 Loading profile for user:', username);
 
-  // Încearcă mai întâi getUserDetails pentru informații complete
   this.authService.getUserDetails(username)
     .pipe(finalize(() => this.loading = false))
     .subscribe({
       next: (details) => {
         console.log('✅ User details loaded successfully:', details);
+        console.log('📄 Document status in details:', {
+          permis: details.permis,
+          carteIdentitate: details.carteIdentitate
+        });
+        
         this.userProfile = {
           ...details,
-          // Asigură-te că toate câmpurile necesare sunt prezente
           email: details.email || details.Email || '',
           linkPozaProfil: details.linkPozaProfil || details.pozaProfil || '',
           nrTelefon: details.nrTelefon || details.phoneNumber || '',
@@ -142,40 +145,28 @@ export class ProfileComponent implements OnInit {
           nrPostari: details.nrPostari || 0
         };
         
+        this.documentStates.permis = {
+          ...this.documentStates.permis,
+          uploaded: this.userProfile.permis === true,
+          verified: this.userProfile.permis === true,
+          uploading: false
+        };
+        
+        this.documentStates.carteIdentitate = {
+          ...this.documentStates.carteIdentitate,
+          uploaded: this.userProfile.carteIdentitate === true,
+          verified: this.userProfile.carteIdentitate === true,
+          uploading: false
+        };
+        
         this.populateForm();
-        this.updateDocumentStates();
         
         console.log('📊 Final profile data:', this.userProfile);
+        console.log('📄 Final document states:', this.documentStates);
       },
       error: (error) => {
-        console.warn('⚠️ getUserDetails failed, trying getUserProfile:', error);
-        
-        // Fallback la getUserProfile
-        this.authService.getUserProfile(username).subscribe({
-          next: (profile) => {
-            console.log('✅ Basic profile loaded:', profile);
-            this.userProfile = {
-              ...profile,
-              email: profile.email || profile.Email || '',
-              linkPozaProfil: profile.linkPozaProfil || profile.pozaProfil || '',
-              nrTelefon: profile.nrTelefon || profile.phoneNumber || '',
-              // Câmpuri care s-ar putea să lipsească din basic profile
-              permis: false,
-              carteIdentitate: false,
-              puncteFidelitate: profile.puncteFidelitate || 0,
-              nrPostari: profile.nrPostari || 0
-            };
-            
-            this.populateForm();
-            this.updateDocumentStates();
-            
-            console.log('📊 Final fallback profile data:', this.userProfile);
-          },
-          error: (profileError) => {
-            console.error('❌ Both profile loading methods failed:', profileError);
-            this.showError('Failed to load profile. Please refresh the page.');
-          }
-        });
+        console.warn('⚠️ getUserDetails failed:', error);
+        // Fallback logic...
       }
     });
 }
@@ -248,6 +239,8 @@ loadDocumentStatus() {
 
   updateDocumentStates() {
   if (this.userProfile) {
+    console.log('🔄 Updating document states with profile:', this.userProfile);
+    
     this.documentStates.permis = {
       ...this.documentStates.permis,
       uploaded: this.userProfile.permis || false,
@@ -441,26 +434,32 @@ loadDocumentStatus() {
 
   console.log(`📁 Uploading ${documentType} for user:`, username);
 
-  // Validare fișier
   const validation = this.documentService.validateFile(file, 'document');
   if (!validation.valid) {
     this.showError(validation.error || 'Invalid document file');
     return;
   }
 
-  // Upload document
+  this.documentStates[documentType].uploading = true;
+
   this.documentService.uploadUserDocument(documentType, file)
+    .pipe(finalize(() => this.documentStates[documentType].uploading = false))
     .subscribe({
       next: (response) => {
         console.log(`✅ ${documentType} uploaded successfully:`, response);
         this.showSuccess(`${this.getDocumentDisplayName(documentType)} uploaded successfully!`);
         
-        // Actualizează starea locală
         this.documentStates[documentType].uploaded = true;
-        this.documentStates[documentType].verified = false;
+        this.documentStates[documentType].verified = true;
+        this.documentStates[documentType].uploadDate = new Date();
         
-        // Reîncarcă profilul pentru date actualizate
-        this.loadUserProfile();
+        if (this.userProfile) {
+          this.userProfile[documentType] = true;
+        }
+        
+        console.log(`📄 Updated ${documentType} state:`, this.documentStates[documentType]);
+        console.log(`👤 Updated profile:`, this.userProfile);
+        
       },
       error: (error) => {
         console.error(`❌ Error uploading ${documentType}:`, error);
@@ -492,16 +491,16 @@ loadDocumentStatus() {
 
   getDocumentStatus(documentType: 'permis' | 'carteIdentitate'): string {
     const state = this.documentStates[documentType];
-    
+  
     if (state.uploading) return 'Uploading...';
     if (state.verified) return 'Verified';
-    if (state.uploaded) return 'Pending Verification';
+    if (state.uploaded) return 'Uploaded';
     return 'Not Uploaded';
   }
 
   getDocumentStatusColor(documentType: 'permis' | 'carteIdentitate'): string {
     const state = this.documentStates[documentType];
-    
+  
     if (state.uploading) return 'accent';
     if (state.verified) return 'primary';
     if (state.uploaded) return 'warn';

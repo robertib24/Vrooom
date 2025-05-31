@@ -221,104 +221,125 @@
           </mat-tab>
 
           <!-- Documents Tab -->
-          <mat-tab label="Documents">
-            <div class="tab-content">
-              <div class="documents-section">
-                <h3>Document Verification</h3>
-                <p class="documents-description">
-                  Upload your documents to unlock additional features and become a verified user.
-                </p>
+          <!-- În profile.component.html, în Documents Tab -->
+<mat-tab label="Documents">
+  <div class="tab-content">
+    <div class="documents-section">
+      <h3>Document Verification</h3>
+      <p class="documents-description">
+        Upload your documents to unlock additional features and become a verified user.
+      </p>
 
-                <div class="documents-grid">
-                  <mat-card class="document-card">
-                    <mat-card-header>
-                      <mat-icon mat-card-avatar>drive_eta</mat-icon>
-                      <mat-card-title>Driver's License</mat-card-title>
-                      <mat-card-subtitle>Required to rent vehicles</mat-card-subtitle>
-                    </mat-card-header>
-                    
-                    <mat-card-content>
-                      <div class="document-status">
-                        <mat-chip [color]="userProfile.permis ? 'primary' : 'accent'">
-                          <mat-icon>{{ userProfile.permis ? 'verified' : 'upload_file' }}</mat-icon>
-                          {{ userProfile.permis ? 'Uploaded' : 'Not Uploaded' }}
-                        </mat-chip>
-                      </div>
-                    </mat-card-content>
-                    
-                    <mat-card-actions>
-                      <input 
-                        type="file" 
-                        #permisFile 
-                        (change)="uploadDocument('permis', $event)"
-                        accept="image/*,.pdf" 
-                        style="display: none;">
-                      
-                      <button 
-                        mat-button 
-                        color="primary" 
-                        (click)="permisFile.click()">
-                        <mat-icon>upload_file</mat-icon>
-                        {{ userProfile.permis ? 'Replace' : 'Upload' }}
-                      </button>
-
-                      @if (userProfile.permis) {
-                        <button 
-                          mat-button 
-                          (click)="viewDocument('permis')">
-                          <mat-icon>visibility</mat-icon>
-                          View
-                        </button>
-                      }
-                    </mat-card-actions>
-                  </mat-card>
-
-                  <mat-card class="document-card">
-                    <mat-card-header>
-                      <mat-icon mat-card-avatar>badge</mat-icon>
-                      <mat-card-title>ID Card</mat-card-title>
-                      <mat-card-subtitle>Required to list vehicles</mat-card-subtitle>
-                    </mat-card-header>
-                    
-                    <mat-card-content>
-                      <div class="document-status">
-                        <mat-chip [color]="userProfile.carteIdentitate ? 'primary' : 'accent'">
-                          <mat-icon>{{ userProfile.carteIdentitate ? 'verified' : 'upload_file' }}</mat-icon>
-                          {{ userProfile.carteIdentitate ? 'Uploaded' : 'Not Uploaded' }}
-                        </mat-chip>
-                      </div>
-                    </mat-card-content>
-                    
-                    <mat-card-actions>
-                      <input 
-                        type="file" 
-                        #idFile 
-                        (change)="uploadDocument('carteIdentitate', $event)"
-                        accept="image/*,.pdf" 
-                        style="display: none;">
-                      
-                      <button 
-                        mat-button 
-                        color="primary" 
-                        (click)="idFile.click()">
-                        <mat-icon>upload_file</mat-icon>
-                        {{ userProfile.carteIdentitate ? 'Replace' : 'Upload' }}
-                      </button>
-
-                      @if (userProfile.carteIdentitate) {
-                        <button 
-                          mat-button 
-                          (click)="viewDocument('carteIdentitate')">
-                          <mat-icon>visibility</mat-icon>
-                          View
-                        </button>
-                      }
-                    </mat-card-actions>
-                  </mat-card>
-                </div>
-              </div>
+      <div class="documents-grid">
+        <!-- Driver's License Card - actualizează și pe aceasta -->
+        <mat-card class="document-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>drive_eta</mat-icon>
+            <mat-card-title>Driver's License</mat-card-title>
+            <mat-card-subtitle>Required to rent vehicles</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="document-status">
+              <mat-chip [color]="getDocumentStatusColor('permis')">
+                @if (documentStates.permis.uploading) {
+                  <mat-spinner diameter="16"></mat-spinner>
+                } @else {
+                  <mat-icon>{{ documentStates.permis.uploaded ? 'verified' : 'upload_file' }}</mat-icon>
+                }
+                {{ getDocumentStatus('permis') }}
+              </mat-chip>
             </div>
-          </mat-tab>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <input 
+              type="file" 
+              #permisFile 
+              (change)="uploadDocument('permis', $event)"
+              accept="image/*,.pdf" 
+              style="display: none;">
+            
+            <button 
+              mat-button 
+              color="primary" 
+              (click)="permisFile.click()"
+              [disabled]="documentStates.permis.uploading">
+              @if (documentStates.permis.uploading) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <mat-icon>upload_file</mat-icon>
+              }
+              {{ documentStates.permis.uploading ? 'Uploading...' : (documentStates.permis.uploaded ? 'Replace' : 'Upload') }}
+            </button>
+
+            @if (documentStates.permis.uploaded) {
+              <button 
+                mat-button 
+                (click)="viewDocument('permis')">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
+            }
+          </mat-card-actions>
+        </mat-card>
+
+        <!-- ID Card - ÎNLOCUIEȘTE CODUL EXISTENT CU ACESTA -->
+        <mat-card class="document-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>badge</mat-icon>
+            <mat-card-title>ID Card</mat-card-title>
+            <mat-card-subtitle>Required to list vehicles</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="document-status">
+              <mat-chip [color]="getDocumentStatusColor('carteIdentitate')">
+                @if (documentStates.carteIdentitate.uploading) {
+                  <mat-spinner diameter="16"></mat-spinner>
+                } @else {
+                  <mat-icon>{{ documentStates.carteIdentitate.uploaded ? 'verified' : 'upload_file' }}</mat-icon>
+                }
+                {{ getDocumentStatus('carteIdentitate') }}
+              </mat-chip>
+            </div>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <input 
+              type="file" 
+              #idFile 
+              (change)="uploadDocument('carteIdentitate', $event)"
+              accept="image/*,.pdf" 
+              style="display: none;">
+            
+            <button 
+              mat-button 
+              color="primary" 
+              (click)="idFile.click()"
+              [disabled]="documentStates.carteIdentitate.uploading">
+              @if (documentStates.carteIdentitate.uploading) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <mat-icon>upload_file</mat-icon>
+              }
+              {{ documentStates.carteIdentitate.uploading ? 'Uploading...' : (documentStates.carteIdentitate.uploaded ? 'Replace' : 'Upload') }}
+            </button>
+
+            @if (documentStates.carteIdentitate.uploaded) {
+              <button 
+                mat-button 
+                (click)="viewDocument('carteIdentitate')">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
+            }
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</mat-tab>
 
           <!-- Settings Tab -->
           <mat-tab label="Settings">

@@ -16,14 +16,7 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor(private tokenService: TokenService, private router: Router) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    if (request.url.includes('login') || request.url.includes('register')) {
-      return next.handle(request);
-    }
-
-    if (request.body instanceof FormData) {
-      return next.handle(request);
-    }
-
+  if (request.url.includes('uploadDocument')) {
     const token = this.tokenService.getToken();
     
     if (token) {
@@ -43,7 +36,7 @@ export class AuthInterceptor implements HttpInterceptor {
         })
       );
     }
-    
+  }
     return next.handle(request);
   }
 }

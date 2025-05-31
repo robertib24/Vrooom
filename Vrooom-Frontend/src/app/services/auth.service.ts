@@ -234,17 +234,17 @@ export class AuthService {
   }
 
   getUserDetails(username: string): Observable<any> {
-    if (!username) {
-      return throwError(() => new Error('Username is required'));
-    }
-
-    return this.apiService.post('User/getUserDetails', username).pipe(
-      catchError(error => {
-        console.error('Error getting user details:', error);
-        return throwError(() => error);
-      })
-    );
+  if (!username) {
+    return throwError(() => new Error('Username is required'));
   }
+
+  return this.apiService.get(`User/getUserDetails?username=${encodeURIComponent(username)}`).pipe(
+    catchError(error => {
+      console.error('Error getting user details:', error);
+      return throwError(() => error);
+    })
+  );
+}
 
   getUserProfile(username: string): Observable<any> {
     if (!username) {

@@ -9,7 +9,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { BookingService, Booking } from '../../services/booking.service';
 import { VehiclesService } from '../../services/vehicles.service';
 import { finalize } from 'rxjs/operators';
@@ -21,6 +21,7 @@ import { Inject } from '@angular/core';
   imports: [
     CommonModule,
     MatCardModule,
+    RouterModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
