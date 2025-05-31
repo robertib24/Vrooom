@@ -447,6 +447,8 @@ namespace Vrooom.Services.UserServices
                 Console.WriteLine($"📄 User permis: {user.permis}");
                 Console.WriteLine($"📄 User carteIdentitate: {user.carteIdentitate}");
 
+                int nrPostari = await _postareRepository.NrPostareByUserID(user.Id);
+
                 var userInfo = new UserDTO
                 {
                     username = user.UserName,
@@ -459,6 +461,7 @@ namespace Vrooom.Services.UserServices
                     carteIdentitate = !string.IsNullOrEmpty(user.carteIdentitate) && user.carteIdentitate != "N/A",
                     dataNasterii = user.dataNasterii,
                     linkPozaProfil = user.pozaProfil,
+                    nrPostari = nrPostari,
                     puncteFidelitate = user.puncteFidelitate
                 };
 

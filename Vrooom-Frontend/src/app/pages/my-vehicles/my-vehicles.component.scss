@@ -360,3 +360,171 @@
     }
   }
 }
+
+.vehicle-image-container {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+
+  .booking-badge {
+    position: absolute;
+    top: 50px;
+    left: 12px;
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+    mat-icon {
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+}
+
+.booking-summary {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+
+  h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .booking-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.8rem;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .renter {
+      font-weight: 600;
+      color: #333;
+      flex: 1;
+    }
+
+    .dates {
+      color: #666;
+      margin: 0 0.5rem;
+    }
+
+    .status {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+
+      &.upcoming {
+        background: #e3f2fd;
+        color: #1976d2;
+      }
+
+      &.active {
+        background: #e8f5e8;
+        color: #4caf50;
+      }
+
+      &.completed {
+        background: #f3e5f5;
+        color: #9c27b0;
+      }
+    }
+  }
+
+  .more-bookings {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.8rem;
+    color: #666;
+    font-style: italic;
+  }
+}
+
+// Update pentru stats cu revenue
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+
+      mat-icon {
+        font-size: 1.8rem;
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+    }
+
+    .stat-content {
+      h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        color: #333;
+      }
+
+      p {
+        margin: 0.25rem 0 0 0;
+        color: #666;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .booking-summary {
+    .booking-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+
+      .dates,
+      .status {
+        margin: 0;
+      }
+    }
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

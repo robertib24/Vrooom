@@ -69,7 +69,7 @@
                   <mat-icon>visibility</mat-icon>
                 </div>
                 <div class="stat-content">
-                  <h3>-</h3>
+                  <h3>{{ stats.totalViews }}</h3>
                   <p>Total Views</p>
                 </div>
               </div>
@@ -78,8 +78,17 @@
                   <mat-icon>event</mat-icon>
                 </div>
                 <div class="stat-content">
-                  <h3>-</h3>
-                  <p>Bookings</p>
+                  <h3>{{ stats.totalBookings }}</h3>
+                  <p>Total Bookings</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon">
+                  <mat-icon>euro</mat-icon>
+                </div>
+                <div class="stat-content">
+                  <h3>€{{ stats.totalRevenue }}</h3>
+                  <p>Total Revenue</p>
                 </div>
               </div>
             </div>
@@ -116,6 +125,14 @@
                 <mat-icon>check_circle</mat-icon>
                 Active
               </div>
+
+              <!-- Booking Info Badge -->
+              @if (getActiveBookingsCount(vehicle.id) > 0) {
+                <div class="booking-badge">
+                  <mat-icon>event</mat-icon>
+                  {{ getActiveBookingsCount(vehicle.id) }} Active
+                </div>
+              }
             </div>
 
             <mat-card-header>
@@ -140,7 +157,30 @@
                   <mat-icon>palette</mat-icon>
                   <span>{{ vehicle.culoare | titlecase }}</span>
                 </div>
+                @if (getVehicleBookings(vehicle.id).length > 0) {
+                  <div class="stat">
+                    <mat-icon>event</mat-icon>
+                    <span>{{ getVehicleBookings(vehicle.id).length }} Bookings</span>
+                  </div>
+                }
               </div>
+
+              <!-- Booking Details -->
+              @if (getVehicleBookings(vehicle.id).length > 0) {
+                <div class="booking-summary">
+                  <h4>Recent Bookings:</h4>
+                  @for (booking of getVehicleBookings(vehicle.id).slice(0, 2); track booking.chirieId) {
+                    <div class="booking-item">
+                      <span class="renter">{{ booking.renterName }}</span>
+                      <span class="dates">{{ booking.dataStart | date:'MMM d' }} - {{ booking.dataStop | date:'MMM d' }}</span>
+                      <span class="status" [class]="booking.status">{{ booking.status | titlecase }}</span>
+                    </div>
+                  }
+                  @if (getVehicleBookings(vehicle.id).length > 2) {
+                    <p class="more-bookings">+{{ getVehicleBookings(vehicle.id).length - 2 }} more bookings</p>
+                  }
+                </div>
+              }
             </mat-card-content>
 
             <mat-card-actions class="card-actions">

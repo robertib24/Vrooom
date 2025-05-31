@@ -9,7 +9,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { VehiclesService, Vehicle } from '../../services/vehicles.service';
 import { TokenService } from '../../services/token.service';
-import { finalize } from 'rxjs/operators';
+import { finalize, forkJoin } from 'rxjs';
+
+interface VehicleStats {
+  totalViews: number;
+  totalBookings: number;
+  activeBookings: number;
+  totalRevenue: number;
+}
 
 @Component({
   selector: 'app-my-vehicles',
@@ -31,6 +38,17 @@ export class MyVehiclesComponent implements OnInit {
   error = false;
   deletingVehicleId: number | null = null;
 
+  // Stats
+  stats: VehicleStats = {
+    totalViews: 0,
+    totalBookings: 0,
+    activeBookings: 0,
+    totalRevenue: 0
+  };
+
+  // Bookings for all vehicles
+  allBookings: any[] = [];
+
   constructor(
     private vehiclesService: VehiclesService,
     private tokenService: TokenService,
@@ -47,18 +65,66 @@ export class MyVehiclesComponent implements OnInit {
     this.loading = true;
     this.error = false;
 
-    this.vehiclesService.getUserVehicles()
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: (vehicles) => {
-          this.myVehicles = vehicles;
-        },
-        error: (error) => {
-          console.error('Error loading my vehicles:', error);
-          this.error = true;
-          this.showError('Failed to load your vehicles');
-        }
-      });
+    // Load vehicles and stats in parallel
+    forkJoin({
+      vehicles: this.vehiclesService.getUserVehicles(),
+      bookings: this.vehiclesService.getOwnerBookings(),
+      views: this.vehiclesService.getAllVehicleViews()
+    })
+    .pipe(finalize(() => this.loading = false))
+    .subscribe({
+      next: (data) => {
+        console.log('📊 Loaded data:', data);
+        
+        this.myVehicles = data.vehicles;
+        this.allBookings = data.bookings;
+        
+        // Calculate stats
+        this.calculateStats(data.bookings, data.views);
+      },
+      error: (error) => {
+        console.error('Error loading my vehicles:', error);
+        this.error = true;
+        
+        // Fallback: load just vehicles
+        this.vehiclesService.getUserVehicles()
+          .pipe(finalize(() => this.loading = false))
+          .subscribe({
+            next: (vehicles) => {
+              this.myVehicles = vehicles;
+              console.log('📊 Loaded vehicles (fallback):', vehicles);
+            },
+            error: (err) => {
+              console.error('Error loading vehicles (fallback):', err);
+              this.showError('Failed to load your vehicles');
+            }
+          });
+      }
+    });
+  }
+
+  calculateStats(bookings: any[], vehicleViews: { [vehicleId: number]: number }) {
+    console.log('📊 Calculating stats with:', { bookings, vehicleViews });
+    
+    // Calculate views
+    this.stats.totalViews = Object.values(vehicleViews).reduce((sum, views) => sum + views, 0);
+    
+    // Calculate bookings
+    this.stats.totalBookings = bookings.length;
+    
+    // Calculate active bookings (current or future)
+    const now = new Date();
+    this.stats.activeBookings = bookings.filter(booking => {
+      const endDate = new Date(booking.dataStop);
+      return endDate >= now;
+    }).length;
+    
+    // Calculate total revenue
+    this.stats.totalRevenue = bookings.reduce((sum, booking) => {
+      return sum + (booking.totalAmount || 0);
+    }, 0);
+
+    console.log('📊 Calculated stats:', this.stats);
   }
 
   getVehicleImageUrl(vehicleId: number): string {
@@ -74,7 +140,6 @@ export class MyVehiclesComponent implements OnInit {
   }
 
   editVehicle(vehicle: Vehicle) {
-    // TODO: Navigate to edit form
     this.showInfo('Edit functionality coming soon!');
   }
 
@@ -103,6 +168,8 @@ export class MyVehiclesComponent implements OnInit {
         next: () => {
           this.showSuccess('Vehicle deleted successfully!');
           this.myVehicles = this.myVehicles.filter(v => v.id !== vehicleId);
+          // Recalculate stats
+          this.loadMyVehicles();
         },
         error: (error) => {
           console.error('Error deleting vehicle:', error);
@@ -113,6 +180,20 @@ export class MyVehiclesComponent implements OnInit {
 
   addNewVehicle() {
     this.router.navigate(['/add-vehicle']);
+  }
+
+  // Get bookings for a specific vehicle
+  getVehicleBookings(vehicleId: number): any[] {
+    return this.allBookings.filter(booking => booking.postareId === vehicleId);
+  }
+
+  // Get active bookings count for a vehicle
+  getActiveBookingsCount(vehicleId: number): number {
+    const now = new Date();
+    return this.getVehicleBookings(vehicleId).filter(booking => {
+      const endDate = new Date(booking.dataStop);
+      return endDate >= now;
+    }).length;
   }
 
   private showSuccess(message: string) {

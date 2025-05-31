@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Vrooom.Data;
 using Vrooom.Models.DTOs;
 using Vrooom.Services.ChirieServices;
 
@@ -10,10 +12,12 @@ namespace Vrooom.Controllers
     public class ChirieController : ControllerBase
     {
         private readonly IChirieService _chirieService;
+        private readonly VrooomDbContext _dbContext;
 
-        public ChirieController(IChirieService chirieService)
+        public ChirieController(IChirieService chirieService, VrooomDbContext dbContext)
         {
             _chirieService = chirieService;
+            _dbContext = dbContext;
         }
 
         [HttpPost]
@@ -28,8 +32,53 @@ namespace Vrooom.Controllers
             {
                 return BadRequest(e.Message);
             }
+        }
 
+        [HttpGet("owner/{userId}")]
+        public async Task<IActionResult> GetBookingsForOwner(int userId)
+        {
+            try
+            {
+                var userPosts = await _dbContext.Postare
+                    .Where(p => p.UserId == userId)
+                    .Select(p => p.PostareId)
+                    .ToListAsync();
 
+                if (!userPosts.Any())
+                {
+                    return Ok(new List<object>());
+                }
+
+                var ownerBookings = await _dbContext.Chirie
+                    .Include(c => c.User)
+                    .Include(c => c.Postare)
+                    .Where(c => userPosts.Contains(c.PostareId))
+                    .OrderByDescending(c => c.dataStart)
+                    .Select(c => new
+                    {
+                        chirieId = c.ChirieId,
+                        postareId = c.PostareId,
+                        userId = c.UserId,
+                        dataStart = c.dataStart,
+                        dataStop = c.dataStop,
+                        renterName = c.User.nume + " " + c.User.prenume,
+                        renterEmail = c.User.Email,
+                        vehicleName = c.Postare.firma + " " + c.Postare.model,
+                        vehicleYear = c.Postare.anFabricatie,
+                        dailyRate = c.Postare.pret,
+                        totalDays = (c.dataStop - c.dataStart).Days,
+                        totalAmount = (c.dataStop - c.dataStart).Days * c.Postare.pret,
+                        status = c.dataStart > DateTime.Now ? "upcoming" :
+                                c.dataStop < DateTime.Now ? "completed" : "active"
+                    })
+                    .ToListAsync();
+
+                return Ok(ownerBookings);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
         }
 
         [HttpDelete("{id}")]

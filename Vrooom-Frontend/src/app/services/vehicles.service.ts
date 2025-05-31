@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, forkJoin, of } from 'rxjs';
+import { switchMap, map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SnackbarComponent } from '../components/snackbar/snackbar.component';
@@ -58,56 +59,38 @@ export class VehiclesService {
   ) {}
 
   addVehicle(vehicleData: any, images: File[]): Observable<number> {
-  const formData = new FormData();
-  
-  // Add basic vehicle data
-  formData.append('userId', vehicleData.userId.toString());
-  formData.append('titlu', vehicleData.titlu || '');
-  formData.append('descriere', vehicleData.descriere || '');
-  formData.append('pret', vehicleData.pret.toString());
-  formData.append('firma', vehicleData.firma || '');
-  formData.append('model', vehicleData.model || '');
-  formData.append('kilometraj', vehicleData.kilometraj.toString());
-  formData.append('anFabricatie', vehicleData.anFabricatie.toString());
-  formData.append('culoare', vehicleData.culoare || '');
-  formData.append('locatie', vehicleData.locatie || '');
-  
-  // Add document URLs (backend expects these as strings)
-  formData.append('talon', this.PLACEHOLDER_IMAGE);
-  formData.append('carteIdentitateMasina', this.PLACEHOLDER_IMAGE);
-  formData.append('asigurare', this.PLACEHOLDER_IMAGE);
-
-  // IMPORTANT: Backend expects 'imagini' as array, not individual files
-  // Add each image with the same field name 'imagini'
-  images.forEach((image, index) => {
-    const imageNumber = index + 1;
-    const fileExtension = this.getFileExtension(image.name) || 'jpg';
-    const fileName = `${imageNumber}.${fileExtension}`;
+    const formData = new FormData();
     
-    // Use 'imagini' as field name for ALL images (not 'imagini[0]', 'imagini[1]', etc.)
-    formData.append('imagini', image, fileName);
-  });
+    formData.append('userId', vehicleData.userId.toString());
+    formData.append('titlu', vehicleData.titlu || '');
+    formData.append('descriere', vehicleData.descriere || '');
+    formData.append('pret', vehicleData.pret.toString());
+    formData.append('firma', vehicleData.firma || '');
+    formData.append('model', vehicleData.model || '');
+    formData.append('kilometraj', vehicleData.kilometraj.toString());
+    formData.append('anFabricatie', vehicleData.anFabricatie.toString());
+    formData.append('culoare', vehicleData.culoare || '');
+    formData.append('locatie', vehicleData.locatie || '');
+    
+    formData.append('talon', this.PLACEHOLDER_IMAGE);
+    formData.append('carteIdentitateMasina', this.PLACEHOLDER_IMAGE);
+    formData.append('asigurare', this.PLACEHOLDER_IMAGE);
 
-  // Debug logging
-  console.log('FormData contents:');
-  console.log(`- Total images: ${images.length}`);
-  for (let [key, value] of formData.entries()) {
-    if (value instanceof File) {
-      console.log(`${key}: File - ${value.name} (${this.formatFileSize(value.size)})`);
-    } else {
-      console.log(`${key}: ${value}`);
-    }
+    images.forEach((image, index) => {
+      const imageNumber = index + 1;
+      const fileExtension = this.getFileExtension(image.name) || 'jpg';
+      const fileName = `${imageNumber}.${fileExtension}`;
+      
+      formData.append('imagini', image, fileName);
+    });
+
+    return this.apiService.postFormData<number>('Postare', formData);
   }
 
-  return this.apiService.postFormData<number>('Postare', formData);
-}
-
   getVehicleImageUrl(vehicleId: number, imageIndex: number = 1): string {
-    // Format: https://vrooom1224.s3.amazonaws.com/post{vehicleId}/{imageIndex}.jpg
     return `${this.S3_BUCKET_URL}/post${vehicleId}/${imageIndex}.jpg`;
   }
 
-  // Get multiple vehicle images
   getVehicleImages(vehicleId: number, imageCount: number = 1): string[] {
     const images: string[] = [];
     for (let i = 1; i <= imageCount; i++) {
@@ -116,13 +99,11 @@ export class VehiclesService {
     return images;
   }
 
-  // Get all available images for a vehicle (tries common extensions)
   getVehicleImagesWithFallback(vehicleId: number, maxImages: number = 10): string[] {
     const images: string[] = [];
     const extensions = ['jpg', 'jpeg', 'png', 'webp'];
     
     for (let i = 1; i <= maxImages; i++) {
-      // Try each extension, but default to .jpg as seen in your S3 structure
       const imageUrl = `${this.S3_BUCKET_URL}/post${vehicleId}/${i}.jpg`;
       images.push(imageUrl);
     }
@@ -130,7 +111,6 @@ export class VehiclesService {
     return images;
   }
 
-  // Check if image exists (for error handling)
   async checkImageExists(url: string): Promise<boolean> {
     try {
       const response = await fetch(url, { method: 'HEAD' });
@@ -140,17 +120,14 @@ export class VehiclesService {
     }
   }
 
-  // Get placeholder image URL
   getPlaceholderImageUrl(): string {
     return this.PLACEHOLDER_IMAGE;
   }
 
-  // Utility: Get file extension
   private getFileExtension(filename: string): string {
     return filename.split('.').pop()?.toLowerCase() || 'jpg';
   }
 
-  // Utility: Format file size for logging
   private formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -159,8 +136,6 @@ export class VehiclesService {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-
-  // Standard CRUD operations
   getVehicles(): Observable<Vehicle[]> {
     return this.apiService.get<Vehicle[]>('Postare');
   }
@@ -189,7 +164,6 @@ export class VehiclesService {
     return this.apiService.put(`Postare/${id}`, vehicleData);
   }
 
-  // Search and filter methods
   getVehiclesByPrice(minPrice: number, maxPrice: number): Observable<Vehicle[]> {
     return this.apiService.get<Vehicle[]>(`Postare/pret/${minPrice}/${maxPrice}`);
   }
@@ -222,7 +196,6 @@ export class VehiclesService {
     return this.apiService.post<{prompt: string}>('OpenAI/getdescription', { prompt: description });
   }
 
-  // Booking methods
   bookVehicle(vehicleId: number, bookingData: { start: Date, end: Date }): Observable<any> {
     const userId = this.tokenService.getUserId();
     if (!userId) {
@@ -247,8 +220,47 @@ export class VehiclesService {
     return this.apiService.get<Booking[]>(`Chirie/user/${userId}`);
   }
 
+  getOwnerBookings(): Observable<any[]> {
+    const userId = this.tokenService.getUserId();
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+    return this.apiService.get<any[]>(`Chirie/owner/${userId}`);
+  }
+
   sendBookingConfirmation(booking: Booking): Observable<any> {
     return this.apiService.post('Chirie/rentConfirmationEmail', booking);
+  }
+
+  getVehicleViews(vehicleId: number): Observable<number> {
+    // momentan e random
+    return of(Math.floor(Math.random() * 90) + 10);
+  }
+
+  getAllVehicleViews(): Observable<{ [vehicleId: number]: number }> {
+    return this.getUserVehicles().pipe(
+      switchMap(vehicles => {
+        if (!vehicles.length) {
+          return of({});
+        }
+        
+        const viewRequests = vehicles.map(vehicle => 
+          this.getVehicleViews(vehicle.id).pipe(
+            map(views => ({ vehicleId: vehicle.id, views }))
+          )
+        );
+        
+        return forkJoin(viewRequests).pipe(
+          map(results => {
+            const viewsMap: { [vehicleId: number]: number } = {};
+            results.forEach(result => {
+              viewsMap[result.vehicleId] = result.views;
+            });
+            return viewsMap;
+          })
+        );
+      })
+    );
   }
 
   // Review methods
