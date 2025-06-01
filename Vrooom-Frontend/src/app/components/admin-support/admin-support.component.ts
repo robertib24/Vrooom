@@ -112,42 +112,41 @@ export class AdminSupportComponent implements OnInit, OnDestroy {
   }
 
   groupTicketsBySupport() {
-    this.groupedTickets = {};
+  this.groupedTickets = {};
+  
+  this.supportTickets.forEach(ticket => {
+    if (!this.groupedTickets[ticket.supportId]) {
+      this.groupedTickets[ticket.supportId] = [];
+    }
+    this.groupedTickets[ticket.supportId].push(ticket);
+  });
+  
+  Object.keys(this.groupedTickets).forEach(supportIdStr => {
+    const supportId = parseInt(supportIdStr);
+    const conversation = this.groupedTickets[supportId];
     
-    // Group all tickets by supportId
-    this.supportTickets.forEach(ticket => {
-      if (!this.groupedTickets[ticket.supportId]) {
-        this.groupedTickets[ticket.supportId] = [];
-      }
-      this.groupedTickets[ticket.supportId].push(ticket);
+    conversation.sort((a, b) => {
+      const aIsOriginal = a.titlu && 
+                         a.titlu !== '' && 
+                         a.titlu !== 'Admin Reply' && 
+                         a.titlu.length > 5;
+      const bIsOriginal = b.titlu && 
+                         b.titlu !== '' && 
+                         b.titlu !== 'Admin Reply' &&
+                         b.titlu.length > 5;
+      
+      if (aIsOriginal && !bIsOriginal) return -1;
+      if (!aIsOriginal && bIsOriginal) return 1;
+      
+      return 0;
     });
     
-    // Sort tickets within each group for proper conversation flow
-    Object.keys(this.groupedTickets).forEach(supportIdStr => {
-      const supportId = parseInt(supportIdStr);
-      const conversation = this.groupedTickets[supportId];
-      
-      // Sort by: original message first (with meaningful title), then chronological order
-      conversation.sort((a, b) => {
-        // Identify original user message (has title, not admin reply)
-        const aIsOriginal = a.titlu && a.titlu !== '' && a.titlu !== 'Admin Reply';
-        const bIsOriginal = b.titlu && b.titlu !== '' && b.titlu !== 'Admin Reply';
-        
-        if (aIsOriginal && !bIsOriginal) return -1;
-        if (!aIsOriginal && bIsOriginal) return 1;
-        
-        // For replies, maintain insertion order (we don't have timestamps)
-        return 0;
-      });
-      
-      console.log(`🗂️ Admin Conversation ${supportId}:`, conversation.map(t => ({
-        userId: t.userId,
-        titlu: t.titlu,
-        isAdmin: this.isAdminMessage(t),
-        isOriginal: t.titlu && t.titlu !== '' && t.titlu !== 'Admin Reply'
-      })));
+    console.log(`🗂️ Admin Conversation ${supportId} (${conversation.length} messages):`);
+    conversation.forEach((t, index) => {
+      console.log(`  ${index + 1}. ${this.isAdminMessage(t) ? '[ADMIN]' : '[USER]'} "${t.titlu}" - User ${t.userId}`);
     });
-  }
+  });
+}
 
   initializeReplyForms() {
     Object.keys(this.groupedTickets).forEach(supportIdStr => {
@@ -181,62 +180,80 @@ export class AdminSupportComponent implements OnInit, OnDestroy {
   }
 
   isAdminMessage(ticket: ExtendedSupportTicket): boolean {
-
-    const isAdminReply = ticket.titlu === 'Admin Reply';
-    const isFromCurrentAdmin = ticket.userId === this.currentAdminId;
-    const hasNoTitle = !ticket.titlu || ticket.titlu === '';
-    const isOriginalTicket = ticket.titlu && ticket.titlu !== '' && ticket.titlu !== 'Admin Reply';
-    
-    if (isOriginalTicket) {
-      return false;
-    }
-    
-    // Otherwise, check if it's an admin reply
-    return isAdminReply || (isFromCurrentAdmin && hasNoTitle);
+  const isAdminReply = ticket.titlu === 'Admin Reply';
+  if (isAdminReply) {
+    console.log(`🔍 Message ${ticket.supportId} identified as admin reply by title`);
+    return true;
   }
+  
+  const isFromCurrentAdmin = ticket.userId === this.currentAdminId;
+  if (isFromCurrentAdmin) {
+    console.log(`🔍 Message ${ticket.supportId} from current admin user ${this.currentAdminId}`);
+    return true;
+  }
+  
+  const hasAdminPattern = ticket.titlu === '' || 
+                         ticket.titlu === null || 
+                         ticket.titlu === undefined ||
+                         ticket.titlu.toLowerCase().includes('admin') ||
+                         ticket.titlu.toLowerCase().includes('support');
+  
+  if (hasAdminPattern && ticket.userId !== this.getOriginalCustomerId(ticket.supportId)) {
+    console.log(`🔍 Message ${ticket.supportId} identified as admin by pattern analysis`);
+    return true;
+  }
+  
+  console.log(`🔍 Message ${ticket.supportId} identified as user message`);
+  return false;
+}
+
+  private getOriginalCustomerId(supportId: number): number {
+  const conversation = this.getTicketConversation(supportId);
+  const originalTicket = conversation.find(t => 
+    t.titlu && 
+    t.titlu !== 'Admin Reply' && 
+    t.titlu !== '' &&
+    t.titlu.length > 5
+  );
+  
+  return originalTicket ? originalTicket.userId : 0;
+}
 
   isUserMessage(ticket: ExtendedSupportTicket): boolean {
     return !this.isAdminMessage(ticket);
   }
 
   replyToTicket(supportId: number) {
-    const form = this.replyForms[supportId];
-    if (!form || form.invalid) {
-      this.showError('Please enter a valid reply (minimum 10 characters)');
-      return;
-    }
-
-    const reply = form.get('reply')?.value;
-    this.replyingToTicket = supportId;
-
-    console.log(`📤 Admin replying to ticket ${supportId}:`, reply);
-
-    this.adminService.adminReplyToTicket(supportId, reply)
-      .pipe(finalize(() => this.replyingToTicket = null))
-      .subscribe({
-        next: (response) => {
-          console.log('✅ Reply sent successfully:', response);
-          this.showSuccess('Reply sent successfully! Email notification sent to user.');
-          form.reset();
-          
-          this.supportService.sendSupportReplyEmail({
-            supportId,
-            titlu: 'Admin Reply',
-            comentariu: reply,
-            userId: this.currentAdminId
-          }).subscribe({
-            next: () => console.log('📧 Reply email sent'),
-            error: (error) => console.error('📧 Failed to send reply email:', error)
-          });
-          
-          this.loadAllSupportTickets();
-        },
-        error: (error) => {
-          console.error('Error sending reply:', error);
-          this.showError('Failed to send reply. Please try again.');
-        }
-      });
+  const form = this.replyForms[supportId];
+  if (!form || form.invalid) {
+    this.showError('Please enter a valid reply (minimum 10 characters)');
+    return;
   }
+
+  const reply = form.get('reply')?.value;
+  this.replyingToTicket = supportId;
+
+  console.log(`📤 Admin replying to ticket ${supportId}:`, reply);
+  console.log(`👤 Current admin ID: ${this.currentAdminId}`);
+
+  this.adminService.adminReplyToTicket(supportId, reply)
+    .pipe(finalize(() => this.replyingToTicket = null))
+    .subscribe({
+      next: (response) => {
+        console.log('✅ Reply sent successfully:', response);
+        this.showSuccess('Reply sent successfully! Email notification sent to customer.');
+        form.reset();
+        
+        setTimeout(() => {
+          this.loadAllSupportTickets();
+        }, 1000);
+      },
+      error: (error) => {
+        console.error('❌ Error sending reply:', error);
+        this.showError('Failed to send reply. Please try again.');
+      }
+    });
+}
 
   markAsResolved(supportId: number) {
     console.log(`🔧 Marking ticket ${supportId} as resolved`);
@@ -273,10 +290,7 @@ export class AdminSupportComponent implements OnInit, OnDestroy {
     }
     return 'low';
   }
-
-  // ===== METODE NOI ADĂUGATE =====
   
-  // Filter Methods
   getTicketsByStatus(status: string): ExtendedSupportTicket[] {
     const tickets = this.getUniqueTickets();
     if (status === 'all') return tickets;
@@ -368,35 +382,30 @@ export class AdminSupportComponent implements OnInit, OnDestroy {
     return this.getUserDisplayName(userId);
   }
 
-  // Enhanced Status Management
   getTicketStatus(ticket: ExtendedSupportTicket): string {
-    // Check if ticket has explicit status
-    if (ticket.status) {
-      return ticket.status;
-    }
-    
-    // Get conversation to determine status
-    const conversation = this.getTicketConversation(ticket.supportId);
-    
-    // Check if any message in conversation indicates resolution
-    const hasResolved = conversation.some(t => 
-      t.status?.toLowerCase() === 'resolved' ||
-      t.titlu?.toLowerCase().includes('resolved')
-    );
-    
-    if (hasResolved) {
-      return 'Resolved';
-    }
-    
-    // Check if admin has replied
-    const hasAdminReply = conversation.some(t => this.isAdminMessage(t));
-    
-    if (hasAdminReply) {
-      return 'In Progress';
-    }
-    
-    return 'Open';
+  if (ticket.status && ticket.status !== 'Open') {
+    return ticket.status;
   }
+  
+  const conversation = this.getTicketConversation(ticket.supportId);
+  
+  const hasResolved = conversation.some(t => 
+    t.status?.toLowerCase() === 'resolved' ||
+    t.titlu?.toLowerCase().includes('resolved')
+  );
+  
+  if (hasResolved) {
+    return 'Resolved';
+  }
+  
+  const hasAdminReply = conversation.some(t => this.isAdminMessage(t));
+  
+  if (hasAdminReply) {
+    return 'In Progress';
+  }
+  
+  return 'Open';
+}
 
   formatDate(date: Date | string | undefined): string {
     if (!date) return 'Unknown';

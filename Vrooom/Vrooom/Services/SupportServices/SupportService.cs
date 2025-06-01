@@ -36,7 +36,7 @@ namespace Vrooom.Services.SupportServices
                     titlu = supportDTO.titlu,
                     comentariu = supportDTO.comentariu,
                     Status = "Open",
-                    CreatedAt = DateTime.Now 
+                    CreatedAt = DateTime.Now
                 };
 
                 _logger.LogInformation("📝 Assigned Support ID {SupportId} to new ticket", support.SupportId);
@@ -63,11 +63,14 @@ namespace Vrooom.Services.SupportServices
                 {
                     SupportId = supportDTO.supportId,
                     UserId = supportDTO.userId,
-                    titlu = supportDTO.titlu,
+                    titlu = supportDTO.titlu ?? "Reply",
                     comentariu = supportDTO.comentariu,
-                    Status = "InProgress", 
+                    Status = "InProgress",
                     CreatedAt = DateTime.Now
                 };
+
+                _logger.LogInformation("📝 Reply details - SupportId: {SupportId}, UserId: {UserId}, Title: '{Title}', Status: '{Status}'",
+                    support.SupportId, support.UserId, support.titlu, support.Status);
 
                 await _supportRepository.addSupport(support);
 
@@ -441,24 +444,45 @@ namespace Vrooom.Services.SupportServices
         {
             try
             {
-                _logger.LogInformation("📧 Sending admin email for Support {SupportId} to User {UserId}",
-                    support.supportId, support.userId);
+                _logger.LogInformation("📧 Sending admin email for Support {SupportId}", support.supportId);
 
-                User user = await _supportRepository.UserByID(support.userId);
-                string clientEmailHtml = await File.ReadAllTextAsync("Templates/AdminSupportEmailTemplate.html");
-                clientEmailHtml = clientEmailHtml.Replace("{{titlu}}", support.titlu.ToString());
-                clientEmailHtml = clientEmailHtml.Replace("{{username}}", user.UserName.ToString());
-                clientEmailHtml = clientEmailHtml.Replace("{{comentariu}}", support.comentariu.ToString());
+                var conversation = await _supportRepository.getSupportBySupportID(support.supportId);
+                var originalTicket = conversation.FirstOrDefault(t =>
+                    t.titlu != "Admin Reply" &&
+                    !string.IsNullOrEmpty(t.titlu) &&
+                    t.UserId != support.userId); 
 
-                await _emailSender.SendEmailAsync(user.Email, "Support", clientEmailHtml);
+                if (originalTicket == null)
+                {
+                    _logger.LogWarning("⚠️ Could not find original customer ticket for Support {SupportId}", support.supportId);
+                    throw new Exception("Could not find original customer ticket");
+                }
+
+                _logger.LogInformation("👤 Sending email to customer User {UserId} for original ticket", originalTicket.UserId);
+
+                User customer = await _supportRepository.UserByID(originalTicket.UserId);
+                if (customer == null)
+                {
+                    _logger.LogError("❌ Customer user {UserId} not found", originalTicket.UserId);
+                    throw new Exception($"Customer user with ID {originalTicket.UserId} not found");
+                }
+
+                string adminEmailHtml = await File.ReadAllTextAsync("Templates/AdminSupportEmailTemplate.html");
+                adminEmailHtml = adminEmailHtml.Replace("{{titlu}}", originalTicket.titlu ?? "Support Request");
+                adminEmailHtml = adminEmailHtml.Replace("{{username}}", customer.UserName ?? "Valued Customer");
+                adminEmailHtml = adminEmailHtml.Replace("{{comentariu}}", support.comentariu);
+
+                await _emailSender.SendEmailAsync(customer.Email,
+                    $"💬 Response to Support Ticket #{support.supportId}",
+                    adminEmailHtml);
 
                 _logger.LogInformation("✅ Admin email sent successfully to {Email} for Support {SupportId}",
-                    user.Email, support.supportId);
+                    customer.Email, support.supportId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error sending admin email for Support {SupportId}", support.supportId);
-                throw;
+                throw new Exception($"Failed to send admin email: {ex.Message}", ex);
             }
         }
     }

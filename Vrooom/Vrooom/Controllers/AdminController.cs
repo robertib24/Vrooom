@@ -307,13 +307,30 @@ namespace Vrooom.Controllers
             {
                 Console.WriteLine($"📧 Admin replying to ticket {supportId}: {replyData.comentariu}");
 
-                replyData.supportId = supportId;
-                await _supportService.ReplySupport(replyData);
+                var currentUserIdClaim = User.FindFirst("id")?.Value;
+                if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out int adminUserId))
+                {
+                    Console.WriteLine("❌ Admin user ID not found in token");
+                    return Unauthorized("Admin user ID not found");
+                }
+
+                var adminReply = new SupportDTO
+                {
+                    supportId = supportId,
+                    titlu = "Admin Reply", 
+                    comentariu = replyData.comentariu,
+                    userId = adminUserId 
+                };
+
+                Console.WriteLine($"👤 Admin reply details: SupportId={supportId}, AdminUserId={adminUserId}, Title='{adminReply.titlu}'");
+
+                await _supportService.ReplySupport(adminReply);
+                Console.WriteLine($"✅ Admin reply saved to database");
 
                 try
                 {
-                    await _supportService.adminEmail(replyData);
-                    Console.WriteLine($"✅ Admin reply email sent for ticket {supportId}");
+                    await _supportService.adminEmail(adminReply);
+                    Console.WriteLine($"📧 Admin reply email sent successfully for ticket {supportId}");
                 }
                 catch (Exception emailEx)
                 {
@@ -323,13 +340,20 @@ namespace Vrooom.Controllers
                 return Ok(new
                 {
                     message = "Reply sent successfully",
-                    emailSent = true
+                    emailSent = true,
+                    supportId = supportId,
+                    adminUserId = adminUserId
                 });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Error in admin reply: {ex.Message}");
-                return StatusCode(500, new { error = ex.Message });
+                Console.WriteLine($"📋 Stack trace: {ex.StackTrace}");
+                return StatusCode(500, new
+                {
+                    error = ex.Message,
+                    supportId = supportId
+                });
             }
         }
 

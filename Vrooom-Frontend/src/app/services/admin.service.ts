@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { ApiService } from './api.service';
+import { Observable, throwError, of } from 'rxjs';
+import { ApiService } from './api.service'  ;
 import { TokenService } from './token.service';
 import { SupportTicket } from './support.service';
+import { catchError, tap } from 'rxjs/operators';
 
 export interface AdminVehicle {
   id: number;
@@ -163,7 +164,6 @@ export class AdminService {
     return this.apiService.get(`Admin/users/${userId}/validate-deletion`);
   }
 
-  // Support Management
   getAllSupportTickets(): Observable<SupportTicket[]> {
     return this.apiService.get<SupportTicket[]>('Admin/support-tickets');
   }
@@ -171,28 +171,54 @@ export class AdminService {
   adminReplyToTicket(supportId: number, reply: string): Observable<any> {
   const userId = this.tokenService.getUserId();
   if (!userId) {
-    throw new Error('User not authenticated');
+    throw new Error('Admin not authenticated');
   }
 
   const replyData = {
-    supportId,
+    supportId: supportId,
     titlu: 'Admin Reply',
     comentariu: reply,
-    userId: parseInt(userId)
+    userId: parseInt(userId) 
   };
 
   console.log('📤 Sending admin reply:', replyData);
+  console.log('🔑 Admin user ID:', userId);
 
-  return this.apiService.post(`Admin/support-tickets/${supportId}/reply`, replyData);
+  return this.apiService.post(`Admin/support-tickets/${supportId}/reply`, replyData).pipe(
+    tap(response => {
+      console.log('✅ Admin reply API response:', response);
+    }),
+    catchError(error => {
+      console.error('❌ Admin reply API error:', error);
+      return throwError(() => error);
+    })
+  );
 }
 
   resolveTicket(supportId: number): Observable<any> {
   console.log(`🔧 Resolving ticket ${supportId}`);
-  return this.apiService.post(`Admin/support-tickets/${supportId}/resolve`, {});
+  
+  return this.apiService.post(`Admin/support-tickets/${supportId}/resolve`, {}).pipe(
+    tap(response => {
+      console.log('✅ Ticket resolved successfully:', response);
+    }),
+    catchError(error => {
+      console.error('❌ Error resolving ticket:', error);
+      return throwError(() => error);
+    })
+  );
 }
 
   getTicketStatus(supportId: number): Observable<any> {
-  return this.apiService.get(`Admin/support-tickets/${supportId}/status`);
+  return this.apiService.get(`Admin/support-tickets/${supportId}/status`).pipe(
+    tap(response => {
+      console.log(`📊 Ticket ${supportId} status:`, response);
+    }),
+    catchError(error => {
+      console.error(`❌ Error getting ticket ${supportId} status:`, error);
+      return throwError(() => error);
+    })
+  );
 }
 
   reopenTicket(supportId: number): Observable<any> {
@@ -268,10 +294,18 @@ export class AdminService {
     return this.apiService.get('Admin/reports/popular-vehicles');
   }
 
-  // Validation and Security
   validateAdminAccess(): Observable<boolean> {
-    return this.apiService.get<boolean>('Admin/validate-access');
-  }
+  const role = this.tokenService.getRole();
+  const isAdmin = role === 'Admin';
+  
+  console.log('🔐 Admin access validation:', {
+    role: role,
+    isAdmin: isAdmin,
+    userId: this.tokenService.getUserId()
+  });
+  
+  return of(isAdmin);
+}
 
   getSecurityLogs(page: number = 0, pageSize: number = 50): Observable<any> {
     return this.apiService.get(`Admin/security-logs?page=${page}&pageSize=${pageSize}`);
