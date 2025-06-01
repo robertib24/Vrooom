@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, forkJoin, of, tap } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, forkJoin, of, tap, throwError } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SnackbarComponent } from '../components/snackbar/snackbar.component';
@@ -46,11 +46,10 @@ export interface Review {
   providedIn: 'root',
 })
 export class VehiclesService {
-  // Cache management with BehaviorSubject
+
   private vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
   public vehicles$ = this.vehiclesSubject.asObservable();
   
-  // Cache state tracking
   private vehiclesCacheLoaded = false;
   private lastCacheRefresh = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -64,41 +63,83 @@ export class VehiclesService {
     private tokenService: TokenService
   ) {}
 
-  /**
-   * Get all vehicles with smart caching
-   */
   getVehicles(forceRefresh: boolean = false): Observable<Vehicle[]> {
     const now = Date.now();
     const cacheExpired = (now - this.lastCacheRefresh) > this.CACHE_DURATION;
     
-    // Return cached data if available and not expired, unless force refresh
-    if (!forceRefresh && this.vehiclesCacheLoaded && !cacheExpired) {
+    console.log('🔍 Cache status check:', {
+      forceRefresh,
+      cacheLoaded: this.vehiclesCacheLoaded,
+      cacheExpired,
+      vehicleCount: this.vehiclesSubject.value.length,
+      cacheAge: now - this.lastCacheRefresh
+    });
+    
+    if (!forceRefresh && 
+        this.vehiclesCacheLoaded && 
+        !cacheExpired && 
+        this.vehiclesSubject.value.length > 0) {
       console.log('🔄 Returning cached vehicles data');
       return this.vehicles$;
     }
 
     console.log('🌐 Fetching vehicles from API...');
+    
     return this.apiService.get<Vehicle[]>('Postare').pipe(
       tap(vehicles => {
-        console.log(`✅ Loaded ${vehicles.length} vehicles from API`);
-        this.vehiclesSubject.next(vehicles);
-        this.vehiclesCacheLoaded = true;
-        this.lastCacheRefresh = now;
+        console.log(`✅ API Response: ${vehicles?.length || 0} vehicles received`);
+        
+        if (vehicles && Array.isArray(vehicles)) {
+          if (vehicles.length > 0) {
+            this.vehiclesSubject.next(vehicles);
+            this.vehiclesCacheLoaded = true;
+            this.lastCacheRefresh = now;
+            console.log('💾 Cache updated with vehicles');
+          } else {
+            console.log('⚠️ Empty vehicle list received, updating cache with empty array');
+            this.vehiclesSubject.next([]);
+            this.vehiclesCacheLoaded = true;
+            this.lastCacheRefresh = now;
+          }
+        } else {
+          console.log('❌ Invalid response format received');
+          this.vehiclesCacheLoaded = false;
+        }
+      }),
+      catchError(error => {
+        console.error('❌ VehiclesService API error:', error);
+        
+        this.vehiclesCacheLoaded = false;
+        this.lastCacheRefresh = 0;
+
+        return throwError(() => error);
       })
     );
   }
 
-  /**
-   * Force refresh vehicles data
-   */
   refreshVehicles(): Observable<Vehicle[]> {
     console.log('🔄 Force refreshing vehicles data...');
+    this.clearCacheCompletely(); 
     return this.getVehicles(true);
   }
 
-  /**
-   * Add vehicle and immediately refresh cache
-   */
+  clearCacheCompletely(): void {
+    console.log('🧹 Clearing all cache data');
+    this.vehiclesCacheLoaded = false;
+    this.lastCacheRefresh = 0;
+    this.vehiclesSubject.next([]);
+  }
+
+  debugCacheStatus(): void {
+    console.log('🔍 Cache Status:', {
+      loaded: this.vehiclesCacheLoaded,
+      age: Date.now() - this.lastCacheRefresh,
+      expired: (Date.now() - this.lastCacheRefresh) > this.CACHE_DURATION,
+      vehicleCount: this.vehiclesSubject.value.length,
+      lastRefresh: new Date(this.lastCacheRefresh).toISOString()
+    });
+  }
+
   addVehicle(vehicleData: any, images: File[]): Observable<number> {
     const formData = new FormData();
     
@@ -128,91 +169,74 @@ export class VehiclesService {
     return this.apiService.postFormData<number>('Postare', formData).pipe(
       tap(vehicleId => {
         console.log(`✅ Vehicle created with ID: ${vehicleId}`);
-        // Immediately refresh vehicles cache
+        this.clearCacheCompletely();
         this.refreshVehiclesCache();
       })
     );
   }
 
-  /**
-   * Delete vehicle and refresh cache
-   */
   deleteVehicle(id: number): Observable<any> {
     return this.apiService.delete(`Postare/${id}`).pipe(
       tap(() => {
         console.log(`🗑️ Vehicle ${id} deleted, refreshing cache...`);
+        const currentVehicles = this.vehiclesSubject.value;
+        const updatedVehicles = currentVehicles.filter(v => v.id !== id);
+        this.vehiclesSubject.next(updatedVehicles);
+        
         this.refreshVehiclesCache();
       })
     );
   }
 
-  /**
-   * Update vehicle and refresh cache
-   */
   updateVehicle(id: number, vehicleData: any): Observable<any> {
     return this.apiService.put(`Postare/${id}`, vehicleData).pipe(
       tap(() => {
         console.log(`✏️ Vehicle ${id} updated, refreshing cache...`);
+        this.clearCacheCompletely();
         this.refreshVehiclesCache();
       })
     );
   }
 
-  /**
-   * Internal method to refresh cache after mutations
-   */
   private refreshVehiclesCache(): void {
     setTimeout(() => {
       this.getVehicles(true).subscribe({
-        next: () => console.log('🔄 Vehicle cache refreshed successfully'),
-        error: (error) => console.error('❌ Failed to refresh vehicle cache:', error)
+        next: (vehicles) => {
+          console.log(`🔄 Vehicle cache refreshed successfully with ${vehicles.length} vehicles`);
+        },
+        error: (error) => {
+          console.error('❌ Failed to refresh vehicle cache:', error);
+          setTimeout(() => {
+            this.getVehicles(true).subscribe();
+          }, 3000);
+        }
       });
-    }, 1000); // Small delay to ensure backend has processed the change
+    }, 1500); 
   }
 
-  /**
-   * Get cached vehicles (synchronous access to current cache)
-   */
   getCachedVehicles(): Vehicle[] {
     return this.vehiclesSubject.value;
   }
 
-  /**
-   * Clear cache
-   */
   clearCache(): void {
-    console.log('🧹 Clearing vehicles cache');
-    this.vehiclesCacheLoaded = false;
-    this.lastCacheRefresh = 0;
-    this.vehiclesSubject.next([]);
+    this.clearCacheCompletely();
   }
 
-  /**
-   * Get vehicle by ID with cache fallback
-   */
   getVehicleById(id: number): Observable<Vehicle> {
-    // First try to find in cache
     const cachedVehicle = this.getCachedVehicles().find(v => v.id === id);
     if (cachedVehicle) {
       console.log(`🎯 Found vehicle ${id} in cache`);
       return of(cachedVehicle);
     }
 
-    // If not in cache, fetch from API
     console.log(`🌐 Fetching vehicle ${id} from API`);
     return this.apiService.get<Vehicle>(`Postare/carid/${id}`);
   }
 
-  /**
-   * Get vehicles by user ID
-   */
   getVehiclesByUserId(userId: number): Observable<Vehicle[]> {
     return this.apiService.get<Vehicle[]>(`Postare/userId?userId=${userId}`);
   }
 
-  /**
-   * Get current user's vehicles
-   */
   getUserVehicles(): Observable<Vehicle[]> {
     const userId = this.tokenService.getUserId();
     if (!userId) {
@@ -221,9 +245,7 @@ export class VehiclesService {
     return this.getVehiclesByUserId(parseInt(userId));
   }
 
-  // Search and filter methods (updated to use cached data when possible)
   getVehiclesByPrice(minPrice: number, maxPrice: number): Observable<Vehicle[]> {
-    // Try to filter from cache first
     const cached = this.getCachedVehicles();
     if (cached.length > 0) {
       const filtered = cached.filter(v => v.pret >= minPrice && v.pret <= maxPrice);
@@ -289,7 +311,6 @@ export class VehiclesService {
     return this.apiService.get<Vehicle[]>(`Postare/titlu/${title}`);
   }
 
-  // Image handling methods
   getVehicleImageUrl(vehicleId: number, imageIndex: number = 1): string {
     return `${this.S3_BUCKET_URL}/post${vehicleId}/${imageIndex}.jpg`;
   }
@@ -306,7 +327,6 @@ export class VehiclesService {
     return this.PLACEHOLDER_IMAGE;
   }
 
-  // AI and enhancement methods
   searchVehiclesWithAI(query: string): Observable<Vehicle[]> {
     return this.apiService.post<Vehicle[]>('OpenAI/getCars', { prompt: query });
   }
@@ -315,7 +335,6 @@ export class VehiclesService {
     return this.apiService.post<{prompt: string}>('OpenAI/getdescription', { prompt: description });
   }
 
-  // Booking methods
   bookVehicle(vehicleId: number, bookingData: { start: Date, end: Date }): Observable<any> {
     const userId = this.tokenService.getUserId();
     if (!userId) {
@@ -369,7 +388,6 @@ export class VehiclesService {
     return this.apiService.post('Chirie/rentConfirmationEmail', booking);
   }
 
-  // Statistics and analytics
   getVehicleViews(vehicleId: number): Observable<number> {
     return of(Math.floor(Math.random() * 90) + 10);
   }
@@ -400,7 +418,6 @@ export class VehiclesService {
     );
   }
 
-  // Review methods
   addReview(postareId: number, review: Review): Observable<any> {
     const userId = this.tokenService.getUserId();
     if (!userId) {
@@ -429,7 +446,6 @@ export class VehiclesService {
     return this.apiService.get<Review[]>('Review/GetReviewsByRatingHighToLow');
   }
 
-  // Utility methods
   showBookingSuccess() {
     this.snackBar.openFromComponent(SnackbarComponent, {
       verticalPosition: 'top',
@@ -465,9 +481,6 @@ export class VehiclesService {
     console.log('================================');
   }
 
-  /**
-   * Cache status methods
-   */
   isCacheLoaded(): boolean {
     return this.vehiclesCacheLoaded;
   }
@@ -484,5 +497,27 @@ export class VehiclesService {
       expired: age > this.CACHE_DURATION,
       count: this.getCachedVehicles().length
     };
+  }
+
+  logCacheDebugInfo(): void {
+    console.group('🔍 VehiclesService Cache Debug');
+    console.log('Cache Status:', this.getCacheStatus());
+    console.log('Current Vehicles:', this.getCachedVehicles());
+    console.log('Subject State:', this.vehiclesSubject.value);
+    console.groupEnd();
+  }
+
+  emergencyRefresh(): Observable<Vehicle[]> {
+    console.warn('🚨 Emergency cache refresh initiated');
+    this.clearCacheCompletely();
+    return this.getVehicles(true).pipe(
+      tap(vehicles => {
+        console.log(`🚨 Emergency refresh completed with ${vehicles.length} vehicles`);
+      }),
+      catchError(error => {
+        console.error('🚨 Emergency refresh failed:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }
