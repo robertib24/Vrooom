@@ -53,6 +53,12 @@
               <span class="price-text">{{ formatPrice(vehicle.pret) }}</span>
             </div>
 
+            <!-- Views badge -->
+            <div class="views-badge">
+              <mat-icon>visibility</mat-icon>
+              <span>{{ formatViews(views) }} views</span>
+            </div>
+
             @if (vehicleImages.length > 1) {
               <button mat-mini-fab class="nav-button prev" (click)="previousImage()">
                 <mat-icon>chevron_left</mat-icon>
@@ -100,30 +106,15 @@
           <div class="vehicle-features">
             <h3>Vehicle Features</h3>
             <div class="features-grid">
-              <div class="feature-item">
-                <mat-icon>palette</mat-icon>
-                <span>{{ vehicle.culoare | titlecase }}</span>
-              </div>
-              <div class="feature-item">
-                <mat-icon>speed</mat-icon>
-                <span>{{ formatMileage(vehicle.kilometraj) }}</span>
-              </div>
-              <div class="feature-item">
-                <mat-icon>calendar_today</mat-icon>
-                <span>{{ vehicle.anFabricatie }}</span>
-              </div>
-              <div class="feature-item">
-                <mat-icon>description</mat-icon>
-                <span>Registration Available</span>
-              </div>
-              <div class="feature-item">
-                <mat-icon>verified_user</mat-icon>
-                <span>Insurance Included</span>
-              </div>
-              <div class="feature-item">
-                <mat-icon>security</mat-icon>
-                <span>Vehicle ID Verified</span>
-              </div>
+              @for (feature of getVehicleFeatures(); track feature.label) {
+                <div class="feature-item">
+                  <mat-icon>{{ feature.icon }}</mat-icon>
+                  <div class="feature-content">
+                    <span class="feature-label">{{ feature.label }}</span>
+                    <span class="feature-value">{{ feature.value }}</span>
+                  </div>
+                </div>
+              }
             </div>
           </div>
 
@@ -138,11 +129,11 @@
               </div>
               <div class="price-item">
                 <span>Weekly Rate (7+ days)</span>
-                <span class="price">€{{ (vehicle.pret * 0.9).toFixed(0) }}/day</span>
+                <span class="price">€{{ getWeeklyPrice() }}/day</span>
               </div>
               <div class="price-item">
                 <span>Monthly Rate (30+ days)</span>
-                <span class="price">€{{ (vehicle.pret * 0.8).toFixed(0) }}/day</span>
+                <span class="price">€{{ getMonthlyPrice() }}/day</span>
               </div>
             </div>
           </div>
@@ -168,6 +159,117 @@
         </mat-card-actions>
       </mat-card>
 
+      <!-- Owner Information Section -->
+      <mat-card class="owner-card">
+        <mat-card-header>
+          <div mat-card-avatar class="owner-avatar-container">
+            @if (loadingOwner) {
+              <div class="owner-loading">
+                <mat-spinner diameter="40"></mat-spinner>
+              </div>
+            } @else {
+              <img 
+                [src]="getOwnerImageUrl()" 
+                [alt]="getOwnerFullName()"
+                (error)="onOwnerImageError($event)"
+                class="owner-avatar">
+            }
+          </div>
+          <mat-card-title>{{ getOwnerFullName() }}</mat-card-title>
+          <mat-card-subtitle>Vehicle Owner</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          @if (loadingOwner) {
+            <div class="owner-loading-content">
+              <p>Loading owner information...</p>
+            </div>
+          } @else if (owner) {
+            <div class="owner-info">
+              <div class="owner-stats">
+                <div class="stat-item">
+                  <mat-icon>star</mat-icon>
+                  <div class="stat-content">
+                    <span class="stat-value">{{ getOwnerRating() }}</span>
+                    <span class="stat-label">Rating</span>
+                  </div>
+                </div>
+                
+                <div class="stat-item">
+                  <mat-icon>directions_car</mat-icon>
+                  <div class="stat-content">
+                    <span class="stat-value">{{ owner.nrPostari || 1 }}</span>
+                    <span class="stat-label">Vehicle{{ (owner.nrPostari || 1) !== 1 ? 's' : '' }}</span>
+                  </div>
+                </div>
+                
+                <div class="stat-item">
+                  <mat-icon>stars</mat-icon>
+                  <div class="stat-content">
+                    <span class="stat-value">{{ owner.puncteFidelitate || 0 }}</span>
+                    <span class="stat-label">Points</span>
+                  </div>
+                </div>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <div class="contact-info">
+                <h4>Contact Information</h4>
+                <div class="contact-item">
+                  <mat-icon>phone</mat-icon>
+                  <div class="contact-content">
+                    <span class="contact-label">Phone</span>
+                    <span class="contact-value">{{ formatOwnerPhone() }}</span>
+                  </div>
+                </div>
+                
+                <div class="contact-item">
+                  <mat-icon>email</mat-icon>
+                  <div class="contact-content">
+                    <span class="contact-label">Contact</span>
+                    <span class="contact-value">Via platform messaging</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Owner response time and reliability badges -->
+              <div class="owner-badges">
+                <mat-chip-set>
+                  <mat-chip class="verified-chip">
+                    <mat-icon>verified</mat-icon>
+                    Verified Owner
+                  </mat-chip>
+                  <mat-chip class="response-chip">
+                    <mat-icon>schedule</mat-icon>
+                    Quick Response
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+            </div>
+          } @else {
+            <div class="owner-unavailable">
+              <mat-icon>person_off</mat-icon>
+              <p>Owner information temporarily unavailable</p>
+            </div>
+          }
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-raised-button color="accent" (click)="contactOwner()" [disabled]="loadingOwner || !owner">
+            <mat-icon>message</mat-icon>
+            Send Message
+          </button>
+          
+          @if (owner?.nrTelefon && owner.nrTelefon !== 'Contact via platform') {
+            <a mat-button [href]="'tel:' + owner.nrTelefon">
+              <mat-icon>phone</mat-icon>
+              Call Owner
+            </a>
+          }
+        </mat-card-actions>
+      </mat-card>
+
       <!-- Location Section -->
       <mat-card class="location-card">
         <mat-card-header>
@@ -189,7 +291,6 @@
               }
             </div>
 
-            <!-- Interactive Map Embed - Only here in Pickup Address section -->
             <div class="map-section">
               <h4>Location on Map</h4>
               
@@ -209,7 +310,6 @@
                   </iframe>
                 </div>
               } @else if (staticMapUrl) {
-                <!-- Fallback to static map if embed not available -->
                 <div class="static-map-container">
                   <img 
                     [src]="staticMapUrl" 
@@ -219,7 +319,6 @@
                     (load)="onMapImageLoad()">
                 </div>
               } @else {
-                <!-- Fallback when no map is available -->
                 <div class="map-placeholder">
                   <mat-icon>map</mat-icon>
                   <p class="title">Map not available</p>
@@ -243,11 +342,6 @@
           <button mat-button (click)="openStreetView()">
             <mat-icon>streetview</mat-icon>
             Street View
-          </button>
-          
-          <button mat-button (click)="debugMapsSetup()">
-            <mat-icon>bug_report</mat-icon>
-            Debug Maps
           </button>
         </mat-card-actions>
       </mat-card>

@@ -1,4 +1,3 @@
-// vehicle-details.component.scss
 .vehicle-details-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -126,6 +125,28 @@
             font-size: 1.2rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
+          }
+
+          .views-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            backdrop-filter: blur(10px);
+
+            mat-icon {
+              font-size: 1rem;
+              width: 1rem;
+              height: 1rem;
+            }
           }
 
           .nav-button {
@@ -262,9 +283,21 @@
               font-size: 1.2rem;
             }
 
-            span {
-              font-weight: 500;
-              color: #333;
+            .feature-content {
+              display: flex;
+              flex-direction: column;
+              gap: 0.25rem;
+
+              .feature-label {
+                font-size: 0.8rem;
+                color: #666;
+                font-weight: 500;
+              }
+
+              .feature-value {
+                font-weight: 600;
+                color: #333;
+              }
             }
           }
         }
@@ -327,6 +360,182 @@
           height: 48px;
           border-radius: 24px;
           opacity: 0.6;
+        }
+      }
+    }
+
+    // Enhanced Owner Card Styles
+    .owner-card {
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+      .owner-avatar-container {
+        position: relative;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        overflow: hidden;
+
+        .owner-loading {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f5f5f5;
+        }
+
+        .owner-avatar {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border: 2px solid #e0e0e0;
+          transition: all 0.3s ease;
+
+          &:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+          }
+        }
+      }
+
+      .owner-loading-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: #666;
+      }
+
+      .owner-info {
+        .owner-stats {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+
+          .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            flex-direction: column;
+
+            mat-icon {
+              color: #667eea;
+              font-size: 1.5rem;
+              width: 1.5rem;
+              height: 1.5rem;
+            }
+
+            .stat-content {
+              display: flex;
+              flex-direction: column;
+              gap: 0.25rem;
+
+              .stat-value {
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: #333;
+              }
+
+              .stat-label {
+                font-size: 0.8rem;
+                color: #666;
+              }
+            }
+          }
+        }
+
+        .contact-info {
+          margin: 1.5rem 0;
+
+          h4 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 600;
+          }
+
+          .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+
+            mat-icon {
+              color: #667eea;
+              font-size: 1.2rem;
+            }
+
+            .contact-content {
+              display: flex;
+              flex-direction: column;
+              gap: 0.25rem;
+
+              .contact-label {
+                font-size: 0.8rem;
+                color: #666;
+                font-weight: 500;
+              }
+
+              .contact-value {
+                font-weight: 600;
+                color: #333;
+              }
+            }
+          }
+        }
+
+        .owner-badges {
+          margin-top: 1rem;
+
+          mat-chip-set {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+          }
+
+          .verified-chip {
+            background-color: #4caf50;
+            color: white;
+
+            mat-icon {
+              color: white;
+            }
+          }
+
+          .response-chip {
+            background-color: #2196f3;
+            color: white;
+
+            mat-icon {
+              color: white;
+            }
+          }
+        }
+      }
+
+      .owner-unavailable {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        text-align: center;
+        color: #666;
+
+        mat-icon {
+          font-size: 3rem;
+          width: 3rem;
+          height: 3rem;
+          margin-bottom: 1rem;
+          opacity: 0.5;
         }
       }
     }
@@ -546,12 +755,21 @@
       gap: 1rem;
 
       .info-card,
+      .owner-card,
       .location-card {
         mat-card-actions {
           flex-direction: column;
 
           button {
             width: 100%;
+          }
+        }
+      }
+
+      .owner-card {
+        .owner-info {
+          .owner-stats {
+            grid-template-columns: 1fr;
           }
         }
       }
@@ -575,6 +793,11 @@
         .price-overlay {
           font-size: 1rem;
           padding: 0.5rem 1rem;
+        }
+
+        .views-badge {
+          font-size: 0.8rem;
+          padding: 0.4rem 0.8rem;
         }
       }
 

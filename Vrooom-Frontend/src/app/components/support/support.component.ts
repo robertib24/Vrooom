@@ -252,7 +252,6 @@ export class SupportComponent implements OnInit {
     });
   }
 
-  // FIXED: Methods for template
   getConversationIds(): number[] {
     return Object.keys(this.groupedTickets)
       .map(key => parseInt(key))
@@ -279,7 +278,6 @@ export class SupportComponent implements OnInit {
     return this.groupedTickets[conversationId]?.length || 0;
   }
 
-  // FIXED: Better logic for identifying user vs admin messages
   isUserMessage(ticket: SupportTicket): boolean {
     return ticket.userId === this.currentUserId;
   }
