@@ -46,10 +46,10 @@ export class SupportComponent implements OnInit {
   ticketsLoading = true;
   error = false;
 
-  // Current user ID for comparison
   currentUserId: number = 0;
+  
+  knownAdminUserIds: Set<number> = new Set();
 
-  // Common support topics
   supportTopics = [
     { icon: 'help', title: 'General Questions', description: 'General inquiries about our service' },
     { icon: 'payment', title: 'Billing & Payments', description: 'Issues with payments or billing' },
@@ -59,7 +59,6 @@ export class SupportComponent implements OnInit {
     { icon: 'bug_report', title: 'Technical Issues', description: 'Website bugs or technical problems' }
   ];
 
-  // Predefined quick titles based on topic
   quickTitles: { [key: string]: string[] } = {
     'General Questions': [
       'How does car rental work?',
@@ -111,6 +110,8 @@ export class SupportComponent implements OnInit {
     // Get current user ID
     const userId = this.tokenService.getUserId();
     this.currentUserId = userId ? parseInt(userId) : 0;
+    
+    console.log('🔑 Current user ID:', this.currentUserId);
   }
 
   ngOnInit() {
@@ -134,6 +135,7 @@ export class SupportComponent implements OnInit {
         next: (tickets) => {
           console.log('📋 Loaded tickets:', tickets);
           this.myTickets = tickets.sort((a, b) => b.supportId - a.supportId);
+          this.detectAdminUsers();
           this.groupTicketsByConversation();
         },
         error: (error) => {
@@ -142,6 +144,46 @@ export class SupportComponent implements OnInit {
           this.showError('Failed to load your support tickets');
         }
       });
+  }
+
+  detectAdminUsers() {
+    console.log('🕵️ Detecting admin users from ticket patterns...');
+    
+    this.knownAdminUserIds.clear();
+    
+    const tempGrouped: { [key: number]: SupportTicket[] } = {};
+    this.myTickets.forEach(ticket => {
+      if (!tempGrouped[ticket.supportId]) {
+        tempGrouped[ticket.supportId] = [];
+      }
+      tempGrouped[ticket.supportId].push(ticket);
+    });
+
+    Object.values(tempGrouped).forEach(conversation => {
+      const originalMessage = conversation.find(ticket => 
+        ticket.userId === this.currentUserId && 
+        ticket.titlu && 
+        ticket.titlu.length > 5 && 
+        ticket.titlu !== 'Admin Reply' &&
+        !ticket.titlu.toLowerCase().includes('reply')
+      );
+
+      if (originalMessage) {
+        conversation.forEach(ticket => {
+          if (ticket.userId !== this.currentUserId) {
+            this.knownAdminUserIds.add(ticket.userId);
+            console.log(`🔍 Detected admin user ID: ${ticket.userId} (from ticket ${ticket.supportId})`);
+          }
+          
+          if (ticket.titlu === 'Admin Reply') {
+            this.knownAdminUserIds.add(ticket.userId);
+            console.log(`🔍 Detected admin user ID: ${ticket.userId} (Admin Reply title)`);
+          }
+        });
+      }
+    });
+
+    console.log('🎯 Known admin user IDs:', Array.from(this.knownAdminUserIds));
   }
 
   groupTicketsByConversation() {
@@ -159,25 +201,67 @@ export class SupportComponent implements OnInit {
       const conversation = this.groupedTickets[supportId];
       
       conversation.sort((a, b) => {
-        const aIsOriginal = this.isUserMessage(a) && !this.isAdminReply(a) && 
-                           a.titlu && a.titlu !== '' && a.titlu !== 'Admin Reply' && a.titlu.length > 5;
-        const bIsOriginal = this.isUserMessage(b) && !this.isAdminReply(b) && 
-                           b.titlu && b.titlu !== '' && b.titlu !== 'Admin Reply' && b.titlu.length > 5;
+        const aIsOriginal = this.isOriginalUserMessage(a);
+        const bIsOriginal = this.isOriginalUserMessage(b);
         
         if (aIsOriginal && !bIsOriginal) return -1;
         if (!aIsOriginal && bIsOriginal) return 1;
         
-        return 0;
+        if (a.createdAt && b.createdAt) {
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        }
+        
+        return 0; 
       });
       
-      console.log(`🗂️ Conversation ${supportId}:`, conversation.map(t => ({
-        userId: t.userId,
-        titlu: t.titlu,
-        isFromCurrentUser: this.isUserMessage(t),
-        isAdminReply: this.isAdminReply(t),
-        messageType: this.isAdminReply(t) ? 'ADMIN' : 'USER'
-      })));
+      console.log(`🗂️ Conversation ${supportId} (${conversation.length} messages):`);
+      conversation.forEach((ticket, index) => {
+        console.log(`  ${index + 1}. ${this.isAdminMessage(ticket) ? '[ADMIN]' : '[USER]'} User ${ticket.userId}: "${ticket.titlu}" - ${ticket.comentariu.slice(0, 50)}...`);
+      });
     });
+  }
+
+  isAdminMessage(ticket: SupportTicket): boolean {
+    if (this.knownAdminUserIds.has(ticket.userId)) {
+      console.log(`✅ ADMIN: User ${ticket.userId} is in known admin list`);
+      return true;
+    }
+    
+    if (ticket.titlu === 'Admin Reply') {
+      console.log(`✅ ADMIN: Has "Admin Reply" title`);
+      return true;
+    }
+    
+    if (ticket.userId !== this.currentUserId) {
+      const conversation = this.groupedTickets[ticket.supportId] || [];
+      const hasOriginalFromCurrentUser = conversation.some(t => this.isOriginalUserMessage(t));
+      
+      if (hasOriginalFromCurrentUser) {
+        console.log(`✅ ADMIN: Different user in conversation started by current user`);
+        return true;
+      }
+    }
+    
+    console.log(`❌ USER: User ${ticket.userId} message - "${ticket.titlu || 'no title'}"`);
+    return false;
+  }
+
+  isOriginalUserMessage(ticket: SupportTicket): boolean {
+    if (!ticket.titlu) return false;
+    
+    return ticket.userId === this.currentUserId && 
+           ticket.titlu.length > 5 && 
+           ticket.titlu !== 'Admin Reply' &&
+           !ticket.titlu.toLowerCase().includes('reply') &&
+           ticket.titlu.trim() !== '';
+  }
+
+  isUserMessage(ticket: SupportTicket): boolean {
+    return !this.isAdminMessage(ticket);
+  }
+
+  isAdminReply(ticket: SupportTicket): boolean {
+    return this.isAdminMessage(ticket);
   }
 
   selectTopic(topic: string) {
@@ -211,15 +295,13 @@ export class SupportComponent implements OnInit {
           this.selectedTopic = '';
           this.selectedQuickTitle = '';
           
-          // Send email notification
           this.supportService.sendSupportCreatedEmail({
-            supportId: 0, // Will be assigned by backend
+            supportId: 0,
             titlu: ticketData.titlu,
             comentariu: ticketData.comentariu,
             userId: parseInt(this.tokenService.getUserId() || '0')
           }).subscribe();
 
-          // Reload tickets
           this.loadMyTickets();
         },
         error: (error) => {
@@ -238,8 +320,9 @@ export class SupportComponent implements OnInit {
       data: {
         conversationId,
         conversation,
-        originalTitle: conversation[0]?.titlu || 'Support Ticket',
-        currentUserId: this.currentUserId
+        originalTitle: this.getConversationTitle(conversationId),
+        currentUserId: this.currentUserId,
+        knownAdminUserIds: Array.from(this.knownAdminUserIds)
       }
     });
 
@@ -263,14 +346,7 @@ export class SupportComponent implements OnInit {
   getConversationTitle(conversationId: number): string {
     const conversation = this.groupedTickets[conversationId];
     
-    const originalMessage = conversation?.find(t => 
-      this.isUserMessage(t) && 
-      !this.isAdminReply(t) && 
-      t.titlu && 
-      t.titlu !== 'Admin Reply' && 
-      t.titlu !== '' &&
-      t.titlu.length > 5
-    );
+    const originalMessage = conversation?.find(t => this.isOriginalUserMessage(t));
     
     return originalMessage?.titlu || `Ticket #${conversationId}`;
   }
@@ -283,58 +359,6 @@ export class SupportComponent implements OnInit {
 
   getMessageCount(conversationId: number): number {
     return this.groupedTickets[conversationId]?.length || 0;
-  }
-
-  isUserMessage(ticket: SupportTicket): boolean {
-    const isFromCurrentUser = ticket.userId === this.currentUserId;
-    
-    const isAdminReply = this.isAdminReply(ticket);
-    
-    return isFromCurrentUser && !isAdminReply;
-  }
-
-  isAdminReply(ticket: SupportTicket): boolean {
-    const isFromCurrentUser = ticket.userId === this.currentUserId;
-    const hasAdminReplyTitle = ticket.titlu === 'Admin Reply';
-    const hasEmptyTitle = !ticket.titlu || ticket.titlu === '';
-    
-    console.log(`🔍 Checking ticket ${ticket.supportId} (User ${ticket.userId}):`);
-    console.log(`  Title: "${ticket.titlu}"`);
-    console.log(`  Is from current user (${this.currentUserId}): ${isFromCurrentUser}`);
-    console.log(`  Has "Admin Reply" title: ${hasAdminReplyTitle}`);
-    console.log(`  Has empty title: ${hasEmptyTitle}`);
-    
-    if (hasAdminReplyTitle) {
-      console.log(`  ✅ ADMIN REPLY: Has "Admin Reply" title`);
-      return true;
-    }
-    
-    if (!isFromCurrentUser) {
-      console.log(`  ✅ ADMIN REPLY: From different user (admin ID: ${ticket.userId})`);
-      return true;
-    }
-    
-    if (hasEmptyTitle) {
-      const conversation = this.groupedTickets[ticket.supportId] || [];
-      const originalTicket = conversation.find(t => 
-        t.userId === this.currentUserId && 
-        t.titlu && 
-        t.titlu !== '' && 
-        t.titlu !== 'Admin Reply' &&
-        t.titlu.length > 5
-      );
-      
-      const isNotOriginal = ticket !== originalTicket;
-      console.log(`  Empty title - is not original: ${isNotOriginal}`);
-      
-      if (isNotOriginal) {
-        console.log(`  ✅ ADMIN REPLY: Empty title and not original ticket`);
-        return true;
-      }
-    }
-    
-    console.log(`  ❌ USER MESSAGE: Does not match admin reply patterns`);
-    return false;
   }
 
   get formControls() {
@@ -356,7 +380,6 @@ export class SupportComponent implements OnInit {
   }
 }
 
-// FIXED: Support Reply Dialog Component
 @Component({
   selector: 'app-support-reply-dialog',
   template: `
@@ -373,10 +396,11 @@ export class SupportComponent implements OnInit {
           @for (message of data.conversation; track message.supportId + '-' + message.comentariu.slice(0,10)) {
             <div class="message" 
                  [class.user-message]="isUserMessage(message)" 
-                 [class.support-message]="!isUserMessage(message)">
+                 [class.support-message]="isAdminMessage(message)">
               <div class="message-header">
-                <mat-icon>{{ isUserMessage(message) ? 'person' : 'support_agent' }}</mat-icon>
-                <span class="sender">{{ isUserMessage(message) ? 'You' : 'Vrooom Support' }}</span>
+                <mat-icon>{{ isAdminMessage(message) ? 'support_agent' : 'person' }}</mat-icon>
+                <span class="sender">{{ isAdminMessage(message) ? 'Vrooom Support' : 'You' }}</span>
+                <span class="user-id-debug">(ID: {{ message.userId }})</span>
                 @if (message.titlu && message.titlu !== 'Admin Reply') {
                   <span class="message-title"> - {{ message.titlu }}</span>
                 }
@@ -479,6 +503,13 @@ export class SupportComponent implements OnInit {
                 height: 1.2rem;
               }
               
+              .user-id-debug {
+                font-size: 0.7rem;
+                color: #999;
+                font-weight: normal;
+                opacity: 0.7;
+              }
+              
               .message-title {
                 font-style: italic;
                 color: #666;
@@ -522,6 +553,7 @@ export class SupportComponent implements OnInit {
 export class SupportReplyDialog {
   replyForm: FormGroup;
   loading = false;
+  knownAdminUserIds: Set<number>;
 
   constructor(
     private fb: FormBuilder,
@@ -534,10 +566,31 @@ export class SupportReplyDialog {
     this.replyForm = this.fb.group({
       reply: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]]
     });
+    
+    this.knownAdminUserIds = new Set(this.data.knownAdminUserIds || []);
+    
+    console.log('🔑 Dialog - Current user ID:', this.data.currentUserId);
+    console.log('🎯 Dialog - Known admin IDs:', Array.from(this.knownAdminUserIds));
+  }
+
+  isAdminMessage(message: any): boolean {
+    if (this.knownAdminUserIds.has(message.userId)) {
+      return true;
+    }
+    
+    if (message.titlu === 'Admin Reply') {
+      return true;
+    }
+    
+    if (message.userId !== this.data.currentUserId) {
+      return true;
+    }
+    
+    return false;
   }
 
   isUserMessage(message: any): boolean {
-    return message.userId === this.data.currentUserId;
+    return !this.isAdminMessage(message);
   }
 
   onSubmit() {
@@ -555,7 +608,6 @@ export class SupportReplyDialog {
         next: () => {
           this.showSuccess('Reply sent successfully!');
           
-          // Send email notification
           this.supportService.sendSupportReplyEmail({
             supportId: this.data.conversationId,
             titlu: this.data.originalTitle,

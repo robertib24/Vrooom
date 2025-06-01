@@ -1,3 +1,5 @@
+<!-- UPDATED support.component.html with better message detection -->
+
 <div class="support-container">
   <!-- Hero Section -->
   <div class="hero-section">
@@ -208,32 +210,51 @@
                     </mat-expansion-panel-header>
 
                     <div class="ticket-conversation">
-  <!-- FIXED: Display all messages in conversation with proper identification -->
-  @for (ticket of groupedTickets[conversationId]; track ticket.supportId + '-' + ticket.comentariu.slice(0,20)) {
-    <div class="message" 
-         [class.user-message]="isUserMessage(ticket) && !isAdminReply(ticket)" 
-         [class.support-message]="isAdminReply(ticket)">
-      <div class="message-header">
-        <mat-icon>{{ isAdminReply(ticket) ? 'support_agent' : 'person' }}</mat-icon>
-        <span class="sender">{{ isAdminReply(ticket) ? 'Vrooom Support' : 'You' }}</span>
-        @if (ticket.titlu && ticket.titlu !== 'Admin Reply' && ticket.titlu !== '') {
-          <span class="message-title"> - {{ ticket.titlu }}</span>
-        }
-        <span class="message-time">{{ ticket.supportId }}</span>
-      </div>
-      <div class="message-content">
-        {{ ticket.comentariu }}
-      </div>
-    </div>
-  }
-  
-  <div class="conversation-actions">
-    <button mat-raised-button color="primary" (click)="openReplyDialog(conversationId)">
-      <mat-icon>reply</mat-icon>
-      Add Reply
-    </button>
-  </div>
-</div>
+                      <!-- FIXED: Display all messages with improved admin/user detection -->
+                      @for (ticket of groupedTickets[conversationId]; track ticket.supportId + '-' + ticket.comentariu.slice(0,20)) {
+                        <div class="message" 
+                             [class.user-message]="isUserMessage(ticket)" 
+                             [class.support-message]="isAdminMessage(ticket)">
+                          <div class="message-header">
+                            <div class="message-sender">
+                              <mat-icon class="sender-icon" 
+                                        [class.admin]="isAdminMessage(ticket)"
+                                        [class.user]="isUserMessage(ticket)">
+                                {{ isAdminMessage(ticket) ? 'support_agent' : 'person' }}
+                              </mat-icon>
+                              <span class="sender-name">{{ isAdminMessage(ticket) ? 'Vrooom Support' : 'You' }}</span>
+                              
+                              <!-- Debug info (remove in production) -->
+                              <span class="debug-info">(ID: {{ ticket.userId }})</span>
+                              
+                              <!-- Message type badge -->
+                              <mat-chip class="sender-badge" 
+                                        [class.admin]="isAdminMessage(ticket)"
+                                        [class.user]="isUserMessage(ticket)">
+                                {{ isAdminMessage(ticket) ? 'SUPPORT' : 'CUSTOMER' }}
+                              </mat-chip>
+                            </div>
+                            
+                            <div class="message-meta">
+                              @if (ticket.titlu && ticket.titlu !== 'Admin Reply' && ticket.titlu !== '') {
+                                <div class="message-title">{{ ticket.titlu }}</div>
+                              }
+                              <div class="message-id">{{ ticket.supportId }}</div>
+                            </div>
+                          </div>
+                          <div class="message-content">
+                            {{ ticket.comentariu }}
+                          </div>
+                        </div>
+                      }
+                      
+                      <div class="conversation-actions">
+                        <button mat-raised-button color="primary" (click)="openReplyDialog(conversationId)">
+                          <mat-icon>reply</mat-icon>
+                          Add Reply
+                        </button>
+                      </div>
+                    </div>
                   </mat-expansion-panel>
                 }
               </div>
@@ -258,99 +279,185 @@
 }
 
 .message {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 12px;
   transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .user-message {
-  background: #e3f2fd;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
   margin-left: 2rem;
   border-left: 4px solid #2196f3;
+  
+  &::before {
+    content: "👤 You";
+    position: absolute;
+    top: -8px;
+    left: 16px;
+    background: #2196f3;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
 }
 
 .support-message {
-  background: #f3e5f5;
+  background: linear-gradient(135deg, #f3e5f5, #e1bee7);
   margin-right: 2rem;
   border-left: 4px solid #9c27b0;
   
-  /* Add visual indicator for admin messages */
   &::before {
-    content: "👨‍💼 Support Team";
-    display: block;
-    font-size: 0.8rem;
-    color: #9c27b0;
+    content: "🎧 Support Team";
+    position: absolute;
+    top: -8px;
+    left: 16px;
+    background: #9c27b0;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
-    opacity: 0.8;
   }
 }
 
 .message-header {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  font-size: 0.9rem;
-  
-  mat-icon {
-    font-size: 1.2rem;
-    width: 1.2rem;
-    height: 1.2rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+
+  .message-sender {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .sender-icon {
+      font-size: 1.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      padding: 0.5rem;
+      border-radius: 50%;
+      
+      &.admin {
+        background: linear-gradient(135deg, #9c27b0, #e91e63);
+        color: white;
+      }
+      
+      &.user {
+        background: linear-gradient(135deg, #2196f3, #03a9f4);
+        color: white;
+      }
+    }
+
+    .sender-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 1rem;
+    }
+    
+    .debug-info {
+      font-size: 0.7rem;
+      color: #999;
+      font-weight: normal;
+      opacity: 0.7;
+      background: rgba(0,0,0,0.05);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    .sender-badge {
+      font-size: 0.7rem;
+      height: 20px;
+      border-radius: 10px;
+      font-weight: 600;
+
+      &.admin {
+        background: linear-gradient(135deg, #9c27b0, #e91e63);
+        color: white;
+      }
+
+      &.user {
+        background: linear-gradient(135deg, #2196f3, #03a9f4);
+        color: white;
+      }
+    }
   }
-  
-  .sender {
-    color: #333;
-  }
-  
-  .message-title {
-    font-style: italic;
-    color: #666;
-    font-weight: normal;
-  }
-  
-  .message-time {
-    font-size: 0.7rem;
-    color: #999;
-    margin-left: auto;
+
+  .message-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    text-align: right;
+
+    .message-title {
+      font-size: 0.8rem;
+      color: #666;
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .message-id {
+      font-size: 0.7rem;
+      color: #999;
+      font-family: 'Courier New', monospace;
+    }
   }
 }
 
 .message-content {
-  line-height: 1.5;
+  line-height: 1.6;
   color: #333;
   white-space: pre-wrap;
-  padding-left: 1.7rem; /* Align with header text */
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+
+  p {
+    margin: 0;
+  }
 }
 
 .conversation-actions {
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid #eee;
 
   button {
     border-radius: 20px;
     font-weight: 600;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
   }
 }
 
 /* Enhanced visual feedback for different message types */
-.support-message .message-header mat-icon {
-  color: #9c27b0;
+.support-message .message-header .sender-icon {
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.user-message .message-header mat-icon {
-  color: #2196f3;
+.user-message .message-header .sender-icon {
+  animation: none;
 }
 
-/* Add subtle animation for new messages */
+/* Add subtle animation for messages */
 @keyframes fadeInMessage {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -358,7 +465,64 @@
   }
 }
 
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
 .message {
-  animation: fadeInMessage 0.3s ease-out;
+  animation: fadeInMessage 0.5s ease-out;
+}
+
+/* Responsive design for messages */
+@media (max-width: 768px) {
+  .user-message {
+    margin-left: 0;
+  }
+  
+  .support-message {
+    margin-right: 0;
+  }
+  
+  .message-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+    
+    .message-meta {
+      align-items: flex-start;
+      text-align: left;
+    }
+  }
+  
+  .message-header .message-sender {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+/* Better contrast for readability */
+.message-content {
+  text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+}
+
+.support-message .message-content {
+  background: rgba(255,255,255,0.3);
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-top: 0.75rem;
+}
+
+.user-message .message-content {
+  background: rgba(255,255,255,0.4);
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-top: 0.75rem;
 }
 </style>
