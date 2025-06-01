@@ -59,22 +59,37 @@ namespace Vrooom.Services.SupportServices
                 _logger.LogInformation("💬 Adding reply to Support {SupportId} from User {UserId}",
                     supportDTO.supportId, supportDTO.userId);
 
+                _logger.LogInformation("📝 Full reply data: SupportId={SupportId}, UserId={UserId}, Title='{Title}', Comment='{Comment}'",
+                    supportDTO.supportId, supportDTO.userId, supportDTO.titlu ?? "NULL",
+                    supportDTO.comentariu?.Substring(0, Math.Min(100, supportDTO.comentariu?.Length ?? 0)) ?? "NULL");
+
                 var support = new Support
                 {
                     SupportId = supportDTO.supportId,
                     UserId = supportDTO.userId,
-                    titlu = supportDTO.titlu ?? "Reply",
+                    titlu = supportDTO.titlu ?? "Reply", 
                     comentariu = supportDTO.comentariu,
                     Status = "InProgress",
                     CreatedAt = DateTime.Now
                 };
 
-                _logger.LogInformation("📝 Reply details - SupportId: {SupportId}, UserId: {UserId}, Title: '{Title}', Status: '{Status}'",
+                _logger.LogInformation("💾 Saving to database: SupportId={SupportId}, UserId={UserId}, Title='{Title}', Status='{Status}'",
                     support.SupportId, support.UserId, support.titlu, support.Status);
 
                 await _supportRepository.addSupport(support);
 
                 _logger.LogInformation("✅ Reply added successfully to Support {SupportId}", supportDTO.supportId);
+
+                var allMessagesForTicket = await _supportRepository.getSupportBySupportID(supportDTO.supportId);
+                _logger.LogInformation("🔍 Verification - Total messages for Support {SupportId}: {Count}",
+                    supportDTO.supportId, allMessagesForTicket.Count());
+
+                foreach (var msg in allMessagesForTicket)
+                {
+                    _logger.LogInformation("  📄 Message: UserId={UserId}, Title='{Title}', Content='{Content}'",
+                        msg.UserId, msg.titlu,
+                        msg.comentariu?.Substring(0, Math.Min(50, msg.comentariu?.Length ?? 0)) ?? "NULL");
+                }
             }
             catch (Exception ex)
             {
@@ -322,18 +337,21 @@ namespace Vrooom.Services.SupportServices
                     throw new NotFoundException($"User with ID {userId} not found");
                 }
 
-                _logger.LogInformation("👤 User {UserId} found: {Username}, Role check...", userId, u.UserName);
+                _logger.LogInformation("👤 User {UserId} found: {Username}", userId, u.UserName);
 
-                if (await _userManager.IsInRoleAsync(u, "Admin"))
+             
+                s = await _supportRepository.getSupportByUserID(userId);
+
+                var userTicketIds = s.Select(ticket => ticket.SupportId).Distinct().ToList();
+                var allRelatedMessages = new List<Support>();
+
+                foreach (var ticketId in userTicketIds)
                 {
-                    _logger.LogInformation("🔑 User {UserId} is Admin, retrieving all tickets", userId);
-                    s = await _supportRepository.listSupport();
+                    var ticketMessages = await _supportRepository.getSupportBySupportID(ticketId);
+                    allRelatedMessages.AddRange(ticketMessages);
                 }
-                else
-                {
-                    _logger.LogInformation("👥 User {UserId} is regular user, retrieving their tickets only", userId);
-                    s = await _supportRepository.getSupportByUserID(userId);
-                }
+
+                s = allRelatedMessages.Distinct();
 
                 if (s == null || !s.Any())
                 {
@@ -349,17 +367,20 @@ namespace Vrooom.Services.SupportServices
                     supportId = sup.SupportId,
                     userId = sup.UserId,
                     titlu = sup.titlu,
-                    comentariu = sup.comentariu
+                    comentariu = sup.comentariu,
+                    Status = sup.Status ?? "Open",
+                    CreatedAt = sup.CreatedAt,
+                    ResolvedAt = sup.ResolvedAt,
+                    ResolvedByUserId = sup.ResolvedByUserId
                 });
 
                 var resultList = rez.ToList();
 
-                // Log details of each ticket for debugging
                 foreach (var ticket in resultList)
                 {
-                    _logger.LogInformation("Ticket {SupportId}: '{Title}' from User {UserId} - {ContentPreview}",
+                    _logger.LogInformation("Ticket {SupportId}: '{Title}' from User {UserId} - Type: {Type}",
                         ticket.supportId, ticket.titlu, ticket.userId,
-                        ticket.comentariu.Length > 50 ? ticket.comentariu.Substring(0, 50) + "..." : ticket.comentariu);
+                        ticket.titlu == "Admin Reply" ? "ADMIN_REPLY" : "USER_MESSAGE");
                 }
 
                 return resultList;

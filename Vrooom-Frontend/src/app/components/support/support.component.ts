@@ -147,7 +147,6 @@ export class SupportComponent implements OnInit {
   groupTicketsByConversation() {
     this.groupedTickets = {};
     
-    // Group tickets by supportId
     this.myTickets.forEach(ticket => {
       if (!this.groupedTickets[ticket.supportId]) {
         this.groupedTickets[ticket.supportId] = [];
@@ -155,29 +154,28 @@ export class SupportComponent implements OnInit {
       this.groupedTickets[ticket.supportId].push(ticket);
     });
 
-    // Sort messages within each conversation
     Object.keys(this.groupedTickets).forEach(supportIdStr => {
       const supportId = parseInt(supportIdStr);
       const conversation = this.groupedTickets[supportId];
       
-      // Sort by: original message first (with title), then replies (without title or with specific patterns)
       conversation.sort((a, b) => {
-        // Original user message (has meaningful title, is from current user)
-        const aIsOriginal = a.userId === this.currentUserId && a.titlu && a.titlu !== '' && a.titlu !== 'Admin Reply';
-        const bIsOriginal = b.userId === this.currentUserId && b.titlu && b.titlu !== '' && b.titlu !== 'Admin Reply';
+        const aIsOriginal = this.isUserMessage(a) && !this.isAdminReply(a) && 
+                           a.titlu && a.titlu !== '' && a.titlu !== 'Admin Reply' && a.titlu.length > 5;
+        const bIsOriginal = this.isUserMessage(b) && !this.isAdminReply(b) && 
+                           b.titlu && b.titlu !== '' && b.titlu !== 'Admin Reply' && b.titlu.length > 5;
         
         if (aIsOriginal && !bIsOriginal) return -1;
         if (!aIsOriginal && bIsOriginal) return 1;
         
-        // Both are replies - we don't have timestamps, so keep insertion order
         return 0;
       });
       
       console.log(`🗂️ Conversation ${supportId}:`, conversation.map(t => ({
         userId: t.userId,
         titlu: t.titlu,
-        isFromCurrentUser: t.userId === this.currentUserId,
-        isAdminReply: this.isAdminReply(t)
+        isFromCurrentUser: this.isUserMessage(t),
+        isAdminReply: this.isAdminReply(t),
+        messageType: this.isAdminReply(t) ? 'ADMIN' : 'USER'
       })));
     });
   }
@@ -264,7 +262,16 @@ export class SupportComponent implements OnInit {
 
   getConversationTitle(conversationId: number): string {
     const conversation = this.groupedTickets[conversationId];
-    const originalMessage = conversation?.find(t => t.userId === this.currentUserId && t.titlu && t.titlu !== 'Admin Reply');
+    
+    const originalMessage = conversation?.find(t => 
+      this.isUserMessage(t) && 
+      !this.isAdminReply(t) && 
+      t.titlu && 
+      t.titlu !== 'Admin Reply' && 
+      t.titlu !== '' &&
+      t.titlu.length > 5
+    );
+    
     return originalMessage?.titlu || `Ticket #${conversationId}`;
   }
 
@@ -279,20 +286,55 @@ export class SupportComponent implements OnInit {
   }
 
   isUserMessage(ticket: SupportTicket): boolean {
-    return ticket.userId === this.currentUserId;
+    const isFromCurrentUser = ticket.userId === this.currentUserId;
+    
+    const isAdminReply = this.isAdminReply(ticket);
+    
+    return isFromCurrentUser && !isAdminReply;
   }
 
   isAdminReply(ticket: SupportTicket): boolean {
-    // Admin replies have specific patterns:
-    // 1. Title is "Admin Reply" or empty
-    // 2. User ID is different from current user (admin user ID)
-    // 3. Not the original ticket (which has a meaningful title)
-    
     const isFromCurrentUser = ticket.userId === this.currentUserId;
-    const hasAdminReplyTitle = ticket.titlu === 'Admin Reply' || ticket.titlu === '';
-    const isOriginalTicket = isFromCurrentUser && ticket.titlu && ticket.titlu !== 'Admin Reply' && ticket.titlu !== '';
+    const hasAdminReplyTitle = ticket.titlu === 'Admin Reply';
+    const hasEmptyTitle = !ticket.titlu || ticket.titlu === '';
     
-    return !isFromCurrentUser || (hasAdminReplyTitle && !isOriginalTicket);
+    console.log(`🔍 Checking ticket ${ticket.supportId} (User ${ticket.userId}):`);
+    console.log(`  Title: "${ticket.titlu}"`);
+    console.log(`  Is from current user (${this.currentUserId}): ${isFromCurrentUser}`);
+    console.log(`  Has "Admin Reply" title: ${hasAdminReplyTitle}`);
+    console.log(`  Has empty title: ${hasEmptyTitle}`);
+    
+    if (hasAdminReplyTitle) {
+      console.log(`  ✅ ADMIN REPLY: Has "Admin Reply" title`);
+      return true;
+    }
+    
+    if (!isFromCurrentUser) {
+      console.log(`  ✅ ADMIN REPLY: From different user (admin ID: ${ticket.userId})`);
+      return true;
+    }
+    
+    if (hasEmptyTitle) {
+      const conversation = this.groupedTickets[ticket.supportId] || [];
+      const originalTicket = conversation.find(t => 
+        t.userId === this.currentUserId && 
+        t.titlu && 
+        t.titlu !== '' && 
+        t.titlu !== 'Admin Reply' &&
+        t.titlu.length > 5
+      );
+      
+      const isNotOriginal = ticket !== originalTicket;
+      console.log(`  Empty title - is not original: ${isNotOriginal}`);
+      
+      if (isNotOriginal) {
+        console.log(`  ✅ ADMIN REPLY: Empty title and not original ticket`);
+        return true;
+      }
+    }
+    
+    console.log(`  ❌ USER MESSAGE: Does not match admin reply patterns`);
+    return false;
   }
 
   get formControls() {

@@ -305,7 +305,8 @@ namespace Vrooom.Controllers
         {
             try
             {
-                Console.WriteLine($"📧 Admin replying to ticket {supportId}: {replyData.comentariu}");
+                Console.WriteLine($"📧 Admin replying to ticket {supportId}");
+                Console.WriteLine($"📝 Reply data received: {System.Text.Json.JsonSerializer.Serialize(replyData)}");
 
                 var currentUserIdClaim = User.FindFirst("id")?.Value;
                 if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out int adminUserId))
@@ -314,18 +315,20 @@ namespace Vrooom.Controllers
                     return Unauthorized("Admin user ID not found");
                 }
 
+                Console.WriteLine($"👤 Admin user ID from token: {adminUserId}");
+
                 var adminReply = new SupportDTO
                 {
                     supportId = supportId,
-                    titlu = "Admin Reply", 
+                    titlu = "Admin Reply",
                     comentariu = replyData.comentariu,
                     userId = adminUserId 
                 };
 
-                Console.WriteLine($"👤 Admin reply details: SupportId={supportId}, AdminUserId={adminUserId}, Title='{adminReply.titlu}'");
+                Console.WriteLine($"💬 Final admin reply object: SupportId={adminReply.supportId}, UserId={adminReply.userId}, Title='{adminReply.titlu}'");
 
                 await _supportService.ReplySupport(adminReply);
-                Console.WriteLine($"✅ Admin reply saved to database");
+                Console.WriteLine($"✅ Admin reply saved to database successfully");
 
                 try
                 {
@@ -342,7 +345,9 @@ namespace Vrooom.Controllers
                     message = "Reply sent successfully",
                     emailSent = true,
                     supportId = supportId,
-                    adminUserId = adminUserId
+                    adminUserId = adminUserId,
+                    replyTitle = adminReply.titlu,
+                    timestamp = DateTime.Now
                 });
             }
             catch (Exception ex)
@@ -352,7 +357,8 @@ namespace Vrooom.Controllers
                 return StatusCode(500, new
                 {
                     error = ex.Message,
-                    supportId = supportId
+                    supportId = supportId,
+                    timestamp = DateTime.Now
                 });
             }
         }
